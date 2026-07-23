@@ -401,7 +401,7 @@ FastAPI 서버에 완료 알림
 **콜백 URL**:
 
 ```
-POST {FASTAPI_URL}/api/analysis/modelops/recommendation-completed?batchId={batch_id}
+POST {FASTAPI_BASE_URL}/api/internal/callbacks/recommendation-complete?batchId={batch_id}
 ```
 
 ---

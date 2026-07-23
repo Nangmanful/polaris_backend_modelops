@@ -54,7 +54,8 @@ async def _notify_recommendation_completed(batch_id: str):
         logger.warning("batch_id가 없어 콜백을 건너뜁니다.")
         return
 
-    callback_url = f"{settings.fastapi_url}/api/analysis/modelops/recommendation-completed"
+    # 콜백 경로는 공통 규약(CONVENTIONS §3) /api/internal/callbacks/<이벤트> — API_CONTRACT #21
+    callback_url = f"{settings.fastapi_url}/api/internal/callbacks/recommendation-complete"
 
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
