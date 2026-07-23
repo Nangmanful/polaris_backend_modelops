@@ -52,7 +52,10 @@ def get_db_connection():
 
 
 def main():
-    data_dir = Path("/Users/odong-i/Desktop/SKALA/FinalProject/DB_ALL/modelops/etl/etl_base/local/data")
+    # 데이터 디렉토리: 환경변수 ETL_DATA_DIR 우선, 기본은 레포 내 ETL/etl_base/local/data
+    data_dir = Path(
+        os.environ.get("ETL_DATA_DIR", str(Path(__file__).resolve().parent / "etl_base" / "local" / "data"))
+    )
     sgg261_dir = data_dir / "KMA" / "extracted" / "KMA" / "downloads_kma_ssp_sgg261"
 
     if not sgg261_dir.exists():
