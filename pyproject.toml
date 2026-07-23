@@ -151,7 +151,6 @@ minversion = "7.0"
 addopts = "-ra -q --strict-markers --cov=modelops --cov-report=term-missing"
 testpaths = [
     "tests",
-    "scratch",
 ]
 python_files = "test_*.py"
 python_classes = "Test*"

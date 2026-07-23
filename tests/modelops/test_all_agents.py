@@ -3,7 +3,10 @@
 모든 Probability Agent DB 연동 테스트
 """
 import sys
-sys.path.insert(0, '/Users/odong-i/Desktop/SKALA/FinalProject/DB_ALL/modelops')
+from pathlib import Path
+
+# 레포 루트를 import 경로에 추가 (직접 실행 지원)
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 # 테스트 좌표 (서울 강남구)
 TEST_LAT = 37.5172
