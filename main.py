@@ -148,11 +148,6 @@ app = FastAPI(
     - DELETE `/api/site-assessment/task/{task_id}`: 작업 삭제
 
     ### Batch Trigger (배치 작업 관리)
-    - POST `/api/batch-trigger/trigger-custom-schedule`: 커스텀 시간 배치 예약
-    - POST `/api/batch-trigger/run-probability-batch`: P(H) 배치 즉시 실행
-    - POST `/api/batch-trigger/run-hazard-batch`: H 배치 즉시 실행
-    - POST `/api/batch-trigger/run-candidate-locations-batch`: 13개 후보지 배치 계산
-    - POST `/api/batch-trigger/run-regional-locations-batch`: 250개 시군구 배치 계산
     - GET `/api/batch-trigger/scheduled-jobs`: 스케줄된 작업 조회
 
     ### Health Check
@@ -277,11 +272,6 @@ async def root():
                 "delete_task": "DELETE /api/site-assessment/task/{task_id}",
             },
             "batch_trigger": {
-                "custom_schedule": "POST /api/batch-trigger/trigger-custom-schedule",
-                "run_probability": "POST /api/batch-trigger/run-probability-batch",
-                "run_hazard": "POST /api/batch-trigger/run-hazard-batch",
-                "run_candidate_locations": "POST /api/batch-trigger/run-candidate-locations-batch",
-                "run_regional_locations": "POST /api/batch-trigger/run-regional-locations-batch",
                 "scheduled_jobs": "GET /api/batch-trigger/scheduled-jobs",
             },
             "health": {"check": "GET /api/health", "database": "GET /api/health/db"},

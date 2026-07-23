@@ -118,7 +118,8 @@ polaris_backend_modelops/
 | 재난안전데이터 ETL | 매일 | 09:00 | 긴급재난문자 수집·적재 (최근 5년) |
 | ESG Trends Agent | 주 2회 (월·목) | 09:00 | 기후 뉴스 수집·분석 후 Slack 발송 (cron) |
 
-즉시 실행은 API로 트리거할 수 있습니다: `POST /api/batch-trigger/run-probability-batch`, `POST /api/batch-trigger/run-hazard-batch` 등.
+등록된 스케줄은 API로 조회할 수 있습니다: `GET /api/batch-trigger/scheduled-jobs`.
+(과거의 배치 강제 실행 POST 라우트들은 소비처가 없어 계약 정리 시 삭제되었습니다.)
 
 ## 로컬 실행 방법
 
