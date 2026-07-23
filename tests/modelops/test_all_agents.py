@@ -15,7 +15,7 @@ TEST_LON = 127.0473
 SSP_SCENARIO = "SSP245"
 
 
-def test_agent(agent_class, agent_name):
+def check_agent(agent_class, agent_name):
     """단일 에이전트 테스트"""
     print(f"\n{'='*60}")
     print(f"테스트: {agent_name}")
@@ -55,7 +55,7 @@ def main():
         ExtremeHeatProbabilityAgent,
     )
 
-    success, aal = test_agent(ExtremeHeatProbabilityAgent, "ExtremeHeatProbabilityAgent (폭염)")
+    success, aal = check_agent(ExtremeHeatProbabilityAgent, "ExtremeHeatProbabilityAgent (폭염)")
     results["extreme_heat"] = {"success": success, "aal": aal}
 
     # 2. ExtremeColdProbabilityAgent
@@ -63,7 +63,7 @@ def main():
         ExtremeColdProbabilityAgent,
     )
 
-    success, aal = test_agent(ExtremeColdProbabilityAgent, "ExtremeColdProbabilityAgent (한파)")
+    success, aal = check_agent(ExtremeColdProbabilityAgent, "ExtremeColdProbabilityAgent (한파)")
     results["extreme_cold"] = {"success": success, "aal": aal}
 
     # 3. RiverFloodProbabilityAgent
@@ -71,7 +71,7 @@ def main():
         RiverFloodProbabilityAgent,
     )
 
-    success, aal = test_agent(RiverFloodProbabilityAgent, "RiverFloodProbabilityAgent (하천홍수)")
+    success, aal = check_agent(RiverFloodProbabilityAgent, "RiverFloodProbabilityAgent (하천홍수)")
     results["river_flood"] = {"success": success, "aal": aal}
 
     # 4. UrbanFloodProbabilityAgent
@@ -79,7 +79,7 @@ def main():
         UrbanFloodProbabilityAgent,
     )
 
-    success, aal = test_agent(UrbanFloodProbabilityAgent, "UrbanFloodProbabilityAgent (도시홍수)")
+    success, aal = check_agent(UrbanFloodProbabilityAgent, "UrbanFloodProbabilityAgent (도시홍수)")
     results["urban_flood"] = {"success": success, "aal": aal}
 
     # 5. DroughtProbabilityAgent
@@ -87,7 +87,7 @@ def main():
         DroughtProbabilityAgent,
     )
 
-    success, aal = test_agent(DroughtProbabilityAgent, "DroughtProbabilityAgent (가뭄)")
+    success, aal = check_agent(DroughtProbabilityAgent, "DroughtProbabilityAgent (가뭄)")
     results["drought"] = {"success": success, "aal": aal}
 
     # 6. WildfireProbabilityAgent
@@ -95,7 +95,7 @@ def main():
         WildfireProbabilityAgent,
     )
 
-    success, aal = test_agent(WildfireProbabilityAgent, "WildfireProbabilityAgent (산불)")
+    success, aal = check_agent(WildfireProbabilityAgent, "WildfireProbabilityAgent (산불)")
     results["wildfire"] = {"success": success, "aal": aal}
 
     # 7. TyphoonProbabilityAgent
@@ -103,7 +103,7 @@ def main():
         TyphoonProbabilityAgent,
     )
 
-    success, aal = test_agent(TyphoonProbabilityAgent, "TyphoonProbabilityAgent (태풍)")
+    success, aal = check_agent(TyphoonProbabilityAgent, "TyphoonProbabilityAgent (태풍)")
     results["typhoon"] = {"success": success, "aal": aal}
 
     # 8. SeaLevelRiseProbabilityAgent
@@ -111,7 +111,7 @@ def main():
         SeaLevelRiseProbabilityAgent,
     )
 
-    success, aal = test_agent(
+    success, aal = check_agent(
         SeaLevelRiseProbabilityAgent, "SeaLevelRiseProbabilityAgent (해수면상승)"
     )
     results["sea_level_rise"] = {"success": success, "aal": aal}
@@ -121,7 +121,7 @@ def main():
         WaterStressProbabilityAgent,
     )
 
-    success, aal = test_agent(
+    success, aal = check_agent(
         WaterStressProbabilityAgent, "WaterStressProbabilityAgent (물스트레스)"
     )
     results["water_stress"] = {"success": success, "aal": aal}
