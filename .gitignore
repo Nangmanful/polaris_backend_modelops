@@ -120,6 +120,11 @@ logs/
 # Temporary files
 *.tmp
 *.bak
+*.backup
+*.ai_agent_backup
+
+# Scratch / personal work area (원본 대용량 데이터·개인 작업물)
+scratch/
 
 # uv
 .uv/
