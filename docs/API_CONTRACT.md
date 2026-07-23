@@ -31,7 +31,7 @@
 | # | 용도 | 메서드 | 정식 경로(신) | 파라미터(정식 명칭) | 제공측 (FA) | 소비측 (SB) | 현재 경로(구) | 변경 여부 |
 |---|---|---|---|---|---|---|---|---|
 | 1 | 분석 시작(배치) | POST | `/api/analysis/start` | body: `userId`, `sites[]`, `hazardTypes[]`, `priority`, `options` | `src/routes/analysis.py:33` | `client/fastapi/FastApiClient.java:90` | 동일 | **유지** (단, hazardTypes 값 한글 변환 문제 — §3-1 참고) |
-| 2 | 분석 작업 상태 조회 | GET | `/api/analysis/{jobId}/status` | path: `jobId` | `src/routes/analysis.py:167` | `FastApiClient.java:118-135 (uri :122)` | `GET /api/analysis/status?userId={userId}&jobid={jobid}` | **변경** — `jobid`→`jobId`, 식별자 path화. userId 기반 최신 작업 조회는 §3-2 미해결 |
+| 2 | 분석 작업 상태 조회 | GET | `/api/analysis/{jobId}/status` | path: `jobId` | `src/routes/analysis.py:167` | `FastApiClient.java:118-135 (uri :122)` | `GET /api/analysis/status?userId={userId}&jobid={jobid}` | **변경** — `jobid`→`jobId`, 식별자 path화. userId 최신 작업 조회는 `GET /api/analysis/status?userId=`로 확정(§3-2 해결, 2026-07-23) |
 | 3 | 대시보드 요약 | GET | `/api/dashboard/summary?siteIds=…` | query: `siteIds`(복수, 필터) | `src/routes/dashboard.py:15` | `FastApiClient.java:145-155 (uri :148)` | 동일 | **유지** |
 | 4 | 물리 리스크 점수 | GET | `/api/analysis/sites/{siteId}/physical-risk-scores?hazardType=&term=` | path: `siteId` / query: `hazardType`, `term` | `src/routes/analysis.py:218` | `FastApiClient.java:166-177 (uri :168)` | `GET /api/analysis/physical-risk-scores?siteId=…` | **변경** — 식별자 path화 |
 | 5 | 재무 영향(AAL) | GET | `/api/analysis/sites/{siteId}/financial-impacts?hazardType=&term=` | path: `siteId` / query: `hazardType`, `term` | `src/routes/analysis.py:270` | `FastApiClient.java:227-238 (uri :229)` | `GET /api/analysis/financial-impacts?siteId=…` | **변경** — 식별자 path화 |
@@ -186,7 +186,7 @@ MO 쪽 소비처 확인 안 되는 라우트(§3-5): `site_assessment.py:804 /ta
 ## 3. 모호·미해결 항목 (코드만으로 판단 불가)
 
 1. **hazardTypes 값 변환** — SB `FastApiClient.java:67`이 `HazardTypeMapper.toFastApiValues()`로 영문→**한글** 변환 후 FA에 전달. CONVENTIONS §2는 `hazardType` 값을 영문 snake_case 9종으로 규정. FA 내부(AnalysisService)가 한글 값을 기대하는지 확인 후, 영문 snake_case로 통일하고 매퍼를 제거할지 결정 필요.
-2. **userId 기반 최신 작업 조회** — 현행 `GET /api/analysis/status?userId=`는 jobId 없이 "해당 사용자의 최신 작업" 조회를 겸한다(FA `analysis.py:207-212`). 정식 계약은 `/{jobId}/status`인데, userId 조회 유즈케이스를 별도 엔드포인트(예: `GET /api/analysis/latest?userId=`)로 남길지 결정 필요.
+2. **userId 기반 최신 작업 조회 — 해결(2026-07-23)**: `GET /api/analysis/status?userId=` 유지로 확정. userId는 리소스 식별자가 아니라 "해당 사용자의 최신 작업"을 고르는 **필터**이므로 CONVENTIONS §2(query=필터)에 부합. FA 라우트 복원 완료(`analysis.py`), 특정 작업 조회는 `/{jobId}/status` 병행.
 3. **`/summary`의 latitude/longitude** — 사업장 좌표를 매 호출마다 query로 전달(SB `:468-472`). siteId로 DB에서 좌표를 조회하면 파라미터 자체가 불필요. 데이터 소유권(사이트 정보는 SB 소유) 관점에서 팀 결정 필요.
 4. **리포트 삭제 계약** — SB는 `DELETE /api/reports?userId=`를 호출하지만 FA 라우트는 주석(`reports.py:223`, 원래도 파라미터 없는 전체 삭제 스텁). "사용자 단위 삭제"가 실제 요구인지, reportId 단위(`DELETE /api/reports/{reportId}`)로 갈지 미정.
 5. **소비처 불명 라우트 존치 여부** — FA: `/api/v1/meta/hazards`(SB MetaController와 중복), `/api/additional-data/*` 5개(SB는 `/api/reports/data`만 호출 — 프론트 직접 호출 여부 불명), `/modelops-proxy/*`(테스트 콘솔 전용), `/api/recommendation/*`(410 tombstone — 언제 제거?). MO: `/api/site-assessment/task-status·tasks·task`, `/api/batch-trigger/scheduled-jobs`(운영자 수동 조회용으로 추정). 호출 주체(프론트/운영 도구) 확인 전 삭제 금지.
