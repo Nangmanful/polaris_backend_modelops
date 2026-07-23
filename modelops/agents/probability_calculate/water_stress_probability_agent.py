@@ -311,36 +311,6 @@ class WaterStressProbabilityAgent(BaseProbabilityAgent):
 
         return results
 
-    def get_future_withdrawals_all_scenarios(
-        self, withdrawal_baseline: float, aqueduct_data: Dict[str, Any], target_years: List[int]
-    ) -> Dict[str, Dict[int, Dict[str, float]]]:
-        """
-        모든 SSP 시나리오에 대해 미래 용수이용량 계산
-
-        Args:
-                withdrawal_baseline: 기준 연도 용수이용량 (m³/year)
-                aqueduct_data: Aqueduct BWS 데이터
-                target_years: 계산할 연도 리스트
-
-        Returns:
-                시나리오별/연도별 미래 용수이용량
-                {
-                        'SSP1-2.6': {2026: {...}, 2027: {...}, ...},
-                        'SSP2-4.5': {...},
-                        'SSP3-7.0': {...},
-                        'SSP5-8.5': {...}
-                }
-        """
-        scenarios = ["SSP1-2.6", "SSP2-4.5", "SSP3-7.0", "SSP5-8.5"]
-        results = {}
-
-        for scenario in scenarios:
-            results[scenario] = self._calculate_future_withdrawals(
-                withdrawal_baseline, aqueduct_data, target_years, scenario
-            )
-
-        return results
-
     def _calculate_trwr_baseline(self, flow_data: list, baseline_years: list) -> float:
         """
         재생 가능 수자원 (TRWR) 기준값 계산

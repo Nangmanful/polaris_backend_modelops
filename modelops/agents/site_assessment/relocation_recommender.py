@@ -3,7 +3,7 @@
 ~1000개 후보 격자를 평가하여 최적 후보지 추천
 """
 
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional
 import logging
 from datetime import datetime
 
@@ -284,90 +284,4 @@ class RelocationRecommender:
 
         except Exception as e:
             logger.error(f"비교 분석 실패: {e}", exc_info=True)
-            raise
-
-    def compare_two_locations(
-        self,
-        location_a: Tuple[float, float],
-        location_b: Tuple[float, float],
-        building_info: Dict[str, Any],
-        asset_info: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
-        """
-        두 위치를 직접 비교
-
-        Args:
-            location_a: (latitude, longitude) 튜플
-            location_b: (latitude, longitude) 튜플
-            building_info: 건물 정보 dict
-            asset_info: 자산 정보 dict (선택)
-
-        Returns:
-            {
-                'location_a': {...},
-                'location_b': {...},
-                'comparison': {
-                    'better_location': 'A' or 'B',
-                    'aal_difference': float,
-                    'aal_reduction_percent': float
-                }
-            }
-        """
-        logger.info(f"두 위치 비교: A{location_a} vs B{location_b}")
-
-        try:
-            # Location A 계산
-            result_a = self.risk_calculator.calculate_site_risks(
-                latitude=location_a[0],
-                longitude=location_a[1],
-                building_info=building_info,
-                asset_info=asset_info,
-                site_id="location_a",
-            )
-
-            # Location B 계산
-            result_b = self.risk_calculator.calculate_site_risks(
-                latitude=location_b[0],
-                longitude=location_b[1],
-                building_info=building_info,
-                asset_info=asset_info,
-                site_id="location_b",
-            )
-
-            # AAL 비교
-            aal_a = result_a["summary"]["total_final_aal"]
-            aal_b = result_b["summary"]["total_final_aal"]
-            aal_diff = abs(aal_a - aal_b)
-
-            if aal_a < aal_b:
-                better_location = "A"
-                reduction_percent = ((aal_b - aal_a) / aal_b * 100) if aal_b > 0 else 0
-            else:
-                better_location = "B"
-                reduction_percent = ((aal_a - aal_b) / aal_a * 100) if aal_a > 0 else 0
-
-            return {
-                "location_a": {
-                    "latitude": location_a[0],
-                    "longitude": location_a[1],
-                    "total_aal": round(aal_a, 6),
-                    "average_integrated_risk": result_a["summary"]["average_integrated_risk"],
-                    "highest_risk": result_a["summary"]["highest_integrated_risk"],
-                },
-                "location_b": {
-                    "latitude": location_b[0],
-                    "longitude": location_b[1],
-                    "total_aal": round(aal_b, 6),
-                    "average_integrated_risk": result_b["summary"]["average_integrated_risk"],
-                    "highest_risk": result_b["summary"]["highest_integrated_risk"],
-                },
-                "comparison": {
-                    "better_location": better_location,
-                    "aal_difference": round(aal_diff, 6),
-                    "aal_reduction_percent": round(reduction_percent, 2),
-                },
-            }
-
-        except Exception as e:
-            logger.error(f"두 위치 비교 실패: {e}", exc_info=True)
             raise

@@ -117,12 +117,6 @@ class ExtremeHeatExposureAgent(BaseExposureAgent):
         else:
             return "low"
 
-    def _estimate_green_space_proximity(self, landcover_data: Dict) -> bool:
-        """Evaluate proximity to green spaces."""
-        land_use = landcover_data.get("landcover_type", "urban")
-        vegetation_ratio = landcover_data.get("vegetation_ratio", 0.0)
-        return vegetation_ratio > 0.3 or land_use in ["agricultural", "grassland", "forest"]
-
     def _estimate_building_orientation(self, lat: float) -> str:
         """Estimate building orientation based on latitude."""
         if lat > 37.5:

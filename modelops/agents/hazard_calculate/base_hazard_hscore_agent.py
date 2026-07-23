@@ -170,30 +170,6 @@ class BaseHazardHScoreAgent(ABC):
 
     # ==================== 유틸리티 메서드 ====================
 
-    def normalize_score(
-        self, value: float, min_val: float, max_val: float, clip: bool = True
-    ) -> float:
-        """
-        값을 0-1 범위로 정규화
-
-        Args:
-                value: 정규화할 값
-                min_val: 최소값
-                max_val: 최대값
-                clip: True이면 0-1 범위로 클리핑
-
-        Returns:
-                정규화된 값 (0.0 ~ 1.0)
-        """
-        if max_val == min_val:
-            return 0.5
-
-        normalized = (value - min_val) / (max_val - min_val)
-
-        if clip:
-            return max(0.0, min(1.0, normalized))
-        return normalized
-
     def get_value_with_fallback(self, data: Dict, keys: list, fallback: Any) -> Any:
         """
         딕셔너리에서 값을 찾되, 여러 키를 순차적으로 시도

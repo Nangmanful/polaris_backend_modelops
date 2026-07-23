@@ -163,11 +163,7 @@ def _process_hazard_task_worker(task: Dict[str, Any]) -> Dict[str, Any]:
                 )
 
             except Exception as e:
-                # 개별 리스크 실패는 로깅만 하고 계속 진행
-                # logger.error(
-                #     f"Risk {risk_type} failed for {scenario} {year} "
-                #     f"at ({lat}, {lon}): {e}"
-                # )
+                # 개별 리스크 실패는 무시하고 계속 진행
                 pass
 
         return {

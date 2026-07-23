@@ -368,49 +368,6 @@ class TyphoonProbabilityAgent(BaseProbabilityAgent):
 
         return exposure_array
 
-    def get_future_S_tc_all_scenarios(
-        self, target_years: List[int], scenario_temps: Dict[str, Dict[int, float]]
-    ) -> Dict[str, np.ndarray]:
-        """
-        모든 SSP 시나리오에 대해 미래 S_tc 계산
-
-        Args:
-                target_years: 계산할 연도 리스트
-                scenario_temps: 시나리오별 연도별 기온
-                        {
-                                'SSP126': {2026: 15.0, 2027: 15.1, ...},
-                                'SSP245': {...},
-                                'SSP370': {...},
-                                'SSP585': {...}
-                        }
-
-        Returns:
-                시나리오별 S_tc 배열
-                {
-                        'SSP126': np.array([...]),
-                        'SSP245': np.array([...]),
-                        'SSP370': np.array([...]),
-                        'SSP585': np.array([...])
-                }
-        """
-        if self.baseline_stats is None:
-            raise ValueError(
-                "Baseline이 초기화되지 않았습니다. " "먼저 initialize_baseline()을 호출하세요."
-            )
-
-        scenarios = ["SSP126", "SSP245", "SSP370", "SSP585"]
-        results = {}
-
-        for scenario in scenarios:
-            yearly_temps = scenario_temps.get(scenario, {})
-            results[scenario] = self._generate_future_S_tc(
-                target_years=target_years,
-                yearly_temps=yearly_temps,
-                seed=42,  # 동일 시드로 재현성 보장
-            )
-
-        return results
-
     def _calculate_bin_inst(
         self, track_point: Dict[str, Any], site_lon: float, site_lat: float
     ) -> int:

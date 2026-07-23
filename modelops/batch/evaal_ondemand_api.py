@@ -52,9 +52,6 @@ from ..agents.vulnerability_calculate.water_stress_vulnerability_agent import (
 # AAL Agent
 from ..agents.risk_assessment.aal_scaling_agent import AALScalingAgent
 
-# Site Assessment
-from ..agents.site_assessment.relocation_recommender import RelocationRecommender
-
 # Utils
 from ..database.connection import DatabaseConnection
 from ..utils.hazard_data_collector import HazardDataCollector
@@ -992,114 +989,6 @@ def calculate_evaal_ondemand(
             "error": str(e),
             "latitude": latitude,
             "longitude": longitude,
-            "scenario": scenario,
-            "target_year": target_year,
-        }
-
-
-# ========== 후보지 추천 (Relocation) ==========
-def recommend_locations_ondemand(
-    candidate_grids: List[Dict[str, float]],
-    building_info: Optional[Dict[str, Any]] = None,
-    asset_info: Optional[Dict[str, Any]] = None,
-    scenario: str = "SSP245",
-    target_year: int = 2040,
-    max_candidates: int = 3,
-) -> Dict[str, Any]:
-    """
-    사업장 이전 후보지 추천 (On-Demand)
-
-    Args:
-        candidate_grids: 후보 격자 리스트 [{'latitude': ..., 'longitude': ...}, ...]
-        building_info: 건물 정보 (None이면 기본값 사용)
-        asset_info: 자산 정보 (선택)
-        scenario: SSP 시나리오
-        target_year: 목표 연도
-        max_candidates: 추천 개수
-
-    Returns:
-        추천 결과 딕셔너리
-    """
-    try:
-        # 건물 정보가 없으면 기본값 사용
-        if not building_info:
-            building_info = _get_default_building_info()
-
-        recommender = RelocationRecommender(scenario=scenario, target_year=target_year)
-
-        result = recommender.recommend_locations(
-            candidate_grids=candidate_grids,
-            building_info=building_info,
-            asset_info=asset_info,
-            max_candidates=max_candidates,
-        )
-
-        return {
-            "status": "success",
-            "scenario": scenario,
-            "target_year": target_year,
-            "recommendation_result": result,
-        }
-
-    except Exception as e:
-        logger.error(f"Location recommendation failed: {e}", exc_info=True)
-        return {
-            "status": "error",
-            "error": str(e),
-            "scenario": scenario,
-            "target_year": target_year,
-        }
-
-
-def compare_current_and_candidates_ondemand(
-    current_site: Dict[str, float],  # {'latitude': ..., 'longitude': ...}
-    recommended_candidates_result: Dict[
-        str, Any
-    ],  # The 'recommendation_result' from recommend_locations_ondemand
-    building_info: Optional[Dict[str, Any]] = None,
-    asset_info: Optional[Dict[str, Any]] = None,
-    scenario: str = "SSP245",
-    target_year: int = 2040,
-) -> Dict[str, Any]:
-    """
-    현재 사업장과 추천 후보지들 간의 리스크를 비교 (On-Demand)
-
-    Args:
-        current_site: 현재 사업장 정보 {'latitude': ..., 'longitude': ...}
-        recommended_candidates_result: recommend_locations_ondemand의 'recommendation_result' 필드 값
-        building_info: 건물 정보 (None이면 기본값 사용)
-        asset_info: 자산 정보 (선택)
-        scenario: SSP 시나리오
-        target_year: 목표 연도
-
-    Returns:
-        비교 결과 딕셔너리
-    """
-    try:
-        if not building_info:
-            building_info = _get_default_building_info()
-
-        recommender = RelocationRecommender(scenario=scenario, target_year=target_year)
-
-        comparison_result = recommender.compare_current_and_candidates(
-            current_site=current_site,
-            candidate_result=recommended_candidates_result,
-            building_info=building_info,
-            asset_info=asset_info,
-        )
-
-        return {
-            "status": "success",
-            "scenario": scenario,
-            "target_year": target_year,
-            "comparison_result": comparison_result,
-        }
-
-    except Exception as e:
-        logger.error(f"Comparison between current site and candidates failed: {e}", exc_info=True)
-        return {
-            "status": "error",
-            "error": str(e),
             "scenario": scenario,
             "target_year": target_year,
         }

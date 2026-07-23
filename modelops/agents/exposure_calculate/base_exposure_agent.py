@@ -11,11 +11,6 @@
 from typing import Dict, Any
 import logging
 
-try:
-    from modelops.config import hazard_config as config
-except ImportError:
-    config = None
-
 logger = logging.getLogger(__name__)
 
 
@@ -50,46 +45,7 @@ class BaseExposureAgent:
         """
         raise NotImplementedError("Subclasses must implement calculate_exposure()")
 
-    def _get_config_or_default(self, config_key: str, default_value: Any) -> Any:
-        """
-        Get configuration value or return default.
-
-        Args:
-            config_key: Configuration key to lookup
-            default_value: Default value if config is not available
-
-        Returns:
-            Configuration value or default
-        """
-        if not config:
-            return default_value
-        return getattr(config, config_key, default_value)
-
     # ==================== 유틸리티 메서드 ====================
-
-    def normalize_score(
-        self, value: float, min_val: float, max_val: float, clip: bool = True
-    ) -> float:
-        """
-        값을 0-1 범위로 정규화
-
-        Args:
-            value: 정규화할 값
-            min_val: 최소값
-            max_val: 최대값
-            clip: True이면 0-1 범위로 클리핑
-
-        Returns:
-            정규화된 값 (0.0 ~ 1.0)
-        """
-        if max_val == min_val:
-            return 0.5
-
-        normalized = (value - min_val) / (max_val - min_val)
-
-        if clip:
-            return max(0.0, min(1.0, normalized))
-        return normalized
 
     def get_value_with_fallback(self, data: Dict, keys: list, fallback: Any) -> Any:
         """
@@ -151,62 +107,3 @@ class BaseExposureAgent:
             result["landcover_type"] = spatial_data.get("landcover_type")
 
         return result
-
-    def get_exposure_level(self, exposure_score_100: float) -> str:
-        """
-        Exposure 점수에 따른 노출 등급 반환
-
-        Args:
-            exposure_score_100: Exposure 점수 (0 ~ 100)
-
-        Returns:
-            노출 등급 문자열
-                - 'Very High': 80 이상
-                - 'High': 60 ~ 80
-                - 'Medium': 40 ~ 60
-                - 'Low': 20 ~ 40
-                - 'Very Low': 20 미만
-        """
-        if exposure_score_100 >= 80:
-            return "Very High"
-        elif exposure_score_100 >= 60:
-            return "High"
-        elif exposure_score_100 >= 40:
-            return "Medium"
-        elif exposure_score_100 >= 20:
-            return "Low"
-        else:
-            return "Very Low"
-
-    def classify_building_purpose(self, main_purpose: str) -> str:
-        """
-        건물 용도 분류
-
-        Args:
-            main_purpose: 건물 주용도 문자열
-
-        Returns:
-            분류된 용도 (residential, commercial, industrial, public, mixed)
-        """
-        if not main_purpose:
-            return "residential"
-
-        purpose_lower = main_purpose.lower()
-
-        if any(
-            kw in purpose_lower
-            for kw in ["주거", "아파트", "주택", "다세대", "연립", "residential"]
-        ):
-            return "residential"
-        elif any(
-            kw in purpose_lower for kw in ["상업", "사무", "오피스", "업무", "commercial", "office"]
-        ):
-            return "commercial"
-        elif any(
-            kw in purpose_lower for kw in ["공장", "산업", "제조", "창고", "industrial", "factory"]
-        ):
-            return "industrial"
-        elif any(kw in purpose_lower for kw in ["공공", "관공서", "교육", "학교", "public"]):
-            return "public"
-        else:
-            return "mixed"

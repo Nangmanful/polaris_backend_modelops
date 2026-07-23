@@ -76,8 +76,7 @@ class SiteRiskCalculator:
            - V 계산 (VulnerabilityAgent)
            - Score 계산 (H × E × V / 10000)
            - AAL 계산 (base_aal × F_vuln × (1 - insurance_rate))
-        4. DB 저장
-        5. 요약 통계 계산
+        4. 요약 통계 계산
 
         Args:
             latitude: 위도
@@ -212,10 +211,7 @@ class SiteRiskCalculator:
                     "final_aal": round(final_aal, 6),
                 }
 
-            # Step 4: DB 저장
-            # self._save_results(latitude, longitude, site_id, results)
-
-            # Step 5: 요약 통계
+            # Step 4: 요약 통계
             summary = self._calculate_summary(results)
 
             end_time = datetime.now()
@@ -326,55 +322,6 @@ class SiteRiskCalculator:
             return "Low"
         else:
             return "Very Low"
-
-    def _save_results(
-        self, latitude: float, longitude: float, site_id: Optional[str], results: Dict[str, Any]
-    ):
-        """계산 결과를 DB에 저장"""
-        try:
-            for risk_type in self.RISK_TYPES:
-                # exposure_results 저장
-                e_data = results["exposure"].get(risk_type, {})
-                DatabaseConnection.save_exposure_results(
-                    latitude=latitude,
-                    longitude=longitude,
-                    risk_type=risk_type,
-                    exposure_score=e_data.get("exposure_score", 0.0),
-                    proximity_factor=1.0,  # 기본값
-                    site_id=site_id,
-                )
-
-                # vulnerability_results 저장
-                v_data = results["vulnerability"].get(risk_type, {})
-                DatabaseConnection.save_vulnerability_results(
-                    latitude=latitude,
-                    longitude=longitude,
-                    risk_type=risk_type,
-                    vulnerability_score=v_data.get("vulnerability_score", 0.0),
-                    vulnerability_level=v_data.get("vulnerability_level", "medium"),
-                    factors=v_data.get("factors", {}),
-                    site_id=site_id,
-                )
-
-                # aal_scaled_results 저장
-                aal_data = results["aal_scaled"].get(risk_type, {})
-                DatabaseConnection.save_aal_scaled_results(
-                    latitude=latitude,
-                    longitude=longitude,
-                    risk_type=risk_type,
-                    base_aal=aal_data.get("base_aal", 0.0),
-                    vulnerability_scale=aal_data.get("vulnerability_scale", 1.0),
-                    final_aal=aal_data.get("final_aal", 0.0),
-                    insurance_rate=aal_data.get("insurance_rate", 0.0),
-                    expected_loss=None,  # asset_value 없으면 None
-                    site_id=site_id,
-                )
-
-            logger.debug(f"DB 저장 완료: ({latitude}, {longitude})")
-
-        except Exception as e:
-            logger.error(f"DB 저장 실패: {e}")
-            # DB 저장 실패해도 계산 결과는 반환
 
     def _calculate_summary(self, results: Dict[str, Any]) -> Dict[str, Any]:
         """요약 통계 계산"""
