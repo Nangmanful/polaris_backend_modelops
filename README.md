@@ -156,6 +156,15 @@ python scripts/run_step3_only.py [--log-file step3_only.log]
 > DB 접속 정보는 코드에 하드코딩하지 않고 `.env`/환경변수로만 주입합니다.
 > `DW_DB_PASSWORD` 가 비어 있으면 DB 연결 시 명확한 에러가 발생합니다.
 
+## 테스트
+
+`tests/unit/` 은 순수 계산 로직(KDE 확률·AAL 스케일링·H×E×V 통합 점수·격자 유틸) 단위 테스트로, DB·네트워크 없이 결정론적으로 실행됩니다.
+
+```bash
+python -m venv .venv && .venv/Scripts/pip install pytest pytest-cov "numpy<2" scipy pydantic pydantic-settings python-dotenv psycopg2-binary requests
+.venv/Scripts/python -m pytest tests/unit -v --no-cov
+```
+
 ## 환경변수
 
 `.env.example` 과 동일한 목록입니다.

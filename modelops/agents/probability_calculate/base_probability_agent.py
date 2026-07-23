@@ -307,8 +307,14 @@ class BaseProbabilityAgent(ABC):
                     bin_indices[idx] = i
                     break
             else:
-                # 마지막 bin (upper bound 없음)
-                bin_indices[idx] = len(self.bins) - 1
+                # 어느 bin에도 속하지 않는 값 처리
+                if value < self.bins[0][0]:
+                    # 첫 bin 하한 미만 → 가장 낮은 강도 bin
+                    # (기존에는 마지막 bin으로 분류되어 AAL이 과대평가되는 버그)
+                    bin_indices[idx] = 0
+                else:
+                    # 마지막 bin 상한 초과 (upper bound 없음)
+                    bin_indices[idx] = len(self.bins) - 1
 
         return bin_indices
 
@@ -369,8 +375,17 @@ class BaseProbabilityAgent(ABC):
 
             # 정규화 (합이 1이 되도록)
             total = sum(probabilities)
-            if total > 0:
-                probabilities = [p / total for p in probabilities]
+            if total <= 0:
+                # 퇴화 분포(예: 모든 샘플 동일 → 분산 0)에서 최신 scipy는 예외 없이
+                # 델타 형태 KDE를 반환하고, quad 적분이 스파이크를 놓쳐 모든 bin이 0이 된다.
+                # 확률 합 0은 유효한 분포가 아니므로 이산적 방식(count)으로 폴백한다.
+                self.logger.warning(
+                    "KDE bin 확률 합이 0입니다 (퇴화 분포 가능성). 이산적 방식(count)으로 전환"
+                )
+                self._probability_method = "count"
+                return self._calculate_bin_probabilities_count(intensity_values)
+
+            probabilities = [p / total for p in probabilities]
 
             self._probability_method = "kde"
             self.logger.info(f"KDE 방식으로 확률 계산 완료 (샘플 {sample_count}개)")
