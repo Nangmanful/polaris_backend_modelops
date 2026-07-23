@@ -169,37 +169,21 @@ class AALScalingAgent:
 
     def classify_aal_grades(
         self, scaled_aals: Dict[str, Dict[str, Any]]
-    ) -> Dict[str, Dict[str, Any]]:
+    ) -> Dict[str, str]:
         """
         모든 리스크에 대한 AAL 등급 일괄 분류
 
         Args:
-            scaled_aals: {risk_type: AAL 스케일링 결과}
+            scaled_aals: {risk_type: AAL 스케일링 결과 (final_aal 포함 dict)}
 
         Returns:
-            {
-                risk_type: {
-                    'base_aal': float,
-                    'final_aal': float,
-                    'grade': str,
-                    'grade_description': str,
-                    'expected_loss': int | None
-                }
-            }
+            {risk_type: 등급 문자열} — classify_aal_grade 반환값
+            ('-', '0~3%', '~6%', '~10%', '~16%', '~30%', '30%~')
         """
         results = {}
 
         for risk_type, aal_result in scaled_aals.items():
             final_aal = aal_result.get("final_aal", 0.0)
-            # base_aal = aal_result.get('base_aal', 0.0)
-
-            # 등급 분류
-            grade_info = self.classify_aal_grade(final_aal)
-
-            # base_aal 및 예상 손실액 추가
-            # grade_info['base_aal'] = base_aal
-            # grade_info['expected_loss'] = aal_result.get('expected_loss')
-
-            results[risk_type] = grade_info
+            results[risk_type] = self.classify_aal_grade(final_aal)
 
         return results

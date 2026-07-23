@@ -14,7 +14,7 @@
                 * _db_available 플래그 추가
                 * DB fetch 메서드 추가 (기후지표, 수자원, 해양, 태풍 데이터)
         - 2025-12-11: v1.2 - KDE 방식 개선 및 메타데이터 추가
-                * threshold 3 → 30으로 상향 조정
+                * KDE 최소 샘플 threshold 도입 (현재 MIN_SAMPLES_FOR_KDE = 3)
                 * _probability_method 플래그 추가 (사용한 계산 방식 추적)
                 * calculation_details에 실제 사용한 방식(kde/count) 표시
                 * bin_details에 각 bin의 실제 샘플 수 추가 (디버깅용)
