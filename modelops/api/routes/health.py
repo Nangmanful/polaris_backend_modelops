@@ -1,21 +1,26 @@
 """
 Health Check API
 서버 및 데이터베이스 상태 확인
+
+경로·응답 형식은 공통 규약(docs/CONVENTIONS.md §2)을 따른다:
+GET /api/health → { "status": "ok", "service": "modelops", "version": "<버전>" }
 """
 
 from fastapi import APIRouter, HTTPException
 from ..schemas.risk_models import HealthResponse
 from ...database.connection import DatabaseConnection
 import logging
-from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(tags=["health"])
+router = APIRouter(prefix="/api/health", tags=["health"])
+
+SERVICE_NAME = "modelops"
+SERVICE_VERSION = "2.0.0"
 
 
 @router.get(
-    "/health",
+    "",
     response_model=HealthResponse,
     responses={
         200: {"description": "서버 정상 작동 중"},
@@ -23,13 +28,11 @@ router = APIRouter(tags=["health"])
 )
 async def health_check():
     """서버 상태 확인"""
-    return HealthResponse(
-        status="healthy", service="ModelOps Risk Assessment API", timestamp=datetime.now()
-    )
+    return HealthResponse(status="ok", service=SERVICE_NAME, version=SERVICE_VERSION)
 
 
 @router.get(
-    "/health/db",
+    "/db",
     response_model=HealthResponse,
     responses={
         200: {"description": "데이터베이스 연결 정상"},
@@ -59,10 +62,10 @@ async def database_health():
 
             if result:
                 return HealthResponse(
-                    status="healthy",
-                    service="ModelOps Risk Assessment API",
+                    status="ok",
+                    service=SERVICE_NAME,
+                    version=SERVICE_VERSION,
                     database="connected",
-                    timestamp=datetime.now(),
                 )
             else:
                 raise Exception("Database query returned no result")

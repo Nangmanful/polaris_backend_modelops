@@ -138,7 +138,7 @@ python ETL/01_run_all_etl.py
 # 4. FastAPI 서버 실행 (포트 8001)
 uvicorn main:app --host 0.0.0.0 --port 8001
 # API 문서: http://localhost:8001/docs
-# Health Check: http://localhost:8001/health
+# Health Check: http://localhost:8001/api/health
 ```
 
 실행 스크립트 (레포 루트에서):
@@ -182,7 +182,7 @@ GitHub Actions 기반 CI/CD (`.github/workflows/`):
 1. **CI** (`ci_modelops.yaml`): develop push/PR 시 black·ruff·mypy·pytest 검사 →
    main push 시 Docker 이미지 빌드 후 **GCP Artifact Registry** 푸시
 2. **CD** (`cd_modelops.yaml`): CI 성공 시 SSH로 운영 서버 접속 →
-   최신 이미지 pull → 기존 컨테이너 교체(Recreate) → `/health` 헬스체크
+   최신 이미지 pull → 기존 컨테이너 교체(Recreate) → `/api/health` 헬스체크
 3. 환경변수는 GitHub Secrets → 컨테이너 `-e` 주입 (비밀번호는 코드·이미지에 미포함)
 
 수동 배포·모니터링 스크립트는 `scripts/` 에 있습니다 (레포 루트에서 실행):

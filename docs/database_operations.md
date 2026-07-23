@@ -738,7 +738,7 @@ DatabaseConnection.fail_batch_job(
 
 ---
 
-### GET `/health/db`
+### GET `/api/health/db`
 
 **파일**: [modelops/api/routes/health.py:27-55](../modelops/api/routes/health.py#L27-L55)
 

@@ -80,8 +80,8 @@ modelops/api/
 - `GET /api/v1/risk-assessment/status/{request_id}`: 진행상황 조회
 - `WS /api/v1/risk-assessment/ws/{request_id}`: 실시간 진행상황 (WebSocket)
 - `GET /api/v1/risk-assessment/results/{lat}/{lon}`: 저장된 결과 조회
-- `GET /health`: 서버 상태
-- `GET /health/db`: 데이터베이스 연결 확인
+- `GET /api/health`: 서버 상태
+- `GET /api/health/db`: 데이터베이스 연결 확인
 
 ### 2.4 실행 스크립트
 ```
@@ -126,7 +126,7 @@ python start_api_server.py --help
 
 **서버 접속:**
 - API 문서: http://localhost:8001/docs
-- Health Check: http://localhost:8001/health
+- Health Check: http://localhost:8001/api/health
 - Root: http://localhost:8001/
 
 ### 3.3 API 사용 예시
@@ -397,10 +397,10 @@ CREATE TABLE aal_scaled_results (
 python start_api_server.py --reload
 
 # 2. Health Check
-curl http://localhost:8001/health
+curl http://localhost:8001/api/health
 
 # 3. DB Health Check
-curl http://localhost:8001/health/db
+curl http://localhost:8001/api/health/db
 
 # 4. 계산 요청
 curl -X POST http://localhost:8001/api/v1/risk-assessment/calculate \

@@ -156,8 +156,8 @@ app = FastAPI(
     - GET `/api/batch-trigger/scheduled-jobs`: 스케줄된 작업 조회
 
     ### Health Check
-    - GET `/health`: 서버 상태 확인
-    - GET `/health/db`: 데이터베이스 연결 확인
+    - GET `/api/health`: 서버 상태 확인
+    - GET `/api/health/db`: 데이터베이스 연결 확인
     """,
     version="2.0.0",
     docs_url="/docs",
@@ -188,7 +188,7 @@ async def startup_event():
     logger.info("ModelOps Site Assessment API 시작")
     logger.info("=" * 60)
     logger.info("API 문서: http://localhost:8001/docs")
-    logger.info("Health Check: http://localhost:8001/health")
+    logger.info("Health Check: http://localhost:8001/api/health")
     logger.info("=" * 60)
 
     # BackgroundScheduler 시작
@@ -254,7 +254,7 @@ async def root():
         "version": "2.0.0",
         "description": "사업장 리스크 평가 및 이전 후보지 추천 API",
         "docs": "/docs",
-        "health": "/health",
+        "health": "/api/health",
         "features": [
             "사업장 리스크 계산 (건물 정보 기반 H × E × V)",
             "이전 후보지 추천 (~1000개 격자 평가)",
@@ -284,7 +284,7 @@ async def root():
                 "run_regional_locations": "POST /api/batch-trigger/run-regional-locations-batch",
                 "scheduled_jobs": "GET /api/batch-trigger/scheduled-jobs",
             },
-            "health": {"check": "GET /health", "database": "GET /health/db"},
+            "health": {"check": "GET /api/health", "database": "GET /api/health/db"},
         },
     }
 

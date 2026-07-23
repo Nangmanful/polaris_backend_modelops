@@ -183,7 +183,7 @@ check_container_status() {
 health_check() {
     log_step "헬스 체크"
 
-    local health_url="http://localhost:${PORT}/health"
+    local health_url="http://localhost:${PORT}/api/health"
     local max_attempts=10
     local attempt=1
 
@@ -225,7 +225,7 @@ print_deployment_info() {
     echo "  http://localhost:${PORT}"
     echo ""
     echo "헬스 체크:"
-    echo "  http://localhost:${PORT}/health"
+    echo "  http://localhost:${PORT}/api/health"
     echo ""
     echo "API 문서:"
     echo "  http://localhost:${PORT}/docs"

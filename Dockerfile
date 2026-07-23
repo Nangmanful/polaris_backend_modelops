@@ -94,7 +94,7 @@ ENV PYTHONUNBUFFERED=1
 
 # Health check for FastAPI
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-    CMD python3.11 -c "import urllib.request; urllib.request.urlopen('http://localhost:8001/health', timeout=5)" || exit 1
+    CMD python3.11 -c "import urllib.request; urllib.request.urlopen('http://localhost:8001/api/health', timeout=5)" || exit 1
 
 # Run the FastAPI application with uvicorn
 CMD ["python3.11", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001", "--log-level", "info"]

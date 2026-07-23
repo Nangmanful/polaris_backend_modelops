@@ -141,18 +141,18 @@ class RiskResultsResponse(BaseModel):
 
 
 class HealthResponse(BaseModel):
-    """Health Check 응답"""
+    """Health Check 응답 (공통 규약 CONVENTIONS §2: status·service·version)"""
 
-    status: str = Field(..., description="서버 상태")
-    service: Optional[str] = Field(None, description="서비스 이름")
-    database: Optional[str] = Field(None, description="데이터베이스 상태")
-    timestamp: datetime = Field(default_factory=datetime.now, description="응답 시각")
+    status: str = Field(..., description="서버 상태 (ok)")
+    service: str = Field(..., description="서비스 이름 (modelops)")
+    version: str = Field(..., description="서비스 버전")
+    database: Optional[str] = Field(None, description="데이터베이스 상태 (/api/health/db 전용)")
 
     class Config:
         json_schema_extra = {
             "example": {
-                "status": "healthy",
-                "service": "ModelOps Risk Assessment API",
-                "timestamp": "2025-12-01T10:30:00",
+                "status": "ok",
+                "service": "modelops",
+                "version": "2.0.0",
             }
         }

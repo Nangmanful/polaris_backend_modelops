@@ -100,7 +100,7 @@ Mock API 서버 시작 (DB 연결 없이 동작)
 ✅ Mock DatabaseConnection 주입 완료
 ================================================================================
 API 문서: http://localhost:8001/docs
-Health Check: http://localhost:8001/health
+Health Check: http://localhost:8001/api/health
 ================================================================================
 서버를 종료하려면 Ctrl+C를 누르세요
 ================================================================================
@@ -122,7 +122,7 @@ python test_api_with_mock.py --test
 
 #### TEST 1: Health Check API
 ```http
-GET http://localhost:8001/health
+GET http://localhost:8001/api/health
 ```
 
 **목적**: 서버가 정상 동작하는지 확인
@@ -149,7 +149,7 @@ GET http://localhost:8001/
   "version": "1.0.0",
   "description": "E, V, AAL 계산 API with Real-time Progress",
   "docs": "/docs",
-  "health": "/health",
+  "health": "/api/health",
   "endpoints": {
     "calculate": "POST /api/v1/risk-assessment/calculate",
     "status": "GET /api/v1/risk-assessment/status/{request_id}",

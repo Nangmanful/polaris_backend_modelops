@@ -107,7 +107,7 @@ jobs:
             # Health check - FastAPI health 엔드포인트 확인
             echo "5. Health check 중..."
             for i in {1..30}; do
-              if docker exec ${CONTAINER_NAME} sh -c "curl -f -s http://localhost:8001/health > /dev/null 2>&1 || wget --quiet --tries=1 --spider http://localhost:8001/health 2>/dev/null" 2>/dev/null; then
+              if docker exec ${CONTAINER_NAME} sh -c "curl -f -s http://localhost:8001/api/health > /dev/null 2>&1 || wget --quiet --tries=1 --spider http://localhost:8001/api/health 2>/dev/null" 2>/dev/null; then
                 echo "   ✓ ModelOps API 정상 동작 확인 (${i}초 경과)"
                 break
               fi
@@ -147,7 +147,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Service:** ModelOps Risk Assessment API (FastAPI)" >> $GITHUB_STEP_SUMMARY
           echo "**Port:** 8001" >> $GITHUB_STEP_SUMMARY
-          echo "**Health Check:** http://<server>:8001/health" >> $GITHUB_STEP_SUMMARY
+          echo "**Health Check:** http://<server>:8001/api/health" >> $GITHUB_STEP_SUMMARY
           echo "**API Docs:** http://<server>:8001/docs" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**배포 전략:** Recreate 방식" >> $GITHUB_STEP_SUMMARY
