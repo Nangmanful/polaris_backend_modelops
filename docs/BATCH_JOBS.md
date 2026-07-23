@@ -31,8 +31,8 @@
 
 | 배치 작업명 | 실행 주기 | 실행 시간 | 담당 서비스 | 설명 |
 |------------|----------|----------|------------|------|
-| **Probability 계산** | 매월 1일 | 새벽 2시 (02:00 KST) | ModelOps | 451,351개 그리드 × 9개 재해 유형의 확률 계산 (약 12-15시간 소요) |
-| **Hazard Score 계산** | 매월 1일 | 새벽 4시 (04:00 KST) | ModelOps | Probability 계산 완료 후 자동 실행되는 위험도 점수 계산 |
+| **Probability 계산** | 매년 1월 1일 | 새벽 2시 (02:00 KST) | ModelOps | 451,351개 그리드 × 9개 재해 유형의 확률 계산 (약 12-15시간 소요) |
+| **Hazard Score 계산** | 매년 1월 1일 | 새벽 4시 (04:00 KST) | ModelOps | Probability 계산 완료 후 자동 실행되는 위험도 점수 계산 |
 | **재난안전데이터 ETL** | 매일 | 오전 9시 (09:00 KST) | ModelOps | 긴급재난문자 API 수집 및 DB 적재 (9종 재난 유형, 최근 5년 데이터) |
 | **ESG Trends Agent** | 주 2회 | 월요일, 목요일 09:00 KST | ModelOps | 기후 관련 뉴스 수집 및 GPT-4o-mini 분석 후 Slack 알림 발송 |
 | **사업장 리스크 계산** | On-Demand | API 요청 시 | ModelOps | N개 사업장 × 4개 시나리오 × 80개 연도 × 9개 리스크 타입의 E, V, AAL 계산 (병렬 처리, max_workers=8) |
@@ -47,7 +47,7 @@
 ### 기본 정보
 
 - **배치 ID**: `probability_batch`
-- **실행 주기**: 매월 1일 새벽 2시
+- **실행 주기**: 매년 1월 1일 새벽 2시
 - **담당 서비스**: ModelOps
 - **소요 시간**: 약 12-15시간
 
@@ -90,7 +90,7 @@ BATCH_SIZE=1000
 ### 기본 정보
 
 - **배치 ID**: `hazard_batch`
-- **실행 주기**: 매월 1일 새벽 4시
+- **실행 주기**: 매년 1월 1일 새벽 4시
 - **담당 서비스**: ModelOps
 - **선행 조건**: Probability 계산 완료 후 실행
 
@@ -535,9 +535,9 @@ psql -h localhost -p 5433 -U skala_dw_user -d skala_datawarehouse
 
 ## 관련 문서
 
-- [README.md](README.md) - 프로젝트 전체 개요
+- [README.md](../README.md) - 프로젝트 전체 개요
 - [BATCH_SCHEDULE_GUIDE.md](BATCH_SCHEDULE_GUIDE.md) - 배치 스케줄 상세 가이드
-- [docs/API_TEST_GUIDE.md](docs/API_TEST_GUIDE.md) - API 테스트 가이드
+- [API_TEST_GUIDE.md](API_TEST_GUIDE.md) - API 테스트 가이드
 
 ---
 
