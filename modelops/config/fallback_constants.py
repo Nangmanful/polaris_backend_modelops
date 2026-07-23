@@ -214,6 +214,49 @@ DATA_SOURCES = {
 }
 
 
+# =============================================================================
+# 레거시 API 기반 fetcher 전용 Fallback (구 modelops/common/fallback_constants.py)
+# =============================================================================
+# modelops/utils/building_api_fetcher.py(공공 API 기반)가 사용하는 스키마.
+# 위 DB 기반 Fallback과 키 구조가 달라(중첩 dict 등) 별도 상수로 유지한다.
+# 값 출처: 통계청 건축물 총조사 등 (구 common 파일 주석 그대로 보존)
+
+BUILDING_FALLBACK_API = {
+    "structure": "철근콘크리트구조",  # 통계청 2020년 건축물 총조사
+    "floors": {"ground": 5, "underground": 1},  # 평균 층수
+    "height": 15.0,  # 평균 높이
+    "seismic": {"applied": "N", "ability": "내진설계 미적용"},  # 1988년 이전 건축물 다수
+    "age": {"years": 30, "approval_date": "19950101"},  # 평균 건축 연한
+    "main_purpose": "주거용",  # 가장 흔한 용도
+    "total_area": 1000.0,  # 평균 연면적
+    "arch_area": 200.0,  # 평균 건축면적
+    "energy_grade": "4등급",  # 평균 에너지 효율 등급
+    "green_grade": "일반",  # 평균 친환경 건축물 등급
+    "total_parking": 10,  # 평균 주차 대수
+    "household_count": 20,  # 공동주택 평균 세대수
+    "integrated_building_grade": "일반",
+    "energy_rating": "N/A",
+    "epi_score": "N/A",
+    "ride_use_elevator_count": 1,
+    "etc_structure": "N/A",
+    "main_purpose_cd": "20000",  # 주거용 코드 (예시)
+}
+
+RIVER_FALLBACK_API = {
+    "distance_m": 5000,  # 평균 하천 거리 (5km)
+    "river_name": "미상",
+    "stream_order": 3,  # 평균 하천 차수
+}
+
+DISASTER_FALLBACK_API = {
+    "intensity": "보통",
+    "damage_scale": "소규모",
+    "frequency": "낮음",
+    "affected_area_km2": 0.1,
+    "economic_loss_million_krw": 10,
+}
+
+
 if __name__ == "__main__":
     """테스트 코드"""
     print("=" * 80)

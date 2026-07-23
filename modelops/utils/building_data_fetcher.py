@@ -16,11 +16,11 @@ import logging
 import json
 from datetime import datetime  # 추가됨
 
-# 통계 기반 Fallback 상수 import
-from ..common.fallback_constants import (
-    BUILDING_FALLBACK,
-    RIVER_FALLBACK,
-    DISASTER_FALLBACK,
+# 통계 기반 Fallback 상수 import (API 기반 fetcher 전용 스키마)
+from ..config.fallback_constants import (
+    BUILDING_FALLBACK_API as BUILDING_FALLBACK,
+    RIVER_FALLBACK_API as RIVER_FALLBACK,
+    DISASTER_FALLBACK_API as DISASTER_FALLBACK,
 )
 
 # 환경변수 로드
