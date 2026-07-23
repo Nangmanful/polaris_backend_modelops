@@ -5,7 +5,7 @@ SK 사업장 9개만 location_grid에 등록하고 기후 데이터 적재
 (울산 격자 제외, SK 사업장만 빠르게 처리)
 
 사용법:
-    DW_DB_HOST=localhost DW_DB_PORT=5555 DW_DB_NAME=datawarehouse DW_DB_USER=skala DW_DB_PASSWORD=skala1234 \
+    DW_DB_HOST=localhost DW_DB_PORT=5555 DW_DB_NAME=datawarehouse DW_DB_USER=skala DW_DB_PASSWORD=<비밀번호> \
     VWORLD_API_KEY=xxx python 02.1_load_sk_sites_climate.py
 
 최종 수정일: 2025-12-14

@@ -79,6 +79,17 @@ def setup_logging(name: str) -> logging.Logger:
 # =============================================================================
 
 
+def require_env(name: str) -> str:
+    """필수 환경변수 조회 — 없으면 즉시 실패 (비밀번호류는 코드에 기본값을 두지 않는다)."""
+    value = os.getenv(name)
+    if not value:
+        raise RuntimeError(
+            f"필수 환경변수 {name}이(가) 설정되지 않았습니다. "
+            f".env 또는 셸 환경에 {name}을(를) 지정한 뒤 다시 실행하세요."
+        )
+    return value
+
+
 def get_db_connection() -> Connection:
     """
     Datawarehouse 데이터베이스 연결
@@ -94,7 +105,7 @@ def get_db_connection() -> Connection:
         port=os.getenv("DW_DB_PORT", "5555"),
         dbname=os.getenv("DW_DB_NAME", "datawarehouse"),
         user=os.getenv("DW_DB_USER", "skala"),
-        password=os.getenv("DW_DB_PASSWORD", "skala1234"),
+        password=require_env("DW_DB_PASSWORD"),
     )
 
 

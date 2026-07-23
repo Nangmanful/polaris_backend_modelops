@@ -19,7 +19,7 @@ import shutil
 from pathlib import Path
 from tqdm import tqdm
 
-from utils import setup_logging, get_db_connection, get_data_dir, get_row_count
+from utils import setup_logging, get_db_connection, get_data_dir, get_row_count, require_env
 
 # SAMPLE_LIMIT: TIF 파일 개수 제한 (테스트용)
 SAMPLE_LIMIT = int(os.environ.get("SAMPLE_LIMIT", 0))  # 0 = 전체
@@ -79,7 +79,7 @@ def load_tif_to_postgres(
         db_port = os.getenv("DW_DB_PORT", "5555")
         db_name = os.getenv("DW_DB_NAME", "datawarehouse")
         db_user = os.getenv("DW_DB_USER", "skala")
-        db_password = os.getenv("DW_DB_PASSWORD", "skala1234")
+        db_password = require_env("DW_DB_PASSWORD")
 
         # SRID 자동 감지
         if srid is None:
@@ -208,7 +208,7 @@ def load_landcover() -> None:
     db_port = os.getenv("DW_DB_PORT", "5555")
     db_name = os.getenv("DW_DB_NAME", "datawarehouse")
     db_user = os.getenv("DW_DB_USER", "skala")
-    db_password = os.getenv("DW_DB_PASSWORD", "skala1234")
+    db_password = require_env("DW_DB_PASSWORD")
 
     drop_env = os.environ.copy()
     drop_env["PGPASSWORD"] = db_password

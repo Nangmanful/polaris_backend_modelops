@@ -2,7 +2,7 @@
 SK 사업장 9개에 대해서만 H, P(H), E, V, AAL 계산
 
 사용법:
-    DW_DB_HOST=localhost DW_DB_PORT=5555 DW_DB_NAME=datawarehouse DW_DB_USER=skala DW_DB_PASSWORD=skala1234 \
+    DW_DB_HOST=localhost DW_DB_PORT=5555 DW_DB_NAME=datawarehouse DW_DB_USER=skala DW_DB_PASSWORD=<비밀번호> \
     PYTHONPATH=. python3 -m modelops.batch.run_sk_sites_only
 """
 

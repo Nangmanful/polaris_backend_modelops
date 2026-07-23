@@ -41,12 +41,18 @@ logger = logging.getLogger("add_4sgg_climate")
 
 
 def get_db_connection():
+    password = os.environ.get("DW_DB_PASSWORD")
+    if not password:
+        raise RuntimeError(
+            "필수 환경변수 DW_DB_PASSWORD가 설정되지 않았습니다. "
+            ".env 또는 셸 환경에 지정한 뒤 다시 실행하세요."
+        )
     return psycopg2.connect(
         host=os.environ.get("DW_DB_HOST", "localhost"),
         port=int(os.environ.get("DW_DB_PORT", 5555)),
         database=os.environ.get("DW_DB_NAME", "datawarehouse"),
         user=os.environ.get("DW_DB_USER", "skala"),
-        password=os.environ.get("DW_DB_PASSWORD", "skala1234"),
+        password=password,
     )
 
 
