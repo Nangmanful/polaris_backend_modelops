@@ -3,30 +3,35 @@ STEP 3만 실행: E, V, AAL 계산
 (H, PH, 건물 데이터는 이미 DB에 적재되어 있음)
 """
 
-import os
+import argparse
 import logging
-from datetime import datetime
-
-# DB 설정 (데이터웨어하우스는 포트 5556)
-os.environ['DATABASE_PORT'] = os.getenv('DATABASE_PORT', '5556')
-os.environ['DATABASE_NAME'] = os.getenv('DATABASE_NAME', 'datawarehouse')
-os.environ['DATABASE_USER'] = os.getenv('DATABASE_USER', 'skala')
-os.environ['DATABASE_PASSWORD'] = os.getenv('DATABASE_PASSWORD', 'skala_test_1234')
-
-os.environ['DW_HOST'] = os.getenv('DW_HOST', 'localhost')
-os.environ['DW_PORT'] = os.getenv('DW_PORT', '5556')
-os.environ['DW_NAME'] = os.getenv('DW_NAME', 'datawarehouse')
-os.environ['DW_USER'] = os.getenv('DW_USER', 'skala')
-os.environ['DW_PASSWORD'] = os.getenv('DW_PASSWORD', 'skala_test_1234')
-
-from modelops.batch.evaal_ondemand_api import calculate_evaal_ondemand
 import sys
+from datetime import datetime
+from pathlib import Path
+
+# 레포 루트를 import 경로에 추가
+REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO_ROOT))
+
+from modelops.batch.evaal_ondemand_api import calculate_evaal_ondemand  # noqa: E402
+
+# CLI 인자: DB 접속 정보는 환경변수(.env)로, 로그 파일 경로만 인자로 받는다
+parser = argparse.ArgumentParser(
+    description="STEP 3만 실행: E, V, AAL 계산. "
+    "DB 접속 정보는 .env 또는 DATABASE_* 환경변수로 설정한다."
+)
+parser.add_argument(
+    "--log-file",
+    default="step3_only.log",
+    help="로그 파일 경로 (기본값: ./step3_only.log)",
+)
+args = parser.parse_args()
 
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('/Users/odong-i/Desktop/SKALA/FinalProject/DB_ALL/modelops/step3_only.log'),
+        logging.FileHandler(args.log_file),
         logging.StreamHandler()
     ]
 )

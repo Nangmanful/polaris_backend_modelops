@@ -6,6 +6,18 @@ from dotenv import load_dotenv
 # 로거 설정
 logger = logging.getLogger(__name__)
 
+
+def _build_db_url() -> str:
+    """settings 기반 PostgreSQL 접속 URL 생성 (자격증명 하드코딩 금지)."""
+    from modelops.config.settings import settings, _require_database_password
+
+    password = _require_database_password(settings.database_password)
+    return (
+        f"postgresql://{settings.database_user}:{password}"
+        f"@{settings.database_host}:{settings.database_port}/{settings.database_name}"
+    )
+
+
 # 데이터 로더 및 페처 임포트
 try:
     from modelops.data_loaders.building_data_fetcher import BuildingDataFetcher
@@ -76,7 +88,7 @@ class HazardDataCollector:
         # DatabaseManager 초기화 (DB 캐시 조회용)
         try:
             from modelops.utils.database import DatabaseManager
-            db_url = f"postgresql://{os.getenv('DATABASE_USER', 'skala')}:{os.getenv('DATABASE_PASSWORD', 'skala_test_1234')}@localhost:{os.getenv('DATABASE_PORT', '5556')}/{os.getenv('DATABASE_NAME', 'datawarehouse')}"
+            db_url = _build_db_url()
             self.db_manager = DatabaseManager(database_url=db_url)
             logger.info("DatabaseManager 초기화 성공")
         except Exception as e:
@@ -86,7 +98,7 @@ class HazardDataCollector:
         # BuildingDataLoader 초기화 (DB 캐시 우선 사용)
         try:
             if BUILDING_LOADER_AVAILABLE and BuildingDataLoader:
-                db_url = f"postgresql://{os.getenv('DATABASE_USER', 'skala')}:{os.getenv('DATABASE_PASSWORD', 'skala_test_1234')}@localhost:{os.getenv('DATABASE_PORT', '5556')}/{os.getenv('DATABASE_NAME', 'datawarehouse')}"
+                db_url = _build_db_url()
                 self.building_loader = BuildingDataLoader(db_url=db_url)
                 logger.info("BuildingDataLoader 초기화 성공 (DB 캐시 사용)")
             else:

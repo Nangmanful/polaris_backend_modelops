@@ -7,7 +7,7 @@ import uuid
 import json
 import logging
 from datetime import datetime
-from ..config.settings import settings
+from ..config.settings import settings, _require_database_password
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ class DatabaseConnection:
                         port=settings.database_port,
                         dbname=settings.database_name,
                         user=settings.database_user,
-                        password=settings.database_password
+                        password=_require_database_password(settings.database_password)
                     )
 
                     # Connection Pool 연결 검증 (초기화 후 바로 연결 테스트)
@@ -64,7 +64,7 @@ class DatabaseConnection:
             f"port={settings.database_port} "
             f"dbname={settings.database_name} "
             f"user={settings.database_user} "
-            f"password={settings.database_password}"
+            f"password={_require_database_password(settings.database_password)}"
         )
 
     @classmethod

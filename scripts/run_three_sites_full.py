@@ -8,44 +8,42 @@
 - 판교 캠퍼스
 """
 
-import os
+import argparse
 import logging
-from datetime import datetime
-
-# DB 설정 (데이터웨어하우스는 포트 5556)
-os.environ['DATABASE_PORT'] = os.getenv('DATABASE_PORT', '5556')
-os.environ['DATABASE_NAME'] = os.getenv('DATABASE_NAME', 'datawarehouse')
-os.environ['DATABASE_USER'] = os.getenv('DATABASE_USER', 'skala')
-os.environ['DATABASE_PASSWORD'] = os.getenv('DATABASE_PASSWORD', 'skala_test_1234')
-
-# 건물 데이터 API 키 설정 (.env에서 로드)
-# .env 파일에 다음 변수들이 필요:
-# VWORLD_API_KEY=your_key
-# PUBLICDATA_API_KEY=your_key
-os.environ['DW_HOST'] = os.getenv('DW_HOST', 'localhost')
-os.environ['DW_PORT'] = os.getenv('DW_PORT', '5556')
-os.environ['DW_NAME'] = os.getenv('DW_NAME', 'datawarehouse')
-os.environ['DW_USER'] = os.getenv('DW_USER', 'skala')
-os.environ['DW_PASSWORD'] = os.getenv('DW_PASSWORD', 'skala_test_1234')
-
-from modelops.batch.hazard_timeseries_batch import run_hazard_batch
-from modelops.batch.probability_timeseries_batch import run_probability_batch
-from modelops.batch.evaal_ondemand_api import calculate_evaal_ondemand
-import asyncio
 import sys
+from datetime import datetime
+from pathlib import Path
 
-# etl 폴더를 sys.path에 추가
-sys.path.insert(0, '/Users/odong-i/Desktop/SKALA/FinalProject/DB_ALL/modelops/etl')
-sys.path.insert(0, '/Users/odong-i/Desktop/SKALA/FinalProject/DB_ALL/modelops')
+# 레포 루트와 ETL 폴더를 import 경로에 추가
+REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO_ROOT))
+sys.path.insert(0, str(REPO_ROOT / "ETL"))
+
+from modelops.batch.hazard_timeseries_batch import run_hazard_batch  # noqa: E402
+from modelops.batch.probability_timeseries_batch import run_probability_batch  # noqa: E402
+from modelops.batch.evaal_ondemand_api import calculate_evaal_ondemand  # noqa: E402
+from modelops.config.settings import settings, _require_database_password  # noqa: E402
 
 # BuildingDataLoader import
-from building_characteristics_loader import BuildingDataLoader
+from building_characteristics_loader import BuildingDataLoader  # noqa: E402
+
+# CLI 인자: DB 접속 정보는 환경변수(.env)로, 로그 파일 경로만 인자로 받는다
+parser = argparse.ArgumentParser(
+    description="3개 SK 사업장 완전 계산 (H/PH → 건물 데이터 → E/V/AAL). "
+    "DB 접속 정보는 .env 또는 DATABASE_* 환경변수로 설정한다."
+)
+parser.add_argument(
+    "--log-file",
+    default="three_sites_full.log",
+    help="로그 파일 경로 (기본값: ./three_sites_full.log)",
+)
+args = parser.parse_args()
 
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('/Users/odong-i/Desktop/SKALA/FinalProject/DB_ALL/modelops/three_sites_full.log'),
+        logging.FileHandler(args.log_file),
         logging.StreamHandler()
     ]
 )
@@ -177,8 +175,12 @@ def main():
     try:
         building_start = datetime.now()
 
-        # BuildingDataLoader 초기화
-        db_url = f"postgresql://{os.environ['DATABASE_USER']}:{os.environ['DATABASE_PASSWORD']}@localhost:{os.environ['DATABASE_PORT']}/{os.environ['DATABASE_NAME']}"
+        # BuildingDataLoader 초기화 (접속 정보는 settings/.env에서)
+        db_url = (
+            f"postgresql://{settings.database_user}:"
+            f"{_require_database_password(settings.database_password)}"
+            f"@{settings.database_host}:{settings.database_port}/{settings.database_name}"
+        )
         loader = BuildingDataLoader(db_url=db_url)
 
         # 3개 사업장에 대해 건물 데이터 적재
