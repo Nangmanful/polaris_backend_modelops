@@ -72,7 +72,7 @@ import os
 
 # BuildingDataFetcher 임포트
 try:
-    from modelops.utils.building_data_fetcher import BuildingDataFetcher
+    from modelops.utils.building_api_fetcher import BuildingDataFetcher
 except ImportError:
     try:
         # 직접 실행 시
@@ -80,7 +80,7 @@ except ImportError:
         import os
 
         sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-        from modelops.utils.building_data_fetcher import BuildingDataFetcher
+        from modelops.utils.building_api_fetcher import BuildingDataFetcher
     except ImportError:
         BuildingDataFetcher = None
         print("⚠️ BuildingDataFetcher를 임포트할 수 없습니다.")

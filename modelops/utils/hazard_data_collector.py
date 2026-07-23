@@ -20,7 +20,7 @@ def _build_db_url() -> str:
 
 # 데이터 로더 및 페처 임포트
 try:
-    from modelops.data_loaders.building_data_fetcher import BuildingDataFetcher
+    from modelops.data_loaders.building_db_fetcher import BuildingDataFetcher
     from modelops.data_loaders.disaster_api_fetcher import DisasterAPIFetcher
     from modelops.data_loaders.climate_data_loader import ClimateDataLoader
     from modelops.data_loaders.spatial_data_loader import SpatialDataLoader

@@ -6,7 +6,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.join(current_dir, "..", "..")
 sys.path.append(project_root)
 
-from modelops.data_loaders.building_data_fetcher import BuildingDataFetcher
+from modelops.data_loaders.building_db_fetcher import BuildingDataFetcher
 
 
 def test_specific():
