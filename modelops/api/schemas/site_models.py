@@ -1,9 +1,12 @@
 """
 Site Assessment API Schemas
 사업장 리스크 계산 및 이전 후보지 추천 Request/Response 모델
+
+요청 JSON 필드는 공통 규약(docs/CONVENTIONS.md §2)에 따라 camelCase alias를 사용한다
+(API_CONTRACT #18, #19: buildingInfo·assetInfo·batchId·candidateGrids·searchCriteria 등).
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, Dict, List
 from datetime import datetime
 
@@ -38,11 +41,13 @@ class SiteLocation(BaseModel):
 class SiteRiskRequest(BaseModel):
     """사업장 리스크 계산 요청 (다중 사업장 지원)"""
 
+    model_config = ConfigDict(populate_by_name=True)
+
     sites: Dict[str, SiteLocation] = Field(
         ..., description="사업장 ID를 키로, 위치 정보를 값으로 하는 딕셔너리"
     )
-    building_info: Optional[BuildingInfo] = Field(None, description="건물 정보")
-    asset_info: Optional[AssetInfo] = Field(None, description="자산 정보")
+    building_info: Optional[BuildingInfo] = Field(None, alias="buildingInfo", description="건물 정보")
+    asset_info: Optional[AssetInfo] = Field(None, alias="assetInfo", description="자산 정보")
 
 
 class SiteRiskResponse(BaseModel):
@@ -66,25 +71,29 @@ class CandidateGrid(BaseModel):
 class SearchCriteria(BaseModel):
     """검색 조건"""
 
-    max_candidates: int = Field(default=3, description="추천 후보지 개수")
-    ssp_scenario: str = Field(default="ssp2", description="SSP 시나리오")
-    target_year: int = Field(default=2040, description="목표 연도")
+    model_config = ConfigDict(populate_by_name=True)
+
+    max_candidates: int = Field(default=3, alias="maxCandidates", description="추천 후보지 개수")
+    scenario: str = Field(default="ssp2", description="SSP 시나리오")
+    target_year: int = Field(default=2040, alias="targetYear", description="목표 연도")
 
 
 class SiteRelocationRequest(BaseModel):
     """사업장 이전 후보지 추천 요청 (다중 사업장 지원)"""
 
+    model_config = ConfigDict(populate_by_name=True)
+
     sites: Dict[str, SiteLocation] = Field(
         ..., description="사업장 ID를 키로, 위치 정보를 값으로 하는 딕셔너리"
     )
-    batch_id: Optional[str] = Field(None, description="배치 작업 ID (ModelOps 콜백용)")
+    batch_id: Optional[str] = Field(None, alias="batchId", description="배치 작업 ID (ModelOps 콜백용)")
     candidate_grids: Optional[List[CandidateGrid]] = Field(
-        None, description="후보 격자 리스트 (제공하지 않으면 고정 10개 위치 사용)"
+        None, alias="candidateGrids", description="후보 격자 리스트 (제공하지 않으면 고정 10개 위치 사용)"
     )
-    building_info: Optional[BuildingInfo] = Field(None, description="건물 정보")
-    asset_info: Optional[AssetInfo] = Field(None, description="자산 정보")
+    building_info: Optional[BuildingInfo] = Field(None, alias="buildingInfo", description="건물 정보")
+    asset_info: Optional[AssetInfo] = Field(None, alias="assetInfo", description="자산 정보")
     search_criteria: Optional[SearchCriteria] = Field(
-        default_factory=SearchCriteria, description="검색 조건"
+        default_factory=SearchCriteria, alias="searchCriteria", description="검색 조건"
     )
 
 

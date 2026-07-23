@@ -745,7 +745,7 @@ async def recommend_relocation_locations(
 
     # 검색 기준 처리
     search_criteria = request.search_criteria or SearchCriteria()
-    scenario = search_criteria.ssp_scenario or "SSP245"
+    scenario = search_criteria.scenario or "SSP245"
     target_year = search_criteria.target_year or 2040
 
     # building_info, asset_info 변환
