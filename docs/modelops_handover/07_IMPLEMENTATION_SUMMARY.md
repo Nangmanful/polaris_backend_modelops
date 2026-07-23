@@ -97,7 +97,7 @@ backend_aiops/
 ### 3.1 데이터베이스 테이블 생성
 ```bash
 # 데이터베이스 서버가 실행 중인지 확인
-# DW_HOST=localhost, DW_PORT=5433
+# DW_DB_HOST=localhost, DW_DB_PORT=5433
 
 # 테이블 생성
 cd c:\Users\Administrator\Desktop\backend_aiops

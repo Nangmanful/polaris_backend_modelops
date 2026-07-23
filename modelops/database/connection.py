@@ -31,11 +31,11 @@ class DatabaseConnection:
                     cls._connection_pool = pool.ThreadedConnectionPool(
                         minconn=2,  # 최소 연결 수
                         maxconn=20,  # 최대 연결 수 (MAX_WORKERS=8 * 2 여유)
-                        host=settings.database_host,
-                        port=settings.database_port,
-                        dbname=settings.database_name,
-                        user=settings.database_user,
-                        password=_require_database_password(settings.database_password),
+                        host=settings.dw_db_host,
+                        port=settings.dw_db_port,
+                        dbname=settings.dw_db_name,
+                        user=settings.dw_db_user,
+                        password=_require_database_password(settings.dw_db_password),
                     )
 
                     # Connection Pool 연결 검증 (초기화 후 바로 연결 테스트)
@@ -60,11 +60,11 @@ class DatabaseConnection:
     def get_connection_string() -> str:
         """데이터베이스 연결 문자열 생성"""
         return (
-            f"host={settings.database_host} "
-            f"port={settings.database_port} "
-            f"dbname={settings.database_name} "
-            f"user={settings.database_user} "
-            f"password={_require_database_password(settings.database_password)}"
+            f"host={settings.dw_db_host} "
+            f"port={settings.dw_db_port} "
+            f"dbname={settings.dw_db_name} "
+            f"user={settings.dw_db_user} "
+            f"password={_require_database_password(settings.dw_db_password)}"
         )
 
     @classmethod

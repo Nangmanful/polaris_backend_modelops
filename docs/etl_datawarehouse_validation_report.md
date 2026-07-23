@@ -118,7 +118,7 @@ for lat_px in range(lat_start, lat_end, 5):  # ❌ 5 픽셀 간격
 
 **utils.py 75줄**:
 ```python
-port=os.getenv("DW_PORT", "5434"),  # ❌ 기본값 5434
+port=os.getenv("DW_DB_PORT", "5434"),  # ❌ 기본값 5434
 ```
 
 **영향**: 환경변수 미설정 시 DB 연결 실패
@@ -248,10 +248,10 @@ for lat_px in range(lat_start, lat_end, 1):
 **`ETL/local/scripts/utils.py` 75줄**:
 ```python
 # ❌ 변경 전
-port=os.getenv("DW_PORT", "5434"),
+port=os.getenv("DW_DB_PORT", "5434"),
 
 # ✅ 변경 후
-port=os.getenv("DW_PORT", "5433"),
+port=os.getenv("DW_DB_PORT", "5433"),
 ```
 
 ### 문서 수정

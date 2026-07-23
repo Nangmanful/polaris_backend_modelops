@@ -145,11 +145,11 @@ python 03_load_buildings.py --sk-sites  # SK 사업장 전체
 
 ```bash
 # 데이터베이스
-DW_HOST=localhost
-DW_PORT=5555
-DW_NAME=datawarehouse
-DW_USER=skala
-DW_PASSWORD=skala1234
+DW_DB_HOST=localhost
+DW_DB_PORT=5555
+DW_DB_NAME=datawarehouse
+DW_DB_USER=skala
+DW_DB_PASSWORD=skala1234
 
 # 데이터 디렉토리
 DATA_DIR=./data

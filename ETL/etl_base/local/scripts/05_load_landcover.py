@@ -75,11 +75,11 @@ def load_tif_to_postgres(
         성공 여부
     """
     try:
-        db_host = os.getenv("DW_HOST", "localhost")
-        db_port = os.getenv("DW_PORT", "5555")
-        db_name = os.getenv("DW_NAME", "datawarehouse")
-        db_user = os.getenv("DW_USER", "skala")
-        db_password = os.getenv("DW_PASSWORD", "skala1234")
+        db_host = os.getenv("DW_DB_HOST", "localhost")
+        db_port = os.getenv("DW_DB_PORT", "5555")
+        db_name = os.getenv("DW_DB_NAME", "datawarehouse")
+        db_user = os.getenv("DW_DB_USER", "skala")
+        db_password = os.getenv("DW_DB_PASSWORD", "skala1234")
 
         # SRID 자동 감지
         if srid is None:
@@ -204,11 +204,11 @@ def load_landcover() -> None:
 
     # 기존 테이블 삭제 (psql로 직접 실행해야 raster2pgsql이 새 테이블 생성 가능)
     logger.info("기존 테이블 삭제")
-    db_host = os.getenv("DW_HOST", "localhost")
-    db_port = os.getenv("DW_PORT", "5555")
-    db_name = os.getenv("DW_NAME", "datawarehouse")
-    db_user = os.getenv("DW_USER", "skala")
-    db_password = os.getenv("DW_PASSWORD", "skala1234")
+    db_host = os.getenv("DW_DB_HOST", "localhost")
+    db_port = os.getenv("DW_DB_PORT", "5555")
+    db_name = os.getenv("DW_DB_NAME", "datawarehouse")
+    db_user = os.getenv("DW_DB_USER", "skala")
+    db_password = os.getenv("DW_DB_PASSWORD", "skala1234")
 
     drop_env = os.environ.copy()
     drop_env["PGPASSWORD"] = db_password

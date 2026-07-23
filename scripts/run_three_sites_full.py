@@ -29,7 +29,7 @@ from building_characteristics_loader import BuildingDataLoader  # noqa: E402
 # CLI 인자: DB 접속 정보는 환경변수(.env)로, 로그 파일 경로만 인자로 받는다
 parser = argparse.ArgumentParser(
     description="3개 SK 사업장 완전 계산 (H/PH → 건물 데이터 → E/V/AAL). "
-    "DB 접속 정보는 .env 또는 DATABASE_* 환경변수로 설정한다."
+    "DB 접속 정보는 .env 또는 DW_DB_* 환경변수로 설정한다."
 )
 parser.add_argument(
     "--log-file",
@@ -175,9 +175,9 @@ def main():
 
         # BuildingDataLoader 초기화 (접속 정보는 settings/.env에서)
         db_url = (
-            f"postgresql://{settings.database_user}:"
-            f"{_require_database_password(settings.database_password)}"
-            f"@{settings.database_host}:{settings.database_port}/{settings.database_name}"
+            f"postgresql://{settings.dw_db_user}:"
+            f"{_require_database_password(settings.dw_db_password)}"
+            f"@{settings.dw_db_host}:{settings.dw_db_port}/{settings.dw_db_name}"
         )
         loader = BuildingDataLoader(db_url=db_url)
 

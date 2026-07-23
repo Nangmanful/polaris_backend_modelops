@@ -123,11 +123,11 @@ pip install -r requirements.txt
 
 ```bash
 # Database
-DW_HOST=localhost
-DW_PORT=5434
-DW_NAME=skala_datawarehouse
-DW_USER=skala_dw_user
-DW_PASSWORD=skala_dw_2025
+DW_DB_HOST=localhost
+DW_DB_PORT=5434
+DW_DB_NAME=skala_datawarehouse
+DW_DB_USER=skala_dw_user
+DW_DB_PASSWORD=skala_dw_2025
 
 # Data Directory (Local ETL)
 DATA_DIR=/path/to/your/data
@@ -313,7 +313,7 @@ response = client.get(url, params=params, retries=3)
 
 ```bash
 # 환경변수 확인
-echo $DW_HOST $DW_PORT
+echo $DW_DB_HOST $DW_DB_PORT
 
 # DB 컨테이너 상태 확인
 docker ps | grep postgres

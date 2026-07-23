@@ -65,16 +65,16 @@ def get_db_connection() -> connection:
 
     # 연결 파라미터 가져오기 (Datawarehouse)
     db_params = {
-        "host": os.getenv("DW_HOST", "localhost"),
-        "port": os.getenv("DW_PORT", "5433"),
-        "database": os.getenv("DW_NAME", "skala_datawarehouse"),
-        "user": os.getenv("DW_USER", "skala_dw_user"),
-        "password": os.getenv("DW_PASSWORD"),
+        "host": os.getenv("DW_DB_HOST", "localhost"),
+        "port": os.getenv("DW_DB_PORT", "5433"),
+        "database": os.getenv("DW_DB_NAME", "skala_datawarehouse"),
+        "user": os.getenv("DW_DB_USER", "skala_dw_user"),
+        "password": os.getenv("DW_DB_PASSWORD"),
     }
 
     # 필수 파라미터 검증
     if not db_params["password"]:
-        raise ValueError("DW_PASSWORD not set in .env file")
+        raise ValueError("DW_DB_PASSWORD not set in .env file")
 
     try:
         conn = psycopg2.connect(**db_params)

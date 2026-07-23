@@ -44,11 +44,11 @@ pip install -r requirements.txt
 
 ```bash
 # Database (PostgreSQL with PostGIS)
-DW_HOST=localhost
-DW_PORT=5555
-DW_NAME=datawarehouse
-DW_USER=skala
-DW_PASSWORD=skala1234
+DW_DB_HOST=localhost
+DW_DB_PORT=5555
+DW_DB_NAME=datawarehouse
+DW_DB_USER=skala
+DW_DB_PASSWORD=skala1234
 
 # 공공데이터포털 API
 PUBLICDATA_API_KEY=your_api_key
@@ -165,8 +165,8 @@ python 01_run_all_etl.py --only A1,A2
 
 ### 대상 데이터베이스
 
-- **Host**: localhost (또는 환경변수 `DW_HOST`)
-- **Port**: 5555 (또는 환경변수 `DW_PORT`)
+- **Host**: localhost (또는 환경변수 `DW_DB_HOST`)
+- **Port**: 5555 (또는 환경변수 `DW_DB_PORT`)
 - **Database**: datawarehouse
 - **Extension**: PostGIS (공간 데이터 처리)
 

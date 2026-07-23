@@ -42,11 +42,11 @@ logger = logging.getLogger("add_4sgg_climate")
 
 def get_db_connection():
     return psycopg2.connect(
-        host=os.environ.get("DW_HOST", "localhost"),
-        port=int(os.environ.get("DW_PORT", 5555)),
-        database=os.environ.get("DW_NAME", "datawarehouse"),
-        user=os.environ.get("DW_USER", "skala"),
-        password=os.environ.get("DW_PASSWORD", "skala1234"),
+        host=os.environ.get("DW_DB_HOST", "localhost"),
+        port=int(os.environ.get("DW_DB_PORT", 5555)),
+        database=os.environ.get("DW_DB_NAME", "datawarehouse"),
+        user=os.environ.get("DW_DB_USER", "skala"),
+        password=os.environ.get("DW_DB_PASSWORD", "skala1234"),
     )
 
 

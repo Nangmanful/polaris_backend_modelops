@@ -164,11 +164,11 @@ code .env
 3. **Datawarehouse 연결 구성:**
 ```bash
 # Datawarehouse 데이터베이스 연결
-DW_HOST=localhost          # Datawarehouse가 원격 서버에 있으면 변경
-DW_PORT=5433               # 기본 Datawarehouse 포트
-DW_NAME=skala_datawarehouse
-DW_USER=skala_dw_user
-DW_PASSWORD=안전한_비밀번호로_변경  # ⚠️ 중요: 변경 필수!
+DW_DB_HOST=localhost          # Datawarehouse가 원격 서버에 있으면 변경
+DW_DB_PORT=5433               # 기본 Datawarehouse 포트
+DW_DB_NAME=skala_datawarehouse
+DW_DB_USER=skala_dw_user
+DW_DB_PASSWORD=안전한_비밀번호로_변경  # ⚠️ 중요: 변경 필수!
 
 # 데이터 디렉토리
 DATA_DIR=./data            # 데이터 파일 위치
@@ -603,11 +603,11 @@ from psycopg2 import pool
 db_pool = pool.SimpleConnectionPool(
     minconn=1,
     maxconn=10,
-    host=os.getenv("DW_HOST"),
-    port=os.getenv("DW_PORT"),
-    dbname=os.getenv("DW_NAME"),
-    user=os.getenv("DW_USER"),
-    password=os.getenv("DW_PASSWORD")
+    host=os.getenv("DW_DB_HOST"),
+    port=os.getenv("DW_DB_PORT"),
+    dbname=os.getenv("DW_DB_NAME"),
+    user=os.getenv("DW_DB_USER"),
+    password=os.getenv("DW_DB_PASSWORD")
 )
 ```
 

@@ -11,10 +11,10 @@ def _build_db_url() -> str:
     """settings 기반 PostgreSQL 접속 URL 생성 (자격증명 하드코딩 금지)."""
     from modelops.config.settings import settings, _require_database_password
 
-    password = _require_database_password(settings.database_password)
+    password = _require_database_password(settings.dw_db_password)
     return (
-        f"postgresql://{settings.database_user}:{password}"
-        f"@{settings.database_host}:{settings.database_port}/{settings.database_name}"
+        f"postgresql://{settings.dw_db_user}:{password}"
+        f"@{settings.dw_db_host}:{settings.dw_db_port}/{settings.dw_db_name}"
     )
 
 

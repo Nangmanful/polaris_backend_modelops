@@ -425,7 +425,7 @@ python test_api_with_mock.py --test
 
 ```bash
 # 1. .env 파일 설정
-# DW_HOST, DW_PORT, DW_NAME 등 설정
+# DW_DB_HOST, DW_DB_PORT, DW_DB_NAME 등 설정
 
 # 2. API 서버 실행
 python main.py

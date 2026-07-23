@@ -82,11 +82,11 @@ def get_db_connection() -> Connection:
         psycopg2.Error: 연결 실패 시
     """
     return psycopg2.connect(
-        host=os.getenv("DW_HOST", "localhost"),
-        port=os.getenv("DW_PORT", "5434"),
-        dbname=os.getenv("DW_NAME", "skala_datawarehouse"),
-        user=os.getenv("DW_USER", "skala_dw_user"),
-        password=os.getenv("DW_PASSWORD", "skala_dw_2025"),
+        host=os.getenv("DW_DB_HOST", "localhost"),
+        port=os.getenv("DW_DB_PORT", "5434"),
+        dbname=os.getenv("DW_DB_NAME", "skala_datawarehouse"),
+        user=os.getenv("DW_DB_USER", "skala_dw_user"),
+        password=os.getenv("DW_DB_PASSWORD", "skala_dw_2025"),
     )
 
 

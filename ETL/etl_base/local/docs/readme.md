@@ -526,11 +526,11 @@ with gzip.open(csv_path, 'rb') as gz_file:
 
 ```bash
 # Datawarehouse 연결
-DW_HOST=localhost
-DW_PORT=5433
-DW_NAME=skala_datawarehouse
-DW_USER=skala_dw_user
-DW_PASSWORD=안전한_비밀번호
+DW_DB_HOST=localhost
+DW_DB_PORT=5433
+DW_DB_NAME=skala_datawarehouse
+DW_DB_USER=skala_dw_user
+DW_DB_PASSWORD=안전한_비밀번호
 
 # 데이터 디렉토리
 DATA_DIR=../data

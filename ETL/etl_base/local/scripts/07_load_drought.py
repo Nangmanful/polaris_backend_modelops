@@ -79,11 +79,11 @@ def load_tif_to_raster(tif_path: Path, table_name: str, append: bool = False, lo
         성공 여부
     """
     try:
-        db_host = os.getenv("DW_HOST", "localhost")
-        db_port = os.getenv("DW_PORT", "5434")
-        db_name = os.getenv("DW_NAME", "skala_datawarehouse")
-        db_user = os.getenv("DW_USER", "skala_dw_user")
-        db_password = os.getenv("DW_PASSWORD", "skala_dw_2025")
+        db_host = os.getenv("DW_DB_HOST", "localhost")
+        db_port = os.getenv("DW_DB_PORT", "5434")
+        db_name = os.getenv("DW_DB_NAME", "skala_datawarehouse")
+        db_user = os.getenv("DW_DB_USER", "skala_dw_user")
+        db_password = os.getenv("DW_DB_PASSWORD", "skala_dw_2025")
 
         # raster2pgsql 명령
         cmd = ["raster2pgsql"]
@@ -156,11 +156,11 @@ def load_drought() -> None:
 
     # 기존 테이블 삭제 (psql로)
     logger.info("기존 테이블 삭제")
-    db_host = os.getenv("DW_HOST", "localhost")
-    db_port = os.getenv("DW_PORT", "5434")
-    db_name = os.getenv("DW_NAME", "skala_datawarehouse")
-    db_user = os.getenv("DW_USER", "skala_dw_user")
-    db_password = os.getenv("DW_PASSWORD", "skala_dw_2025")
+    db_host = os.getenv("DW_DB_HOST", "localhost")
+    db_port = os.getenv("DW_DB_PORT", "5434")
+    db_name = os.getenv("DW_DB_NAME", "skala_datawarehouse")
+    db_user = os.getenv("DW_DB_USER", "skala_dw_user")
+    db_password = os.getenv("DW_DB_PASSWORD", "skala_dw_2025")
 
     drop_env = os.environ.copy()
     drop_env["PGPASSWORD"] = db_password

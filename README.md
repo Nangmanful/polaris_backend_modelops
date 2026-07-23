@@ -130,7 +130,7 @@ uv sync                      # 또는: pip install -e .
 
 # 2. 환경변수 설정 (비밀번호 기본값 없음 — 반드시 설정)
 cp .env.example .env
-# .env 편집: DATABASE_PASSWORD 등 입력
+# .env 편집: DW_DB_PASSWORD 등 입력
 
 # 3. (최초 1회) ETL로 기후 데이터 적재
 python ETL/01_run_all_etl.py
@@ -152,23 +152,20 @@ python scripts/run_step3_only.py [--log-file step3_only.log]
 ```
 
 > DB 접속 정보는 코드에 하드코딩하지 않고 `.env`/환경변수로만 주입합니다.
-> `DATABASE_PASSWORD` 가 비어 있으면 DB 연결 시 명확한 에러가 발생합니다.
+> `DW_DB_PASSWORD` 가 비어 있으면 DB 연결 시 명확한 에러가 발생합니다.
 
 ## 환경변수
 
 `.env.example` 과 동일한 목록입니다.
 
+변수 이름은 공통 규약([docs/CONVENTIONS.md](docs/CONVENTIONS.md) §4)의 정식 명칭을 따릅니다.
+
 | 변수 | 기본값 | 설명 |
 |------|--------|------|
-| `DATABASE_HOST` | `localhost` | 메인 DB 호스트 (ModelOps 계산용) |
-| `DATABASE_PORT` | `5432` | 메인 DB 포트 |
-| `DATABASE_NAME` | `climate_risk_db` | 메인 DB 이름 |
-| `DATABASE_USER` | `postgres` | 메인 DB 사용자 |
-| `DATABASE_PASSWORD` | (없음 — 필수) | 메인 DB 비밀번호 |
-| `DW_HOST` / `DW_PORT` / `DW_NAME` / `DW_USER` / `DW_PASSWORD` | `localhost` / `5433` / `skala_datawarehouse` / `skala_dw_user` / (필수) | 데이터웨어하우스 (기후 원본·격자) |
-| `APP_HOST` / `APP_PORT` / `APP_NAME` / `APP_USER` / `APP_PASSWORD` | `localhost` / `5432` / `skala_application` / `skala_app_user` / (필수) | 애플리케이션 DB (Spring Boot 연동) |
-| `FASTAPI_URL` | `http://localhost:8000` | FastAPI AI 서버 콜백 URL |
-| `FASTAPI_API_KEY` | (빈 값) | 콜백 인증 키 |
+| `DW_DB_HOST` / `DW_DB_PORT` / `DW_DB_NAME` / `DW_DB_USER` / `DW_DB_PASSWORD` | `localhost` / `5433` / `skala_datawarehouse` / `skala_dw_user` / (없음 — 필수) | 데이터웨어하우스 (기후 원본·격자·계산 결과 — ModelOps 메인 DB) |
+| `APP_DB_HOST` / `APP_DB_PORT` / `APP_DB_NAME` / `APP_DB_USER` / `APP_DB_PASSWORD` | `localhost` / `5432` / `skala_application` / `skala_app_user` / (필수) | 애플리케이션 DB (Spring Boot 연동) |
+| `FASTAPI_BASE_URL` | `http://localhost:8000` | FastAPI AI 서버 콜백 URL |
+| `INTERNAL_API_KEY` | (빈 값) | 서비스 간 인증 키 (`X-API-Key` 헤더) |
 | `PROBABILITY_SCHEDULE_MONTH/DAY/HOUR/MINUTE` | `1/1/2/0` | P(H) 배치 스케줄 (매년 1/1 02:00) |
 | `HAZARD_SCHEDULE_MONTH/DAY/HOUR/MINUTE` | `1/1/4/0` | H 배치 스케줄 (매년 1/1 04:00) |
 | `PARALLEL_WORKERS` | `4` | 배치 병렬 워커 수 |
