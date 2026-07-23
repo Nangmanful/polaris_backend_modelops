@@ -1,4 +1,4 @@
-'''
+"""
 파일명: drought_exposure_agent.py
 최종 수정일: 2025-12-14
 버전: v2
@@ -6,7 +6,8 @@
 변경 이력:
     - v1: DB에서 강수량/물 의존도 조회
     - v2: 원래 설계 복원 (DB 로직 제거, 순수 계산만)
-'''
+"""
+
 from typing import Dict, Any
 import logging
 from .base_exposure_agent import BaseExposureAgent
@@ -34,8 +35,9 @@ class DroughtExposureAgent(BaseExposureAgent):
     def __init__(self):
         super().__init__()
 
-    def calculate_exposure(self, building_data: Dict[str, Any], spatial_data: Dict[str, Any],
-                          **kwargs) -> Dict[str, Any]:
+    def calculate_exposure(
+        self, building_data: Dict[str, Any], spatial_data: Dict[str, Any], **kwargs
+    ) -> Dict[str, Any]:
         """
         가뭄 Exposure 계산
 
@@ -47,37 +49,36 @@ class DroughtExposureAgent(BaseExposureAgent):
         Returns:
             가뭄 Exposure 데이터
         """
-        climate_data = kwargs.get('climate_data', {})
+        climate_data = kwargs.get("climate_data", {})
 
         # 1. 강수량 데이터 추출 (이미 data_loaders가 수집한 데이터)
         rainfall_data = self._get_rainfall_data(building_data, climate_data)
 
-        annual_rainfall = rainfall_data['annual_rainfall_mm']
-        rain80_days = rainfall_data.get('rain80_days', 5.0)
-        cdd_days = rainfall_data.get('cdd_days', 30.0)
+        annual_rainfall = rainfall_data["annual_rainfall_mm"]
+        rain80_days = rainfall_data.get("rain80_days", 5.0)
+        cdd_days = rainfall_data.get("cdd_days", 30.0)
 
         # 2. 건물 용도 기반 물 의존도 분류
         water_dep_data = self._get_water_dependency(building_data)
-        water_dependency = water_dep_data['water_dependency']
-        main_purpose = water_dep_data.get('main_purpose')
+        water_dependency = water_dep_data["water_dependency"]
+        main_purpose = water_dep_data.get("main_purpose")
 
         # 3. 가뭄 노출도 점수 계산
-        score = self._calculate_drought_exposure_score(
-            water_dependency, annual_rainfall, cdd_days
-        )
+        score = self._calculate_drought_exposure_score(water_dependency, annual_rainfall, cdd_days)
 
         return {
-            'annual_rainfall_mm': annual_rainfall,
-            'rain80_days': rain80_days,
-            'cdd_days': cdd_days,
-            'water_dependency': water_dependency,
-            'main_purpose': main_purpose,
-            'score': score,
-            'data_source': 'collected'
+            "annual_rainfall_mm": annual_rainfall,
+            "rain80_days": rain80_days,
+            "cdd_days": cdd_days,
+            "water_dependency": water_dependency,
+            "main_purpose": main_purpose,
+            "score": score,
+            "data_source": "collected",
         }
 
-    def _get_rainfall_data(self, building_data: Dict[str, Any],
-                           climate_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _get_rainfall_data(
+        self, building_data: Dict[str, Any], climate_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         강수량 데이터 추출 (collected_data에서)
 
@@ -90,46 +91,45 @@ class DroughtExposureAgent(BaseExposureAgent):
         """
         # 기본값 설정
         if not config:
-            hydro_defaults = {'annual_rainfall_mm': 1200}
+            hydro_defaults = {"annual_rainfall_mm": 1200}
         else:
             hydro_defaults = config.DEFAULT_HYDROLOGICAL_VALUES
 
         defaults = {
-            'annual_rainfall_mm': hydro_defaults.get('annual_rainfall_mm', 1200),
-            'rain80_days': 5.0,
-            'cdd_days': 30.0,
+            "annual_rainfall_mm": hydro_defaults.get("annual_rainfall_mm", 1200),
+            "rain80_days": 5.0,
+            "cdd_days": 30.0,
         }
 
         # climate_data에서 추출 (data_loaders가 DB에서 수집)
         annual_rainfall = self.get_value_with_fallback(
             climate_data,
-            ['annual_rainfall_mm', 'rn', 'total_rainfall'],
-            defaults['annual_rainfall_mm']
+            ["annual_rainfall_mm", "rn", "total_rainfall"],
+            defaults["annual_rainfall_mm"],
         )
 
         rain80_days = self.get_value_with_fallback(
-            climate_data,
-            ['rain80_days', 'rain80'],
-            defaults['rain80_days']
+            climate_data, ["rain80_days", "rain80"], defaults["rain80_days"]
         )
 
         cdd_days = self.get_value_with_fallback(
-            climate_data,
-            ['cdd_days', 'cdd', 'consecutive_dry_days'],
-            defaults['cdd_days']
+            climate_data, ["cdd_days", "cdd", "consecutive_dry_days"], defaults["cdd_days"]
         )
         # cdd가 리스트인 경우 평균값 사용
         if isinstance(cdd_days, list):
-            cdd_days = sum(cdd_days) / len(cdd_days) if cdd_days else defaults['cdd_days']
+            cdd_days = sum(cdd_days) / len(cdd_days) if cdd_days else defaults["cdd_days"]
 
         # building_data에서도 확인
-        if 'annual_rainfall_mm' in building_data and building_data['annual_rainfall_mm'] is not None:
-            annual_rainfall = building_data['annual_rainfall_mm']
+        if (
+            "annual_rainfall_mm" in building_data
+            and building_data["annual_rainfall_mm"] is not None
+        ):
+            annual_rainfall = building_data["annual_rainfall_mm"]
 
         return {
-            'annual_rainfall_mm': annual_rainfall,
-            'rain80_days': rain80_days,
-            'cdd_days': cdd_days,
+            "annual_rainfall_mm": annual_rainfall,
+            "rain80_days": rain80_days,
+            "cdd_days": cdd_days,
         }
 
     def _get_water_dependency(self, building_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -146,38 +146,52 @@ class DroughtExposureAgent(BaseExposureAgent):
             }
         """
         main_purpose = self.get_value_with_fallback(
-            building_data,
-            ['main_purpose', 'building_purpose', 'purpose'],
-            'residential'
+            building_data, ["main_purpose", "building_purpose", "purpose"], "residential"
         )
 
         return {
-            'water_dependency': self._classify_water_dependency(main_purpose),
-            'main_purpose': main_purpose
+            "water_dependency": self._classify_water_dependency(main_purpose),
+            "main_purpose": main_purpose,
         }
 
     def _classify_water_dependency(self, building_purpose: str) -> str:
         """건물 용도 기반 물 의존도 분류"""
         if not building_purpose:
-            return 'low'
+            return "low"
 
-        high_keywords = ['factory', 'manufacturing', 'cooling', 'car_wash', 'bath',
-                         'power', '공장', '동물및식물관련시설', 'industrial']
-        medium_keywords = ['office', 'commercial', 'retail', '제1종근린생활시설',
-                           '제2종근린생활시설', '문화및집회시설', '사무']
+        high_keywords = [
+            "factory",
+            "manufacturing",
+            "cooling",
+            "car_wash",
+            "bath",
+            "power",
+            "공장",
+            "동물및식물관련시설",
+            "industrial",
+        ]
+        medium_keywords = [
+            "office",
+            "commercial",
+            "retail",
+            "제1종근린생활시설",
+            "제2종근린생활시설",
+            "문화및집회시설",
+            "사무",
+        ]
 
         purpose_str = str(building_purpose).lower()
 
         if any(keyword in purpose_str for keyword in high_keywords):
-            return 'high'
+            return "high"
         elif any(keyword in purpose_str for keyword in medium_keywords):
-            return 'medium'
+            return "medium"
         else:
-            return 'low'
+            return "low"
 
-    def _calculate_drought_exposure_score(self, water_dependency: str,
-                                           annual_rainfall_mm: float,
-                                           cdd_days: float = 30.0) -> int:
+    def _calculate_drought_exposure_score(
+        self, water_dependency: str, annual_rainfall_mm: float, cdd_days: float = 30.0
+    ) -> int:
         """
         가뭄 노출도 점수 계산
 
@@ -190,9 +204,9 @@ class DroughtExposureAgent(BaseExposureAgent):
             Exposure 점수 (0-100)
         """
         # 기본 점수 (물 의존도 기반)
-        if water_dependency == 'high':
+        if water_dependency == "high":
             score = 70
-        elif water_dependency == 'medium':
+        elif water_dependency == "medium":
             score = 45
         else:
             score = 25

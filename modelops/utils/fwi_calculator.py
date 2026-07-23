@@ -25,7 +25,7 @@ FWI 시스템 구성:
 """
 
 import math
-from typing import Dict, Optional
+from typing import Dict
 
 
 class FWICalculator:
@@ -40,12 +40,7 @@ class FWICalculator:
         pass
 
     def calculate_ffmc(
-        self,
-        temp: float,
-        rh: float,
-        wind: float,
-        rain: float,
-        ffmc_prev: float = 85.0
+        self, temp: float, rh: float, wind: float, rain: float, ffmc_prev: float = 85.0
     ) -> float:
         """
         FFMC (Fine Fuel Moisture Code) 계산
@@ -71,25 +66,40 @@ class FWICalculator:
             if mo <= 150.0:
                 mr = mo + 42.5 * rf * math.exp(-100.0 / (251.0 - mo)) * (1.0 - math.exp(-6.93 / rf))
             else:
-                mr = mo + 42.5 * rf * math.exp(-100.0 / (251.0 - mo)) * (1.0 - math.exp(-6.93 / rf)) + \
-                     0.0015 * (mo - 150.0) ** 2 * rf ** 0.5
+                mr = (
+                    mo
+                    + 42.5 * rf * math.exp(-100.0 / (251.0 - mo)) * (1.0 - math.exp(-6.93 / rf))
+                    + 0.0015 * (mo - 150.0) ** 2 * rf**0.5
+                )
 
             if mr > 250.0:
                 mr = 250.0
             mo = mr
 
         # 건조 효과
-        ed = 0.942 * (rh ** 0.679) + 11.0 * math.exp((rh - 100.0) / 10.0) + 0.18 * (21.1 - temp) * (1.0 - math.exp(-0.115 * rh))
+        ed = (
+            0.942 * (rh**0.679)
+            + 11.0 * math.exp((rh - 100.0) / 10.0)
+            + 0.18 * (21.1 - temp) * (1.0 - math.exp(-0.115 * rh))
+        )
 
         if mo > ed:
-            ko = 0.424 * (1.0 - ((rh / 100.0) ** 1.7)) + 0.0694 * (wind ** 0.5) * (1.0 - ((rh / 100.0) ** 8))
+            ko = 0.424 * (1.0 - ((rh / 100.0) ** 1.7)) + 0.0694 * (wind**0.5) * (
+                1.0 - ((rh / 100.0) ** 8)
+            )
             kd = ko * 0.581 * math.exp(0.0365 * temp)
             m = ed + (mo - ed) * (10.0 ** (-kd))
         else:
-            ew = 0.618 * (rh ** 0.753) + 10.0 * math.exp((rh - 100.0) / 10.0) + 0.18 * (21.1 - temp) * (1.0 - math.exp(-0.115 * rh))
+            ew = (
+                0.618 * (rh**0.753)
+                + 10.0 * math.exp((rh - 100.0) / 10.0)
+                + 0.18 * (21.1 - temp) * (1.0 - math.exp(-0.115 * rh))
+            )
 
             if mo < ew:
-                kl = 0.424 * (1.0 - (((100.0 - rh) / 100.0) ** 1.7)) + 0.0694 * (wind ** 0.5) * (1.0 - (((100.0 - rh) / 100.0) ** 8))
+                kl = 0.424 * (1.0 - (((100.0 - rh) / 100.0) ** 1.7)) + 0.0694 * (wind**0.5) * (
+                    1.0 - (((100.0 - rh) / 100.0) ** 8)
+                )
                 kw = kl * 0.581 * math.exp(0.0365 * temp)
                 m = ew - (ew - mo) * (10.0 ** (-kw))
             else:
@@ -106,12 +116,7 @@ class FWICalculator:
         return ffmc
 
     def calculate_dmc(
-        self,
-        temp: float,
-        rh: float,
-        rain: float,
-        dmc_prev: float = 6.0,
-        month: int = 7
+        self, temp: float, rh: float, rain: float, dmc_prev: float = 6.0, month: int = 7
     ) -> float:
         """
         DMC (Duff Moisture Code) 계산
@@ -130,8 +135,18 @@ class FWICalculator:
         """
         # 월별 일조시간 계수
         day_length_factor = [
-            -1.6, -1.6, -1.6, 0.9, 3.8, 5.8,  # Jan-Jun
-            6.4, 5.0, 2.4, 0.4, -1.6, -1.6   # Jul-Dec
+            -1.6,
+            -1.6,
+            -1.6,
+            0.9,
+            3.8,
+            5.8,  # Jan-Jun
+            6.4,
+            5.0,
+            2.4,
+            0.4,
+            -1.6,
+            -1.6,  # Jul-Dec
         ]
 
         if temp < -1.1:
@@ -170,12 +185,7 @@ class FWICalculator:
         return dmc
 
     def calculate_dc(
-        self,
-        temp: float,
-        rain: float,
-        dc_prev: float = 15.0,
-        month: int = 7,
-        lat: float = 45.0
+        self, temp: float, rain: float, dc_prev: float = 15.0, month: int = 7, lat: float = 45.0
     ) -> float:
         """
         DC (Drought Code) 계산
@@ -253,7 +263,7 @@ class FWICalculator:
         """
         # 습도에 따른 화재 확산 계수
         mo = 147.2 * (101.0 - ffmc) / (59.5 + ffmc)
-        ff = 19.115 * math.exp(-0.1386 * mo) * (1.0 + (mo ** 5.31) / 4.93e7)
+        ff = 19.115 * math.exp(-0.1386 * mo) * (1.0 + (mo**5.31) / 4.93e7)
 
         # 풍속 효과
         isi = ff * math.exp(0.05039 * wind)
@@ -297,7 +307,7 @@ class FWICalculator:
             FWI 값 (0-∞)
         """
         if bui <= 80.0:
-            fd = 0.626 * (bui ** 0.809) + 2.0
+            fd = 0.626 * (bui**0.809) + 2.0
         else:
             fd = 1000.0 / (25.0 + 108.64 * math.exp(-0.023 * bui))
 
@@ -322,7 +332,7 @@ class FWICalculator:
         dmc_prev: float = 6.0,
         dc_prev: float = 15.0,
         month: int = 7,
-        lat: float = 37.5
+        lat: float = 37.5,
     ) -> Dict[str, float]:
         """
         전체 FWI 시스템 계산 (6개 지수)
@@ -355,14 +365,7 @@ class FWICalculator:
         bui = self.calculate_bui(dmc, dc)
         fwi = self.calculate_fwi(isi, bui)
 
-        return {
-            'ffmc': ffmc,
-            'dmc': dmc,
-            'dc': dc,
-            'isi': isi,
-            'bui': bui,
-            'fwi': fwi
-        }
+        return {"ffmc": ffmc, "dmc": dmc, "dc": dc, "isi": isi, "bui": bui, "fwi": fwi}
 
     @staticmethod
     def classify_fwi(fwi: float) -> str:
@@ -384,17 +387,17 @@ class FWICalculator:
             위험 등급 ('very_low', 'low', 'moderate', 'high', 'very_high', 'extreme')
         """
         if fwi < 5:
-            return 'very_low'
+            return "very_low"
         elif fwi < 11:
-            return 'low'
+            return "low"
         elif fwi < 21:
-            return 'moderate'
+            return "moderate"
         elif fwi < 38:
-            return 'high'
+            return "high"
         elif fwi < 50:
-            return 'very_high'
+            return "very_high"
         else:
-            return 'extreme'
+            return "extreme"
 
 
 # 테스트 코드
@@ -408,12 +411,12 @@ if __name__ == "__main__":
     # 테스트 1: 여름 고온 건조 (산불 위험 높음)
     print("\n[테스트 1] 여름 고온 건조일 (산불 위험 예상)")
     result = calculator.calculate_all(
-        temp=32.0,      # 32°C
-        rh=25.0,        # 25% (매우 건조)
-        wind=20.0,      # 20 km/h (강풍)
-        rain=0.0,       # 무강수
-        month=7,        # 7월
-        lat=37.5        # 서울 위도
+        temp=32.0,  # 32°C
+        rh=25.0,  # 25% (매우 건조)
+        wind=20.0,  # 20 km/h (강풍)
+        rain=0.0,  # 무강수
+        month=7,  # 7월
+        lat=37.5,  # 서울 위도
     )
 
     print(f"  FFMC (Fine Fuel Moisture): {result['ffmc']:.1f}")
@@ -427,15 +430,15 @@ if __name__ == "__main__":
     # 테스트 2: 비 온 후 (산불 위험 낮음)
     print("\n[테스트 2] 강수 후 (산불 위험 낮음 예상)")
     result2 = calculator.calculate_all(
-        temp=22.0,      # 22°C
-        rh=75.0,        # 75% (습함)
-        wind=5.0,       # 5 km/h (약풍)
-        rain=15.0,      # 15mm 강수
-        ffmc_prev=result['ffmc'],  # 전날 값 사용
-        dmc_prev=result['dmc'],
-        dc_prev=result['dc'],
+        temp=22.0,  # 22°C
+        rh=75.0,  # 75% (습함)
+        wind=5.0,  # 5 km/h (약풍)
+        rain=15.0,  # 15mm 강수
+        ffmc_prev=result["ffmc"],  # 전날 값 사용
+        dmc_prev=result["dmc"],
+        dc_prev=result["dc"],
         month=7,
-        lat=37.5
+        lat=37.5,
     )
 
     print(f"  FFMC: {result2['ffmc']:.1f}")

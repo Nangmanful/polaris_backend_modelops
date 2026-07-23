@@ -42,14 +42,14 @@ sys.path.insert(0, str(Path(__file__).parent))
 from utils import setup_logging, get_db_connection, get_row_count, get_data_dir
 
 # SAMPLE_LIMIT: 테스트용 행 수 제한 (0=전체, N=각 테이블당 N개 row만 적재)
-SAMPLE_LIMIT = int(os.environ.get('SAMPLE_LIMIT', 0))
+SAMPLE_LIMIT = int(os.environ.get("SAMPLE_LIMIT", 0))
 
 # 울산 영역 (대략적인 경위도 범위)
 ULSAN_BOUNDS = {
-    'lat_min': 35.42,  # 울산 육지 영역
-    'lat_max': 35.72,
-    'lon_min': 129.05,
-    'lon_max': 129.45
+    "lat_min": 35.42,  # 울산 육지 영역
+    "lat_max": 35.72,
+    "lon_min": 129.05,
+    "lon_max": 129.45,
 }
 
 # 1km ≈ 0.009° (위도), 0.011° (경도, 35°N 기준)
@@ -72,47 +72,48 @@ SK_SITES: List[Tuple[str, float, float, str]] = [
 
 # 기후 데이터 테이블 매핑 (월별)
 MONTHLY_TABLE_MAP = {
-    'ta_data': ['ta', 'TA', 'TAS'],           # 기온
-    'rn_data': ['rn', 'RN', 'PR'],            # 강수량
-    'rhm_data': ['rhm', 'RHM'],               # 상대습도
-    'ws_data': ['ws', 'WS'],                  # 풍속
-    'si_data': ['si', 'SI', 'RSDS'],          # 일사량
-    'spei12_data': ['spei12', 'SPEI12'],      # SPEI 12개월
-    'tamax_data': ['tamax', 'TAMAX', 'TASMAX'],  # 최고기온
-    'tamin_data': ['tamin', 'TAMIN', 'TASMIN'],  # 최저기온
+    "ta_data": ["ta", "TA", "TAS"],  # 기온
+    "rn_data": ["rn", "RN", "PR"],  # 강수량
+    "rhm_data": ["rhm", "RHM"],  # 상대습도
+    "ws_data": ["ws", "WS"],  # 풍속
+    "si_data": ["si", "SI", "RSDS"],  # 일사량
+    "spei12_data": ["spei12", "SPEI12"],  # SPEI 12개월
+    "tamax_data": ["tamax", "TAMAX", "TASMAX"],  # 최고기온
+    "tamin_data": ["tamin", "TAMIN", "TASMIN"],  # 최저기온
 }
 
 # 기후 데이터 테이블 매핑 (연간)
 YEARLY_TABLE_MAP = {
-    'ta_yearly_data': ['ta', 'TA', 'aii', 'AII'],  # 연평균 기온
-    'cdd_data': ['cdd', 'CDD'],                    # 연속무강수일
-    'csdi_data': ['csdi', 'CSDI'],                 # 한파지속지수
-    'rain80_data': ['rain80', 'RAIN80'],           # 80mm 이상 강수일수
-    'rx1day_data': ['rx1day', 'RX1DAY'],           # 1일 최대 강수량
-    'rx5day_data': ['rx5day', 'RX5DAY'],           # 5일 최대 강수량
-    'sdii_data': ['sdii', 'SDII'],                 # 강수강도
-    'wsdi_data': ['wsdi', 'WSDI'],                 # 폭염지속지수
+    "ta_yearly_data": ["ta", "TA", "aii", "AII"],  # 연평균 기온
+    "cdd_data": ["cdd", "CDD"],  # 연속무강수일
+    "csdi_data": ["csdi", "CSDI"],  # 한파지속지수
+    "rain80_data": ["rain80", "RAIN80"],  # 80mm 이상 강수일수
+    "rx1day_data": ["rx1day", "RX1DAY"],  # 1일 최대 강수량
+    "rx5day_data": ["rx5day", "RX5DAY"],  # 5일 최대 강수량
+    "sdii_data": ["sdii", "SDII"],  # 강수강도
+    "wsdi_data": ["wsdi", "WSDI"],  # 폭염지속지수
 }
 
 # sgg261 일별 기후 데이터 테이블 매핑 (시군구 단위)
 SGG261_DAILY_TABLE_MAP = {
-    'ta_daily_sgg261': 'TA',        # 일 평균기온
-    'tamax_daily_sgg261': 'TAMAX',  # 일 최고기온
-    'tamin_daily_sgg261': 'TAMIN',  # 일 최저기온
-    'rn_daily_sgg261': 'RN',        # 일 강수량
-    'rhm_daily_sgg261': 'RHM',      # 일 상대습도
-    'ws_daily_sgg261': 'WS',        # 일 풍속
-    'si_daily_sgg261': 'SI',        # 일 일사량
+    "ta_daily_sgg261": "TA",  # 일 평균기온
+    "tamax_daily_sgg261": "TAMAX",  # 일 최고기온
+    "tamin_daily_sgg261": "TAMIN",  # 일 최저기온
+    "rn_daily_sgg261": "RN",  # 일 강수량
+    "rhm_daily_sgg261": "RHM",  # 일 상대습도
+    "ws_daily_sgg261": "WS",  # 일 풍속
+    "si_daily_sgg261": "SI",  # 일 일사량
 }
 
 # sgg261 필터링: 울산 + SK 사업장 시군구만 (전국 261개 중 일부만 적재)
 SGG261_FILTER_CODES = {
-    '31',      # 울산광역시 전체 (31xxx)
-    '41135',   # 경기도 성남시 분당구 (SK u-타워, 판교 캠퍼스, 수내 오피스, 판교 DC, 애커튼 테크)
-    '11110',   # 서울특별시 종로구 (서린 사옥, 애커튼 파트너스)
-    '30200',   # 대전광역시 유성구 (대덕 데이터 센터)
-    '11620',   # 서울특별시 관악구 (보라매 데이터 센터)
+    "31",  # 울산광역시 전체 (31xxx)
+    "41135",  # 경기도 성남시 분당구 (SK u-타워, 판교 캠퍼스, 수내 오피스, 판교 DC, 애커튼 테크)
+    "11110",  # 서울특별시 종로구 (서린 사옥, 애커튼 파트너스)
+    "30200",  # 대전광역시 유성구 (대덕 데이터 센터)
+    "11620",  # 서울특별시 관악구 (보라매 데이터 센터)
 }
+
 
 def geocode_reverse(api_key: str, lat: float, lon: float, logger) -> Optional[Dict]:
     """VWorld 역지오코딩 API 호출"""
@@ -127,42 +128,42 @@ def geocode_reverse(api_key: str, lat: float, lon: float, logger) -> Optional[Di
         "type": "BOTH",
         "zipcode": "true",
         "simple": "false",
-        "key": api_key
+        "key": api_key,
     }
 
     try:
         response = requests.get(url, params=params, timeout=10)
         data = response.json()
 
-        if data.get('response', {}).get('status') != 'OK':
+        if data.get("response", {}).get("status") != "OK":
             return None
 
-        results = data.get('response', {}).get('result', [])
+        results = data.get("response", {}).get("result", [])
         if not results:
             return None
 
         parcel_result = None
         for item in results:
-            if item.get('type') == 'parcel':
+            if item.get("type") == "parcel":
                 parcel_result = item
                 break
 
         if not parcel_result:
             return None
 
-        structure = parcel_result.get('structure', {})
-        dong_code = structure.get('level4LC', '')
-        sigungu_cd = dong_code[:5] if len(dong_code) >= 5 else ''
-        bjdong_cd = dong_code[5:10] if len(dong_code) >= 10 else ''
+        structure = parcel_result.get("structure", {})
+        dong_code = structure.get("level4LC", "")
+        sigungu_cd = dong_code[:5] if len(dong_code) >= 5 else ""
+        bjdong_cd = dong_code[5:10] if len(dong_code) >= 10 else ""
 
         return {
-            'sido': structure.get('level1', ''),
-            'sigungu': structure.get('level2', ''),
-            'sigungu_cd': sigungu_cd,
-            'dong': structure.get('level4L', ''),
-            'bjdong_cd': bjdong_cd,
-            'dong_code': dong_code,
-            'full_address': parcel_result.get('text', ''),
+            "sido": structure.get("level1", ""),
+            "sigungu": structure.get("level2", ""),
+            "sigungu_cd": sigungu_cd,
+            "dong": structure.get("level4L", ""),
+            "bjdong_cd": bjdong_cd,
+            "dong_code": dong_code,
+            "full_address": parcel_result.get("text", ""),
         }
 
     except Exception as e:
@@ -180,11 +181,13 @@ def create_ulsan_1km_grids(conn, cursor, logger) -> int:
     logger.info("\n[1-1단계] 울산 1km 격자 생성")
 
     # 울산 범위에서 1km 간격 격자 좌표 생성
-    lat_range = np.arange(ULSAN_BOUNDS['lat_min'], ULSAN_BOUNDS['lat_max'], GRID_STEP_LAT)
-    lon_range = np.arange(ULSAN_BOUNDS['lon_min'], ULSAN_BOUNDS['lon_max'], GRID_STEP_LON)
+    lat_range = np.arange(ULSAN_BOUNDS["lat_min"], ULSAN_BOUNDS["lat_max"], GRID_STEP_LAT)
+    lon_range = np.arange(ULSAN_BOUNDS["lon_min"], ULSAN_BOUNDS["lon_max"], GRID_STEP_LON)
 
     total_possible = len(lat_range) * len(lon_range)
-    logger.info(f"   울산 범위: lat {ULSAN_BOUNDS['lat_min']:.2f}~{ULSAN_BOUNDS['lat_max']:.2f}, lon {ULSAN_BOUNDS['lon_min']:.2f}~{ULSAN_BOUNDS['lon_max']:.2f}")
+    logger.info(
+        f"   울산 범위: lat {ULSAN_BOUNDS['lat_min']:.2f}~{ULSAN_BOUNDS['lat_max']:.2f}, lon {ULSAN_BOUNDS['lon_min']:.2f}~{ULSAN_BOUNDS['lon_max']:.2f}"
+    )
     logger.info(f"   1km 간격: {len(lat_range)} x {len(lon_range)} = {total_possible}개 가능")
 
     # 최대 1000개까지 생성
@@ -199,10 +202,13 @@ def create_ulsan_1km_grids(conn, cursor, logger) -> int:
                 break
 
             # 이미 존재하는지 확인 (0.001도 = 약 100m 이내)
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT grid_id FROM location_grid
                 WHERE ABS(latitude - %s) < 0.001 AND ABS(longitude - %s) < 0.001
-            """, (float(lat), float(lon)))
+            """,
+                (float(lat), float(lon)),
+            )
 
             existing = cursor.fetchone()
             if existing:
@@ -213,10 +219,13 @@ def create_ulsan_1km_grids(conn, cursor, logger) -> int:
             new_grid_id = cursor.fetchone()[0]
 
             # 울산 격자 삽입
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO location_grid (grid_id, latitude, longitude, full_address)
                 VALUES (%s, %s, %s, %s)
-            """, (new_grid_id, float(lat), float(lon), f"[울산격자] {lat:.4f}, {lon:.4f}"))
+            """,
+                (new_grid_id, float(lat), float(lon), f"[울산격자] {lat:.4f}, {lon:.4f}"),
+            )
 
             created += 1
 
@@ -232,10 +241,13 @@ def insert_sk_sites(conn, cursor, logger):
     inserted = 0
     for site_name, lat, lon, address in SK_SITES:
         try:
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT grid_id FROM location_grid
                 WHERE ABS(latitude - %s) < 0.0001 AND ABS(longitude - %s) < 0.0001
-            """, (lat, lon))
+            """,
+                (lat, lon),
+            )
 
             existing = cursor.fetchone()
             if existing:
@@ -245,10 +257,13 @@ def insert_sk_sites(conn, cursor, logger):
             cursor.execute("SELECT COALESCE(MAX(grid_id), 0) + 1 FROM location_grid")
             new_grid_id = cursor.fetchone()[0]
 
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO location_grid (grid_id, latitude, longitude, full_address)
                 VALUES (%s, %s, %s, %s)
-            """, (new_grid_id, lat, lon, f"[SK] {site_name}: {address}"))
+            """,
+                (new_grid_id, lat, lon, f"[SK] {site_name}: {address}"),
+            )
 
             inserted += 1
             logger.info(f"   {site_name}: 삽입 완료 (grid_id={new_grid_id})")
@@ -272,23 +287,23 @@ def decompress_if_gzip(file_path: Path) -> Path:
     import subprocess
     import tarfile
 
-    result = subprocess.run(['file', str(file_path)], capture_output=True, text=True)
+    result = subprocess.run(["file", str(file_path)], capture_output=True, text=True)
 
-    if 'gzip' in result.stdout.lower():
+    if "gzip" in result.stdout.lower():
         # gzip 해제 후 임시 파일 생성
-        temp_gz_path = Path(tempfile.mktemp(suffix='.tar'))
-        with gzip.open(file_path, 'rb') as f_in:
-            with open(temp_gz_path, 'wb') as f_out:
+        temp_gz_path = Path(tempfile.mktemp(suffix=".tar"))
+        with gzip.open(file_path, "rb") as f_in:
+            with open(temp_gz_path, "wb") as f_out:
                 shutil.copyfileobj(f_in, f_out)
 
         # tar 아카이브인지 확인
-        tar_check = subprocess.run(['file', str(temp_gz_path)], capture_output=True, text=True)
+        tar_check = subprocess.run(["file", str(temp_gz_path)], capture_output=True, text=True)
 
-        if 'tar' in tar_check.stdout.lower() or 'POSIX' in tar_check.stdout:
+        if "tar" in tar_check.stdout.lower() or "POSIX" in tar_check.stdout:
             # tar 아카이브에서 .nc 파일 추출
             try:
-                with tarfile.open(temp_gz_path, 'r') as tar:
-                    nc_files = [m for m in tar.getmembers() if m.name.endswith('.nc')]
+                with tarfile.open(temp_gz_path, "r") as tar:
+                    nc_files = [m for m in tar.getmembers() if m.name.endswith(".nc")]
                     if nc_files:
                         extract_dir = Path(tempfile.mkdtemp())
                         tar.extract(nc_files[0], extract_dir)
@@ -300,7 +315,7 @@ def decompress_if_gzip(file_path: Path) -> Path:
             return file_path
         else:
             # tar가 아닌 순수 gzip이면 바로 사용
-            decompressed_path = Path(tempfile.mktemp(suffix='.nc'))
+            decompressed_path = Path(tempfile.mktemp(suffix=".nc"))
             shutil.move(str(temp_gz_path), str(decompressed_path))
             return decompressed_path
 
@@ -327,12 +342,15 @@ def find_nc_file(directory: Path, var_names: List[str]) -> Optional[Path]:
 def table_exists(conn, table_name: str) -> bool:
     """테이블 존재 여부 확인"""
     cursor = conn.cursor()
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT EXISTS (
             SELECT FROM information_schema.tables
             WHERE table_schema = 'public' AND table_name = %s
         )
-    """, (table_name,))
+    """,
+        (table_name,),
+    )
     exists = cursor.fetchone()[0]
     cursor.close()
     return exists
@@ -368,7 +386,7 @@ def load_climate_data_for_grids(conn, cursor, grids: List[Tuple], logger, row_li
         return {}
 
     # SSP126이 먼저 처리되도록 정렬
-    ssp_dirs = sorted(ssp_dirs, key=lambda x: 0 if 'SSP126' in x.name else 1)
+    ssp_dirs = sorted(ssp_dirs, key=lambda x: 0 if "SSP126" in x.name else 1)
 
     logger.info(f"\n[기후 데이터 로드] {len(ssp_dirs)}개 SSP 시나리오 발견")
 
@@ -383,8 +401,8 @@ def load_climate_data_for_grids(conn, cursor, grids: List[Tuple], logger, row_li
     sample_file = decompress_if_gzip(sample_files[0])
     ds = nc.Dataset(sample_file)
 
-    lon_name = 'longitude' if 'longitude' in ds.variables else 'lon'
-    lat_name = 'latitude' if 'latitude' in ds.variables else 'lat'
+    lon_name = "longitude" if "longitude" in ds.variables else "lon"
+    lat_name = "latitude" if "latitude" in ds.variables else "lat"
     nc_lon = ds.variables[lon_name][:]
     nc_lat = ds.variables[lat_name][:]
     ds.close()
@@ -443,12 +461,14 @@ def load_climate_data_for_grids(conn, cursor, grids: List[Tuple], logger, row_li
                 time_steps = data.shape[0]
 
                 ssp_col = {
-                    'SSP126': 'ssp1', 'SSP245': 'ssp2',
-                    'SSP370': 'ssp3', 'SSP585': 'ssp5'
-                }.get(ssp_name, 'ssp1')
+                    "SSP126": "ssp1",
+                    "SSP245": "ssp2",
+                    "SSP370": "ssp3",
+                    "SSP585": "ssp5",
+                }.get(ssp_name, "ssp1")
 
                 # 첫 SSP에서 기존 데이터 삭제
-                if ssp_name == 'SSP126':
+                if ssp_name == "SSP126":
                     cursor.execute(f"DELETE FROM {table_name} WHERE grid_id = ANY(%s)", (grid_ids,))
                     conn.commit()
 
@@ -478,17 +498,23 @@ def load_climate_data_for_grids(conn, cursor, grids: List[Tuple], logger, row_li
                         if np.ma.is_masked(val) or np.isnan(val):
                             continue
 
-                        if ssp_name == 'SSP126':
-                            cursor.execute(f"""
+                        if ssp_name == "SSP126":
+                            cursor.execute(
+                                f"""
                                 INSERT INTO {table_name} (grid_id, observation_date, {ssp_col})
                                 VALUES (%s, %s, %s)
                                 ON CONFLICT (observation_date, grid_id) DO UPDATE SET {ssp_col} = EXCLUDED.{ssp_col}
-                            """, (grid_id, obs_date, float(val)))
+                            """,
+                                (grid_id, obs_date, float(val)),
+                            )
                         else:
-                            cursor.execute(f"""
+                            cursor.execute(
+                                f"""
                                 UPDATE {table_name} SET {ssp_col} = %s
                                 WHERE grid_id = %s AND observation_date = %s
-                            """, (float(val), grid_id, obs_date))
+                            """,
+                                (float(val), grid_id, obs_date),
+                            )
 
                         ssp_inserted += 1
 
@@ -545,7 +571,7 @@ def load_climate_data_for_grids(conn, cursor, grids: List[Tuple], logger, row_li
                 if not data_var:
                     # 첫 번째 데이터 변수 사용
                     for v in ds.variables.keys():
-                        if v.upper() not in ['TIME', 'LON', 'LAT', 'LONGITUDE', 'LATITUDE']:
+                        if v.upper() not in ["TIME", "LON", "LAT", "LONGITUDE", "LATITUDE"]:
                             data_var = v
                             break
 
@@ -556,12 +582,14 @@ def load_climate_data_for_grids(conn, cursor, grids: List[Tuple], logger, row_li
                 data = ds.variables[data_var][:]
 
                 ssp_col = {
-                    'SSP126': 'ssp1', 'SSP245': 'ssp2',
-                    'SSP370': 'ssp3', 'SSP585': 'ssp5'
-                }.get(ssp_name, 'ssp1')
+                    "SSP126": "ssp1",
+                    "SSP245": "ssp2",
+                    "SSP370": "ssp3",
+                    "SSP585": "ssp5",
+                }.get(ssp_name, "ssp1")
 
                 # 첫 SSP에서 기존 데이터 삭제
-                if ssp_name == 'SSP126':
+                if ssp_name == "SSP126":
                     cursor.execute(f"DELETE FROM {table_name} WHERE grid_id = ANY(%s)", (grid_ids,))
                     conn.commit()
 
@@ -589,17 +617,23 @@ def load_climate_data_for_grids(conn, cursor, grids: List[Tuple], logger, row_li
                         if np.ma.is_masked(val) or np.isnan(val):
                             continue
 
-                        if ssp_name == 'SSP126':
-                            cursor.execute(f"""
+                        if ssp_name == "SSP126":
+                            cursor.execute(
+                                f"""
                                 INSERT INTO {table_name} (grid_id, year, {ssp_col})
                                 VALUES (%s, %s, %s)
                                 ON CONFLICT (year, grid_id) DO UPDATE SET {ssp_col} = EXCLUDED.{ssp_col}
-                            """, (grid_id, year, float(val)))
+                            """,
+                                (grid_id, year, float(val)),
+                            )
                         else:
-                            cursor.execute(f"""
+                            cursor.execute(
+                                f"""
                                 UPDATE {table_name} SET {ssp_col} = %s
                                 WHERE grid_id = %s AND year = %s
-                            """, (float(val), grid_id, year))
+                            """,
+                                (float(val), grid_id, year),
+                            )
 
                         ssp_inserted += 1
 
@@ -652,7 +686,7 @@ def load_sgg261_daily_data(conn, cursor, logger, row_limit: int = 0) -> Dict[str
     admin_codes_cache = {}  # 행정코드 캐시
 
     # SSP126이 먼저 처리되도록 정렬
-    ssp_dirs = sorted(ssp_dirs, key=lambda x: 0 if 'SSP126' in x.name else 1)
+    ssp_dirs = sorted(ssp_dirs, key=lambda x: 0 if "SSP126" in x.name else 1)
 
     for table_name, var_name in SGG261_DAILY_TABLE_MAP.items():
         if not table_exists(conn, table_name):
@@ -678,22 +712,21 @@ def load_sgg261_daily_data(conn, cursor, logger, row_limit: int = 0) -> Dict[str
             asc_file = asc_files[0]
             logger.info(f"      {table_name} ({ssp_name}): {asc_file.name}")
 
-            ssp_col = {
-                'SSP126': 'ssp1', 'SSP245': 'ssp2',
-                'SSP370': 'ssp3', 'SSP585': 'ssp5'
-            }.get(ssp_name, 'ssp1')
+            ssp_col = {"SSP126": "ssp1", "SSP245": "ssp2", "SSP370": "ssp3", "SSP585": "ssp5"}.get(
+                ssp_name, "ssp1"
+            )
 
             # 첫 SSP + 첫 테이블에서만 location_sgg261 초기화
-            if ssp_name == 'SSP126':
+            if ssp_name == "SSP126":
                 cursor.execute(f"TRUNCATE TABLE {table_name}")
-                if table_name == 'ta_daily_sgg261':  # 첫 테이블에서만 location_sgg261 초기화
+                if table_name == "ta_daily_sgg261":  # 첫 테이블에서만 location_sgg261 초기화
                     cursor.execute("TRUNCATE TABLE location_sgg261")
                 conn.commit()
 
             try:
                 # tar.gz 압축 해제 후 읽기
-                with tarfile.open(asc_file, 'r:gz') as tar:
-                    members = [m for m in tar.getmembers() if m.name.endswith('.txt')]
+                with tarfile.open(asc_file, "r:gz") as tar:
+                    members = [m for m in tar.getmembers() if m.name.endswith(".txt")]
 
                     # SAMPLE_LIMIT 적용: row_limit > 0이면 제한된 연도만 처리
                     if row_limit > 0:
@@ -708,7 +741,7 @@ def load_sgg261_daily_data(conn, cursor, logger, row_limit: int = 0) -> Dict[str
                         if not f:
                             continue
 
-                        content = f.read().decode('utf-8')
+                        content = f.read().decode("utf-8")
                         reader = csv.reader(io.StringIO(content))
                         rows = list(reader)
 
@@ -726,25 +759,36 @@ def load_sgg261_daily_data(conn, cursor, logger, row_limit: int = 0) -> Dict[str
                         sigungu_names = rows[2][1:]
 
                         # location_sgg261에 행정구역 정보 삽입 (첫 SSP 첫 파일에서만, 울산+SK만)
-                        if ssp_name == 'SSP126' and table_name == 'ta_daily_sgg261' and not admin_codes_cache:
+                        if (
+                            ssp_name == "SSP126"
+                            and table_name == "ta_daily_sgg261"
+                            and not admin_codes_cache
+                        ):
                             for i, admin_code in enumerate(admin_codes):
                                 # 필터링: 울산(31xxx) 또는 SK 사업장 시군구만
-                                if not any(admin_code.startswith(code) for code in SGG261_FILTER_CODES):
+                                if not any(
+                                    admin_code.startswith(code) for code in SGG261_FILTER_CODES
+                                ):
                                     continue
 
                                 if admin_code not in admin_codes_cache:
-                                    sido = sido_names[i] if i < len(sido_names) else ''
-                                    sigungu = sigungu_names[i] if i < len(sigungu_names) else ''
+                                    sido = sido_names[i] if i < len(sido_names) else ""
+                                    sigungu = sigungu_names[i] if i < len(sigungu_names) else ""
 
-                                    cursor.execute("""
+                                    cursor.execute(
+                                        """
                                         INSERT INTO location_sgg261 (admin_code, sido_name, sigungu_name)
                                         VALUES (%s, %s, %s)
                                         ON CONFLICT (admin_code) DO NOTHING
-                                    """, (admin_code, sido, sigungu))
+                                    """,
+                                        (admin_code, sido, sigungu),
+                                    )
                                     admin_codes_cache[admin_code] = True
 
                             conn.commit()
-                            logger.info(f"      location_sgg261: {len(admin_codes)}개 행정구역 등록")
+                            logger.info(
+                                f"      location_sgg261: {len(admin_codes)}개 행정구역 등록"
+                            )
 
                         # 데이터 행 처리 (Row 3부터)
                         for row in rows[3:]:
@@ -756,7 +800,7 @@ def load_sgg261_daily_data(conn, cursor, logger, row_limit: int = 0) -> Dict[str
 
                             date_str = row[0]
                             try:
-                                obs_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+                                obs_date = datetime.strptime(date_str, "%Y-%m-%d").date()
                             except ValueError:
                                 continue
 
@@ -766,7 +810,9 @@ def load_sgg261_daily_data(conn, cursor, logger, row_limit: int = 0) -> Dict[str
                                     break
 
                                 # 필터링: 울산(31xxx) 또는 SK 사업장 시군구만
-                                if not any(admin_code.startswith(code) for code in SGG261_FILTER_CODES):
+                                if not any(
+                                    admin_code.startswith(code) for code in SGG261_FILTER_CODES
+                                ):
                                     continue
 
                                 try:
@@ -774,19 +820,25 @@ def load_sgg261_daily_data(conn, cursor, logger, row_limit: int = 0) -> Dict[str
                                 except (ValueError, IndexError):
                                     continue
 
-                                if ssp_name == 'SSP126':
-                                    cursor.execute(f"""
+                                if ssp_name == "SSP126":
+                                    cursor.execute(
+                                        f"""
                                         INSERT INTO {table_name} (admin_code, observation_date, {ssp_col})
                                         VALUES (%s, %s, %s)
                                         ON CONFLICT (observation_date, admin_code)
                                         DO UPDATE SET {ssp_col} = EXCLUDED.{ssp_col}
-                                    """, (admin_code, obs_date, val))
+                                    """,
+                                        (admin_code, obs_date, val),
+                                    )
                                 else:
-                                    cursor.execute(f"""
+                                    cursor.execute(
+                                        f"""
                                         UPDATE {table_name}
                                         SET {ssp_col} = %s
                                         WHERE admin_code = %s AND observation_date = %s
-                                    """, (val, admin_code, obs_date))
+                                    """,
+                                        (val, admin_code, obs_date),
+                                    )
 
                                 ssp_inserted += 1
 
@@ -826,7 +878,7 @@ def load_climate_geocode():
     logger.info("=" * 60)
 
     # API 키 확인
-    api_key = os.getenv('VWORLD_API_KEY')
+    api_key = os.getenv("VWORLD_API_KEY")
     if not api_key:
         logger.error("VWORLD_API_KEY 환경변수 필요")
         return
@@ -847,14 +899,14 @@ def load_climate_geocode():
     logger.info("\nlocation_grid 테이블 컬럼 확인/추가")
 
     geocode_columns = [
-        ('sido', 'VARCHAR(50)'),
-        ('sigungu', 'VARCHAR(50)'),
-        ('sigungu_cd', 'VARCHAR(10)'),
-        ('dong', 'VARCHAR(50)'),
-        ('bjdong_cd', 'VARCHAR(10)'),
-        ('dong_code', 'VARCHAR(20)'),
-        ('full_address', 'VARCHAR(200)'),
-        ('geocoded_at', 'TIMESTAMP'),
+        ("sido", "VARCHAR(50)"),
+        ("sigungu", "VARCHAR(50)"),
+        ("sigungu_cd", "VARCHAR(10)"),
+        ("dong", "VARCHAR(50)"),
+        ("bjdong_cd", "VARCHAR(10)"),
+        ("dong_code", "VARCHAR(20)"),
+        ("full_address", "VARCHAR(200)"),
+        ("geocoded_at", "TIMESTAMP"),
     ]
 
     for col_name, col_type in geocode_columns:
@@ -879,15 +931,22 @@ def load_climate_geocode():
     logger.info("\n[2단계] 역지오코딩 대상 조회 (좌표 기반)")
 
     # 울산 좌표 범위 격자 중 sido가 NULL인 것
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT grid_id, longitude, latitude
         FROM location_grid
         WHERE latitude BETWEEN %s AND %s
           AND longitude BETWEEN %s AND %s
           AND sido IS NULL
         ORDER BY grid_id
-    """, (ULSAN_BOUNDS['lat_min'], ULSAN_BOUNDS['lat_max'],
-          ULSAN_BOUNDS['lon_min'], ULSAN_BOUNDS['lon_max']))
+    """,
+        (
+            ULSAN_BOUNDS["lat_min"],
+            ULSAN_BOUNDS["lat_max"],
+            ULSAN_BOUNDS["lon_min"],
+            ULSAN_BOUNDS["lon_max"],
+        ),
+    )
     ulsan_grids = cursor.fetchall()
     logger.info(f"   울산 좌표 범위 격자: {len(ulsan_grids)}개 (미완료)")
 
@@ -927,7 +986,8 @@ def load_climate_geocode():
 
             if result:
                 try:
-                    cursor.execute("""
+                    cursor.execute(
+                        """
                         UPDATE location_grid
                         SET sido = %s,
                             sigungu = %s,
@@ -938,19 +998,21 @@ def load_climate_geocode():
                             full_address = %s,
                             geocoded_at = CURRENT_TIMESTAMP
                         WHERE grid_id = %s
-                    """, (
-                        result['sido'],
-                        result['sigungu'],
-                        result['sigungu_cd'],
-                        result['dong'],
-                        result['bjdong_cd'],
-                        result['dong_code'],
-                        result['full_address'],
-                        grid_id
-                    ))
+                    """,
+                        (
+                            result["sido"],
+                            result["sigungu"],
+                            result["sigungu_cd"],
+                            result["dong"],
+                            result["bjdong_cd"],
+                            result["dong_code"],
+                            result["full_address"],
+                            grid_id,
+                        ),
+                    )
                     success_count += 1
 
-                    if '울산' in result.get('sido', ''):
+                    if "울산" in result.get("sido", ""):
                         ulsan_count += 1
 
                     if i < len(sk_grids):
@@ -963,7 +1025,9 @@ def load_climate_geocode():
                 fail_count += 1
 
             if (i + 1) % 50 == 0:
-                logger.info(f"   진행: {i + 1}/{len(all_grids)} (성공: {success_count}, SK: {sk_count}, 울산: {ulsan_count})")
+                logger.info(
+                    f"   진행: {i + 1}/{len(all_grids)} (성공: {success_count}, SK: {sk_count}, 울산: {ulsan_count})"
+                )
                 conn.commit()
 
             time.sleep(0.1)
@@ -972,14 +1036,21 @@ def load_climate_geocode():
 
     # 7. 전체 기후 데이터 로드
     # SK 사업장 + 울산 1km 격자 모두 조회 (좌표 기반 - 지오코딩과 독립)
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT grid_id, longitude, latitude
         FROM location_grid
         WHERE (latitude BETWEEN %s AND %s AND longitude BETWEEN %s AND %s)
            OR full_address LIKE '[SK]%%'
         ORDER BY grid_id
-    """, (ULSAN_BOUNDS['lat_min'], ULSAN_BOUNDS['lat_max'],
-          ULSAN_BOUNDS['lon_min'], ULSAN_BOUNDS['lon_max']))
+    """,
+        (
+            ULSAN_BOUNDS["lat_min"],
+            ULSAN_BOUNDS["lat_max"],
+            ULSAN_BOUNDS["lon_min"],
+            ULSAN_BOUNDS["lon_max"],
+        ),
+    )
     climate_grids = cursor.fetchall()
     logger.info(f"\n[5단계] 전체 기후 데이터 로드 대상: {len(climate_grids)}개 격자")
     if SAMPLE_LIMIT > 0:

@@ -3,7 +3,6 @@ Background Task Manager
 백그라운드 작업 관리 및 상태 추적 모듈
 """
 
-import asyncio
 import threading
 from typing import Dict, Any, Optional
 from datetime import datetime
@@ -12,6 +11,7 @@ from enum import Enum
 
 class TaskStatus(str, Enum):
     """작업 상태"""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -46,7 +46,7 @@ class BackgroundTaskManager:
         task_type: str,
         total_sites: int,
         total_years: int,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
         새로운 작업 생성
@@ -63,19 +63,19 @@ class BackgroundTaskManager:
         """
         with self._lock:
             task_info = {
-                'task_id': task_id,
-                'task_type': task_type,
-                'status': TaskStatus.PENDING,
-                'total_sites': total_sites,
-                'total_years': total_years,
-                'completed_sites': 0,
-                'failed_sites': 0,
-                'current_progress': {},  # {site_id: {completed_years: int, failed_years: int}}
-                'created_at': datetime.now(),
-                'started_at': None,
-                'completed_at': None,
-                'error_message': None,
-                'metadata': metadata or {}
+                "task_id": task_id,
+                "task_type": task_type,
+                "status": TaskStatus.PENDING,
+                "total_sites": total_sites,
+                "total_years": total_years,
+                "completed_sites": 0,
+                "failed_sites": 0,
+                "current_progress": {},  # {site_id: {completed_years: int, failed_years: int}}
+                "created_at": datetime.now(),
+                "started_at": None,
+                "completed_at": None,
+                "error_message": None,
+                "metadata": metadata or {},
             }
             self._tasks[task_id] = task_info
             return task_info
@@ -84,45 +84,41 @@ class BackgroundTaskManager:
         """작업 시작"""
         with self._lock:
             if task_id in self._tasks:
-                self._tasks[task_id]['status'] = TaskStatus.RUNNING
-                self._tasks[task_id]['started_at'] = datetime.now()
+                self._tasks[task_id]["status"] = TaskStatus.RUNNING
+                self._tasks[task_id]["started_at"] = datetime.now()
 
     def update_site_progress(
-        self,
-        task_id: str,
-        site_id: str,
-        completed_years: int = 0,
-        failed_years: int = 0
+        self, task_id: str, site_id: str, completed_years: int = 0, failed_years: int = 0
     ):
         """사업장별 진행 상황 업데이트"""
         with self._lock:
             if task_id in self._tasks:
-                progress = self._tasks[task_id]['current_progress']
+                progress = self._tasks[task_id]["current_progress"]
                 if site_id not in progress:
-                    progress[site_id] = {'completed_years': 0, 'failed_years': 0}
+                    progress[site_id] = {"completed_years": 0, "failed_years": 0}
 
-                progress[site_id]['completed_years'] += completed_years
-                progress[site_id]['failed_years'] += failed_years
+                progress[site_id]["completed_years"] += completed_years
+                progress[site_id]["failed_years"] += failed_years
 
     def complete_site(self, task_id: str, site_id: str, success: bool = True):
         """사업장 계산 완료"""
         with self._lock:
             if task_id in self._tasks:
                 if success:
-                    self._tasks[task_id]['completed_sites'] += 1
+                    self._tasks[task_id]["completed_sites"] += 1
                 else:
-                    self._tasks[task_id]['failed_sites'] += 1
+                    self._tasks[task_id]["failed_sites"] += 1
 
     def complete_task(self, task_id: str, error_message: Optional[str] = None):
         """작업 완료"""
         with self._lock:
             if task_id in self._tasks:
                 if error_message:
-                    self._tasks[task_id]['status'] = TaskStatus.FAILED
-                    self._tasks[task_id]['error_message'] = error_message
+                    self._tasks[task_id]["status"] = TaskStatus.FAILED
+                    self._tasks[task_id]["error_message"] = error_message
                 else:
-                    self._tasks[task_id]['status'] = TaskStatus.COMPLETED
-                self._tasks[task_id]['completed_at'] = datetime.now()
+                    self._tasks[task_id]["status"] = TaskStatus.COMPLETED
+                self._tasks[task_id]["completed_at"] = datetime.now()
 
     def get_task(self, task_id: str) -> Optional[Dict[str, Any]]:
         """작업 정보 조회"""

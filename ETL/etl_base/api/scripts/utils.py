@@ -14,7 +14,7 @@ import logging
 import requests
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional
 
 import psycopg2
 from psycopg2.extensions import connection as Connection
@@ -53,8 +53,7 @@ def setup_logging(name: str) -> logging.Logger:
 
         # 포맷 설정
         formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
         )
         console_handler.setFormatter(formatter)
         logger.addHandler(console_handler)
@@ -64,7 +63,7 @@ def setup_logging(name: str) -> logging.Logger:
         log_dir.mkdir(exist_ok=True)
 
         log_file = log_dir / f"{name}_{datetime.now().strftime('%Y%m%d')}.log"
-        file_handler = logging.FileHandler(log_file, encoding='utf-8')
+        file_handler = logging.FileHandler(log_file, encoding="utf-8")
         file_handler.setLevel(logging.INFO)
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
@@ -87,7 +86,7 @@ def get_db_connection() -> Connection:
         port=os.getenv("DW_PORT", "5434"),
         dbname=os.getenv("DW_NAME", "skala_datawarehouse"),
         user=os.getenv("DW_USER", "skala_dw_user"),
-        password=os.getenv("DW_PASSWORD", "skala_dw_2025")
+        password=os.getenv("DW_PASSWORD", "skala_dw_2025"),
     )
 
 
@@ -102,12 +101,11 @@ class APIClient:
     def __init__(self, logger: logging.Logger = None):
         self.logger = logger or logging.getLogger(__name__)
         self.session = requests.Session()
-        self.session.headers.update({
-            'User-Agent': 'SKALA-ETL/1.0'
-        })
+        self.session.headers.update({"User-Agent": "SKALA-ETL/1.0"})
 
-    def get(self, url: str, params: Dict = None, retries: int = 3,
-            timeout: int = 30, delay: float = 1.0) -> Optional[Dict]:
+    def get(
+        self, url: str, params: Dict = None, retries: int = 3, timeout: int = 30, delay: float = 1.0
+    ) -> Optional[Dict]:
         """
         GET 요청 (재시도 포함)
 
@@ -131,7 +129,7 @@ class APIClient:
                     return response.json()
                 except json.JSONDecodeError:
                     # XML 등 다른 형식일 수 있음
-                    return {'raw_text': response.text, 'status_code': response.status_code}
+                    return {"raw_text": response.text, "status_code": response.status_code}
 
             except requests.exceptions.RequestException as e:
                 self.logger.warning(f"API 요청 실패 (시도 {attempt + 1}/{retries}): {e}")
@@ -159,8 +157,13 @@ def get_api_key(key_name: str) -> Optional[str]:
     return key
 
 
-def upsert_api_data(conn: Connection, table_name: str, data: Dict,
-                    unique_columns: List[str], update_columns: List[str] = None) -> bool:
+def upsert_api_data(
+    conn: Connection,
+    table_name: str,
+    data: Dict,
+    unique_columns: List[str],
+    update_columns: List[str] = None,
+) -> bool:
     """
     API 데이터 UPSERT (INSERT ON CONFLICT UPDATE)
 
@@ -201,16 +204,16 @@ def upsert_api_data(conn: Connection, table_name: str, data: Dict,
         if update_columns:
             update_str = ", ".join([f"{c} = EXCLUDED.{c}" for c in update_columns])
             # 테이블별 타임스탬프 컬럼 확인 (cached_at 또는 updated_at)
-            if 'cached_at' in columns:
+            if "cached_at" in columns:
                 update_str += ", cached_at = CURRENT_TIMESTAMP"
-            elif 'updated_at' in columns:
+            elif "updated_at" in columns:
                 update_str += ", updated_at = CURRENT_TIMESTAMP"
         else:
             # 업데이트할 데이터 컬럼이 없는 경우 (모든 컬럼이 unique)
             # 타임스탬프만 업데이트하거나 DO NOTHING
-            if 'cached_at' in columns:
+            if "cached_at" in columns:
                 update_str = "cached_at = CURRENT_TIMESTAMP"
-            elif 'updated_at' in columns:
+            elif "updated_at" in columns:
                 update_str = "updated_at = CURRENT_TIMESTAMP"
             else:
                 # 타임스탬프 컬럼도 없으면 충돌 시 아무것도 하지 않음
@@ -244,8 +247,13 @@ def upsert_api_data(conn: Connection, table_name: str, data: Dict,
         cursor.close()
 
 
-def batch_upsert(conn: Connection, table_name: str, data_list: List[Dict],
-                 unique_columns: List[str], batch_size: int = 100) -> int:
+def batch_upsert(
+    conn: Connection,
+    table_name: str,
+    data_list: List[Dict],
+    unique_columns: List[str],
+    batch_size: int = 100,
+) -> int:
     """
     배치 UPSERT
 
@@ -262,7 +270,7 @@ def batch_upsert(conn: Connection, table_name: str, data_list: List[Dict],
     success_count = 0
 
     for i in range(0, len(data_list), batch_size):
-        batch = data_list[i:i + batch_size]
+        batch = data_list[i : i + batch_size]
         for data in batch:
             if upsert_api_data(conn, table_name, data, unique_columns):
                 success_count += 1
@@ -291,83 +299,74 @@ def get_table_count(conn: Connection, table_name: str) -> int:
 # API 엔드포인트 정의
 API_ENDPOINTS = {
     # SGIS (통계지리정보서비스 - 2025.11.20 도메인 변경)
-    'sgis_auth': 'https://sgisapi.mods.go.kr/OpenAPI3/auth/authentication.json',
-    'sgis_population': 'https://sgisapi.mods.go.kr/OpenAPI3/stats/searchpopulation.json',
-    'sgis_addr_stage': 'https://sgisapi.mods.go.kr/OpenAPI3/addr/stage.json',
-
+    "sgis_auth": "https://sgisapi.mods.go.kr/OpenAPI3/auth/authentication.json",
+    "sgis_population": "https://sgisapi.mods.go.kr/OpenAPI3/stats/searchpopulation.json",
+    "sgis_addr_stage": "https://sgisapi.mods.go.kr/OpenAPI3/addr/stage.json",
     # 재난안전데이터공유플랫폼 (safetydata.go.kr)
-    'river_info': 'https://www.safetydata.go.kr/V2/api/DSSP-IF-10720',
-    'emergency_messages': 'https://www.safetydata.go.kr/V2/api/DSSP-IF-00247',
-
+    "river_info": "https://www.safetydata.go.kr/V2/api/DSSP-IF-10720",
+    "emergency_messages": "https://www.safetydata.go.kr/V2/api/DSSP-IF-00247",
     # WAMIS (인증키 불필요 - 오픈 API)
-    'wamis_water_usage': 'http://www.wamis.go.kr:8080/wamis/openapi/wks/wks_wiawtaa_lst',
-    'wamis_stations': 'http://www.wamis.go.kr:8080/wamis/openapi/wkw/flw_dubobsif',
-    'wamis_daily_flow': 'http://www.wamis.go.kr:8080/wamis/openapi/wkw/flw_dtdata',
-
+    "wamis_water_usage": "http://www.wamis.go.kr:8080/wamis/openapi/wks/wks_wiawtaa_lst",
+    "wamis_stations": "http://www.wamis.go.kr:8080/wamis/openapi/wkw/flw_dubobsif",
+    "wamis_daily_flow": "http://www.wamis.go.kr:8080/wamis/openapi/wkw/flw_dtdata",
     # K-water 댐 저수율 (공공데이터포털)
-    'dam_storage': 'http://apis.data.go.kr/B500001/rwis/waterLevel/list',
-
+    "dam_storage": "http://apis.data.go.kr/B500001/rwis/waterLevel/list",
     # 기상청 태풍 (TYPHOON_API_KEY 사용)
-    'typhoon_list': 'https://apihub.kma.go.kr/api/typ01/url/typ_lst.php',
-    'typhoon_data': 'https://apihub.kma.go.kr/api/typ01/url/typ_data.php',  # typ_inf.php(X) -> typ_data.php(O)
-    'typhoon_now': 'https://apihub.kma.go.kr/api/typ01/url/typ_now.php',
-    'typhoon_affected': 'https://apis.data.go.kr/1360000/TyphoonInfoService/getTyphoonInfo',
-
+    "typhoon_list": "https://apihub.kma.go.kr/api/typ01/url/typ_lst.php",
+    "typhoon_data": "https://apihub.kma.go.kr/api/typ01/url/typ_data.php",  # typ_inf.php(X) -> typ_data.php(O)
+    "typhoon_now": "https://apihub.kma.go.kr/api/typ01/url/typ_now.php",
+    "typhoon_affected": "https://apis.data.go.kr/1360000/TyphoonInfoService/getTyphoonInfo",
     # 기상청 TD (열대저압부)
-    'td_list': 'https://apihub.kma.go.kr/api/typ01/url/td_lst.php',
-    'td_data': 'https://apihub.kma.go.kr/api/typ01/url/td_data.php',
-    'td_now': 'https://apihub.kma.go.kr/api/typ01/url/td_now.php',
-
+    "td_list": "https://apihub.kma.go.kr/api/typ01/url/td_lst.php",
+    "td_data": "https://apihub.kma.go.kr/api/typ01/url/td_data.php",
+    "td_now": "https://apihub.kma.go.kr/api/typ01/url/td_now.php",
     # 기상청 태풍 베스트트랙 (사후 재분석)
-    'typhoon_besttrack': 'https://apihub.kma.go.kr/api/typ01/url/typ_besttrack.php',
-
+    "typhoon_besttrack": "https://apihub.kma.go.kr/api/typ01/url/typ_besttrack.php",
     # 재해연보 (행정안전부)
-    'disaster_yearbook': 'https://apis.data.go.kr/1741000/NaturalDisasterDamageByYear/getNaturalDisasterDamageByYear',
-
+    "disaster_yearbook": "https://apis.data.go.kr/1741000/NaturalDisasterDamageByYear/getNaturalDisasterDamageByYear",
     # 공공데이터포털 (PUBLICDATA_API_KEY 사용)
-    'hospitals': 'https://apis.data.go.kr/B552657/HsptlAsembySearchService/getHsptlMdcncListInfoInqire',
-    'buildings': 'https://apis.data.go.kr/1613000/BldRgstHubService/getBrTitleInfo',
-    'firestations': 'https://apis.data.go.kr/1741000/FacInfoService/getFacInfo',
-    'shelters': 'https://apis.data.go.kr/1741000/SheltInfoService/getSheltInfo',
-    'watertanks': 'https://apis.data.go.kr/1480523/ReservoirInfoService/getReservoirInfo',
-    'groundwater': 'https://apis.data.go.kr/B500001/groundwater/getGroundwaterInfo',
-    'wildfire': 'https://apis.data.go.kr/1400377/forestPoint/forestPointListSearch',
-    'heating': 'https://apis.data.go.kr/B552584/RealTimeHeatingIndex/getRealTimeHeatingIndex',
-    'coastal_infra': 'https://apis.data.go.kr/1192000/CoastProtectionInfoService/getCoastProtectionList',
+    "hospitals": "https://apis.data.go.kr/B552657/HsptlAsembySearchService/getHsptlMdcncListInfoInqire",
+    "buildings": "https://apis.data.go.kr/1613000/BldRgstHubService/getBrTitleInfo",
+    "firestations": "https://apis.data.go.kr/1741000/FacInfoService/getFacInfo",
+    "shelters": "https://apis.data.go.kr/1741000/SheltInfoService/getSheltInfo",
+    "watertanks": "https://apis.data.go.kr/1480523/ReservoirInfoService/getReservoirInfo",
+    "groundwater": "https://apis.data.go.kr/B500001/groundwater/getGroundwaterInfo",
+    "wildfire": "https://apis.data.go.kr/1400377/forestPoint/forestPointListSearch",
+    "heating": "https://apis.data.go.kr/B552584/RealTimeHeatingIndex/getRealTimeHeatingIndex",
+    "coastal_infra": "https://apis.data.go.kr/1192000/CoastProtectionInfoService/getCoastProtectionList",
 }
 
 # API 키 매핑
 API_KEY_MAP = {
     # SGIS (2개 키 필요: SERVICE_ID + SECURITY_KEY)
-    'sgis_auth': 'SGIS_SERVICE_ID',
-    'sgis_population': 'SGIS_SERVICE_ID',
-
-    'river_info': 'RIVER_API_KEY',
-    'emergency_messages': 'EMERGENCYMESSAGE_API_KEY',
-    'dam_storage': 'PUBLICDATA_API_KEY',
+    "sgis_auth": "SGIS_SERVICE_ID",
+    "sgis_population": "SGIS_SERVICE_ID",
+    "river_info": "RIVER_API_KEY",
+    "emergency_messages": "EMERGENCYMESSAGE_API_KEY",
+    "dam_storage": "PUBLICDATA_API_KEY",
     # 태풍 API (TYPHOON_API_KEY 사용)
-    'typhoon_list': 'TYPHOON_API_KEY',
-    'typhoon_data': 'TYPHOON_API_KEY',
-    'typhoon_now': 'TYPHOON_API_KEY',
-    'typhoon_affected': 'PUBLICDATA_API_KEY',
+    "typhoon_list": "TYPHOON_API_KEY",
+    "typhoon_data": "TYPHOON_API_KEY",
+    "typhoon_now": "TYPHOON_API_KEY",
+    "typhoon_affected": "PUBLICDATA_API_KEY",
     # TD API (TYPHOON_API_KEY 사용)
-    'td_list': 'TYPHOON_API_KEY',
-    'td_data': 'TYPHOON_API_KEY',
-    'td_now': 'TYPHOON_API_KEY',
+    "td_list": "TYPHOON_API_KEY",
+    "td_data": "TYPHOON_API_KEY",
+    "td_now": "TYPHOON_API_KEY",
     # 베스트트랙
-    'typhoon_besttrack': 'TYPHOON_API_KEY',
+    "typhoon_besttrack": "TYPHOON_API_KEY",
     # 재해연보
-    'disaster_yearbook': 'PUBLICDATA_API_KEY',
+    "disaster_yearbook": "PUBLICDATA_API_KEY",
     # 기타 공공데이터
-    'hospitals': 'PUBLICDATA_API_KEY',
-    'buildings': 'PUBLICDATA_API_KEY',
-    'firestations': 'PUBLICDATA_API_KEY',
-    'shelters': 'PUBLICDATA_API_KEY',
-    'watertanks': 'PUBLICDATA_API_KEY',
-    'groundwater': 'PUBLICDATA_API_KEY',
-    'wildfire': 'PUBLICDATA_API_KEY',
-    'heating': 'PUBLICDATA_API_KEY',
-    'coastal_infra': 'PUBLICDATA_API_KEY',
+    "hospitals": "PUBLICDATA_API_KEY",
+    "buildings": "PUBLICDATA_API_KEY",
+    "firestations": "PUBLICDATA_API_KEY",
+    "shelters": "PUBLICDATA_API_KEY",
+    "watertanks": "PUBLICDATA_API_KEY",
+    "groundwater": "PUBLICDATA_API_KEY",
+    "wildfire": "PUBLICDATA_API_KEY",
+    "heating": "PUBLICDATA_API_KEY",
+    "coastal_infra": "PUBLICDATA_API_KEY",
     # WAMIS는 키 불필요
 }
 
@@ -387,6 +386,11 @@ if __name__ == "__main__":
         print(f"Connection failed: {e}")
 
     print("\nAPI Keys loaded:")
-    for key_name in ['BUILDING_API_KEY', 'RIVER_API_KEY', 'EMERGENCYMESSAGE_API_KEY', 'KMA_API_KEY']:
+    for key_name in [
+        "BUILDING_API_KEY",
+        "RIVER_API_KEY",
+        "EMERGENCYMESSAGE_API_KEY",
+        "KMA_API_KEY",
+    ]:
         key = get_api_key(key_name)
         print(f"  {key_name}: {'OK' if key else 'MISSING'}")

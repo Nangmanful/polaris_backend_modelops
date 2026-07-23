@@ -1,4 +1,4 @@
-'''
+"""
 파일명: hazard_timeseries_batch.py
 최종 수정일: 2025-12-15
 버전: v01
@@ -12,7 +12,7 @@
         * SSP126, SSP245, SSP370, SSP585 4개 시나리오
         * 2021-2100년 (80년) 1년 단위 계산
         * 9개 리스크 타입별 H 계산
-'''
+"""
 
 import logging
 from typing import List, Dict, Any, Tuple
@@ -39,8 +39,7 @@ from ..database.connection_long import DatabaseConnectionLong
 from ..data_loaders.long_term_mapper import LongTermDataMapper
 
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -50,15 +49,15 @@ SCENARIOS = ["SSP126", "SSP245", "SSP370", "SSP585"]
 YEARS = list(range(2021, 2101))  # 2021-2100 (80년)
 
 RISK_TYPES = [
-    'extreme_heat',
-    'extreme_cold',
-    'wildfire',
-    'drought',
-    'water_stress',
-    'sea_level_rise',
-    'river_flood',
-    'urban_flood',
-    'typhoon'
+    "extreme_heat",
+    "extreme_cold",
+    "wildfire",
+    "drought",
+    "water_stress",
+    "sea_level_rise",
+    "river_flood",
+    "urban_flood",
+    "typhoon",
 ]
 
 
@@ -86,37 +85,37 @@ def _process_hazard_task_worker(task: Dict[str, Any]) -> Dict[str, Any]:
             'error': str (실패 시)
         }
     """
-    lat = task['latitude']
-    lon = task['longitude']
-    scenario = task['scenario']
-    year = task['year']
-    risk_types = task['risk_types']
-    time_scope = task.get('time_scope', 'yearly')
+    lat = task["latitude"]
+    lon = task["longitude"]
+    scenario = task["scenario"]
+    year = task["year"]
+    risk_types = task["risk_types"]
+    time_scope = task.get("time_scope", "yearly")
 
     try:
         # 각 워커마다 독립적으로 에이전트 생성
         hazard_agents = {
-            'extreme_heat': ExtremeHeatHScoreAgent(),
-            'extreme_cold': ExtremeColdHScoreAgent(),
-            'drought': DroughtHScoreAgent(),
-            'river_flood': RiverFloodHScoreAgent(),
-            'urban_flood': UrbanFloodHScoreAgent(),
-            'sea_level_rise': SeaLevelRiseHScoreAgent(),
-            'typhoon': TyphoonHScoreAgent(),
-            'wildfire': WildfireHScoreAgent(),
-            'water_stress': WaterStressHScoreAgent()
+            "extreme_heat": ExtremeHeatHScoreAgent(),
+            "extreme_cold": ExtremeColdHScoreAgent(),
+            "drought": DroughtHScoreAgent(),
+            "river_flood": RiverFloodHScoreAgent(),
+            "urban_flood": UrbanFloodHScoreAgent(),
+            "sea_level_rise": SeaLevelRiseHScoreAgent(),
+            "typhoon": TyphoonHScoreAgent(),
+            "wildfire": WildfireHScoreAgent(),
+            "water_stress": WaterStressHScoreAgent(),
         }
 
         hazard_results = []
 
         # 장기(decadal) 분석인 경우 해당 Decade의 기후 데이터 한 번 조회 (최적화)
         long_term_data = None
-        if time_scope == 'decadal':
+        if time_scope == "decadal":
             try:
                 # 2030 -> 2030s 등 decade 식별
                 decade = (year // 10) * 10
                 long_term_data = DatabaseConnectionLong.fetch_climate_data_by_decade(
-                    lat, lon, decade, scenario.lower() if scenario.startswith('SSP') else 'ssp2'
+                    lat, lon, decade, scenario.lower() if scenario.startswith("SSP") else "ssp2"
                 )
             except Exception as e:
                 logger.error(f"Long-term data fetch failed for {year} at ({lat}, {lon}): {e}")
@@ -127,17 +126,17 @@ def _process_hazard_task_worker(task: Dict[str, Any]) -> Dict[str, Any]:
             try:
                 collected_data = {}
 
-                if time_scope == 'decadal':
+                if time_scope == "decadal":
                     if not long_term_data:
-                         raise ValueError("Long-term data is empty")
+                        raise ValueError("Long-term data is empty")
 
                     base_info = {
-                        'latitude': lat,
-                        'longitude': lon,
-                        'scenario': scenario,
-                        'target_year': year,
-                        'time_scope': time_scope,
-                        'building_data': None # H 계산시 건물정보 불필요
+                        "latitude": lat,
+                        "longitude": lon,
+                        "scenario": scenario,
+                        "target_year": year,
+                        "time_scope": time_scope,
+                        "building_data": None,  # H 계산시 건물정보 불필요
                     }
                     collected_data = LongTermDataMapper.map_data(
                         risk_type, long_term_data, base_info
@@ -145,25 +144,23 @@ def _process_hazard_task_worker(task: Dict[str, Any]) -> Dict[str, Any]:
                 else:
                     # 기존 Yearly 방식
                     collector = HazardDataCollector(scenario=scenario, target_year=year)
-                    collected_data = collector.collect_data(
-                        lat=lat,
-                        lon=lon,
-                        risk_type=risk_type
-                    )
+                    collected_data = collector.collect_data(lat=lat, lon=lon, risk_type=risk_type)
 
                 h_agent = hazard_agents[risk_type]
                 h_result = h_agent.calculate_hazard_score(collected_data)
 
-                hazard_results.append({
-                    'latitude': lat,
-                    'longitude': lon,
-                    'scenario': scenario,
-                    'target_year': year,
-                    'risk_type': risk_type,
-                    'hazard_score': h_result.get('hazard_score', 0.0),
-                    'hazard_score_100': h_result.get('hazard_score_100', 0.0),
-                    'hazard_level': h_result.get('hazard_level', 'Very Low')
-                })
+                hazard_results.append(
+                    {
+                        "latitude": lat,
+                        "longitude": lon,
+                        "scenario": scenario,
+                        "target_year": year,
+                        "risk_type": risk_type,
+                        "hazard_score": h_result.get("hazard_score", 0.0),
+                        "hazard_score_100": h_result.get("hazard_score_100", 0.0),
+                        "hazard_level": h_result.get("hazard_level", "Very Low"),
+                    }
+                )
 
             except Exception as e:
                 # 개별 리스크 실패는 로깅만 하고 계속 진행
@@ -174,18 +171,14 @@ def _process_hazard_task_worker(task: Dict[str, Any]) -> Dict[str, Any]:
                 pass
 
         return {
-            'status': 'success',
-            'task': task,
-            'hazard_results': hazard_results,
-            'risks_calculated': len(hazard_results)
+            "status": "success",
+            "task": task,
+            "hazard_results": hazard_results,
+            "risks_calculated": len(hazard_results),
         }
 
     except Exception as e:
-        return {
-            'status': 'failed',
-            'task': task,
-            'error': str(e)
-        }
+        return {"status": "failed", "task": task, "error": str(e)}
 
 
 # ========== 격자점 조회 ==========
@@ -224,7 +217,7 @@ def run_hazard_batch(
     years: List[int] = None,
     risk_types: List[str] = None,
     batch_size: int = 100,
-    max_workers: int = 4
+    max_workers: int = 4,
 ) -> None:
     """
     모든 격자점에 대해 H 시계열 계산 (병렬 처리)
@@ -254,13 +247,15 @@ def run_hazard_batch(
     for scenario in scenarios:
         for year in years:
             for lat, lon in grid_points:
-                tasks.append({
-                    'latitude': lat,
-                    'longitude': lon,
-                    'scenario': scenario,
-                    'year': year,
-                    'risk_types': risk_types
-                })
+                tasks.append(
+                    {
+                        "latitude": lat,
+                        "longitude": lon,
+                        "scenario": scenario,
+                        "year": year,
+                        "risk_types": risk_types,
+                    }
+                )
 
     total_tasks = len(tasks)
     total_calculations = total_tasks * len(risk_types)  # 실제 계산량
@@ -284,10 +279,7 @@ def run_hazard_batch(
     # ProcessPoolExecutor로 병렬 처리
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
         # 모든 태스크 제출
-        futures = {
-            executor.submit(_process_hazard_task_worker, task): task
-            for task in tasks
-        }
+        futures = {executor.submit(_process_hazard_task_worker, task): task for task in tasks}
 
         # tqdm으로 진행률 표시
         with tqdm(total=total_tasks, desc="Processing Hazard Scores", unit="task") as pbar:
@@ -296,18 +288,20 @@ def run_hazard_batch(
                 try:
                     result = future.result(timeout=300)  # 개별 태스크 5분 timeout
 
-                    if result['status'] == 'success':
+                    if result["status"] == "success":
                         # 결과 배치에 추가
-                        hazard_batch.extend(result['hazard_results'])
+                        hazard_batch.extend(result["hazard_results"])
                         completed_count += 1
 
                         # 진행률 업데이트
-                        pbar.set_postfix({
-                            'success': completed_count,
-                            'failed': failed_count,
-                            'risks': f"{result['risks_calculated']}/{len(risk_types)}",
-                            'pending_save': len(hazard_batch)
-                        })
+                        pbar.set_postfix(
+                            {
+                                "success": completed_count,
+                                "failed": failed_count,
+                                "risks": f"{result['risks_calculated']}/{len(risk_types)}",
+                                "pending_save": len(hazard_batch),
+                            }
+                        )
 
                         # 배치 저장
                         if len(hazard_batch) >= batch_size:
@@ -322,10 +316,7 @@ def run_hazard_batch(
                             f"at ({task['latitude']}, {task['longitude']}): "
                             f"{result.get('error')}"
                         )
-                        pbar.set_postfix({
-                            'success': completed_count,
-                            'failed': failed_count
-                        })
+                        pbar.set_postfix({"success": completed_count, "failed": failed_count})
 
                 except Exception as e:
                     failed_count += 1
@@ -333,10 +324,7 @@ def run_hazard_batch(
                         f"Task exception for {task['scenario']} {task['year']} "
                         f"at ({task['latitude']}, {task['longitude']}): {e}"
                     )
-                    pbar.set_postfix({
-                        'success': completed_count,
-                        'failed': failed_count
-                    })
+                    pbar.set_postfix({"success": completed_count, "failed": failed_count})
 
                 pbar.update(1)
 
@@ -385,37 +373,22 @@ if __name__ == "__main__":
     try:
         # CLI 인자 파싱
         import argparse
+
         parser = argparse.ArgumentParser(
-            description='Hazard Score (H) Timeseries Batch Calculation (Parallel Processing)'
+            description="Hazard Score (H) Timeseries Batch Calculation (Parallel Processing)"
         )
         parser.add_argument(
-            '--scenario',
-            type=str,
-            help='Single scenario (SSP126, SSP245, SSP370, SSP585)'
+            "--scenario", type=str, help="Single scenario (SSP126, SSP245, SSP370, SSP585)"
         )
         parser.add_argument(
-            '--start-year',
-            type=int,
-            default=2021,
-            help='Start year (default: 2021)'
+            "--start-year", type=int, default=2021, help="Start year (default: 2021)"
+        )
+        parser.add_argument("--end-year", type=int, default=2100, help="End year (default: 2100)")
+        parser.add_argument(
+            "--batch-size", type=int, default=100, help="DB batch size (default: 100)"
         )
         parser.add_argument(
-            '--end-year',
-            type=int,
-            default=2100,
-            help='End year (default: 2100)'
-        )
-        parser.add_argument(
-            '--batch-size',
-            type=int,
-            default=100,
-            help='DB batch size (default: 100)'
-        )
-        parser.add_argument(
-            '--workers',
-            type=int,
-            default=4,
-            help='Number of parallel workers (default: 4)'
+            "--workers", type=int, default=4, help="Number of parallel workers (default: 4)"
         )
 
         args = parser.parse_args()
@@ -424,25 +397,22 @@ if __name__ == "__main__":
         scenarios = [args.scenario] if args.scenario else SCENARIOS
 
         # 연도 설정
-        if args.time_scope == 'decadal':
+        if args.time_scope == "decadal":
             # 10년 단위 (2020, 2030, ..., 2090 등)
             # 입력된 시작 연도가 속한 10년대의 시작점 (내림 처리)
             start = (args.start_year // 10) * 10
-            
+
             # 데이터 시작 범위 보정 (2020년 미만은 2020년으로)
-            if start < 2020: 
+            if start < 2020:
                 start = 2020
-                
+
             years = list(range(start, args.end_year + 1, 10))
         else:
             years = list(range(args.start_year, args.end_year + 1))
 
         # 배치 실행
         run_hazard_batch(
-            scenarios=scenarios,
-            years=years,
-            batch_size=args.batch_size,
-            max_workers=args.workers
+            scenarios=scenarios, years=years, batch_size=args.batch_size, max_workers=args.workers
         )
 
         sys.exit(0)

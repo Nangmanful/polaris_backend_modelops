@@ -1,4 +1,4 @@
-'''
+"""
 파일명: extreme_cold_exposure_agent.py
 최종 수정일: 2025-12-14
 버전: v2
@@ -6,7 +6,8 @@
 변경 이력:
     - v1: DB에서 고도 데이터 조회
     - v2: 원래 설계 복원 (DB 로직 제거, 순수 계산만)
-'''
+"""
+
 from typing import Dict, Any
 import logging
 from .base_exposure_agent import BaseExposureAgent
@@ -34,8 +35,9 @@ class ExtremeColdExposureAgent(BaseExposureAgent):
     def __init__(self):
         super().__init__()
 
-    def calculate_exposure(self, building_data: Dict[str, Any], spatial_data: Dict[str, Any],
-                          **kwargs) -> Dict[str, Any]:
+    def calculate_exposure(
+        self, building_data: Dict[str, Any], spatial_data: Dict[str, Any], **kwargs
+    ) -> Dict[str, Any]:
         """
         Calculate extreme cold exposure.
 
@@ -47,24 +49,22 @@ class ExtremeColdExposureAgent(BaseExposureAgent):
         Returns:
             Extreme cold exposure data
         """
-        latitude = kwargs.get('latitude', 37.5)
+        latitude = kwargs.get("latitude", 37.5)
 
         # collected_data에서 고도 추출 (data_loaders가 DB에서 수집)
         elevation_m = self.get_value_with_fallback(
-            {**building_data, **spatial_data},
-            ['elevation_m', 'elevation', 'dem_value'],
-            50.0
+            {**building_data, **spatial_data}, ["elevation_m", "elevation", "dem_value"], 50.0
         )
 
         # 점수 계산
         score = self._calculate_cold_exposure_score(latitude, elevation_m)
 
         return {
-            'latitude': latitude,
-            'elevation_m': elevation_m,
-            'score': score,
-            'exposure_level': 'high' if score > 60 else 'medium' if score > 40 else 'low',
-            'data_source': 'collected'
+            "latitude": latitude,
+            "elevation_m": elevation_m,
+            "score": score,
+            "exposure_level": "high" if score > 60 else "medium" if score > 40 else "low",
+            "data_source": "collected",
         }
 
     def _calculate_cold_exposure_score(self, latitude: float, elevation_m: float) -> int:

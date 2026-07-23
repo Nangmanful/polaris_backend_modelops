@@ -10,6 +10,7 @@
 4) 물리적 리스크 판단
 ==================================================================
 """
+
 import requests
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
@@ -109,7 +110,9 @@ def fetch_weather_for_location(location: str, max_retries: int = 5) -> Optional[
             # 429 에러 시 대기 후 재시도
             if response.status_code == 429:
                 wait_time = (attempt + 1) * 30  # 30초, 60초, 90초, 120초, 150초
-                logger.warning(f"429 Too Many Requests ({location}), {wait_time}초 대기 후 재시도...")
+                logger.warning(
+                    f"429 Too Many Requests ({location}), {wait_time}초 대기 후 재시도..."
+                )
                 time.sleep(wait_time)
                 continue
 
@@ -168,12 +171,12 @@ def parse_weather_items(items: List[Dict], location: str) -> Dict:
 
     # 카테고리별 첫 번째 값만 사용 (가장 가까운 예보)
     category_map = {
-        "TMP": "temperature",       # 기온
-        "REH": "humidity",          # 습도
-        "WSD": "wind_speed",        # 풍속
-        "POP": "precipitation_prob", # 강수확률
-        "PCP": "precipitation",     # 강수량
-        "SKY": "sky_condition",     # 하늘상태
+        "TMP": "temperature",  # 기온
+        "REH": "humidity",  # 습도
+        "WSD": "wind_speed",  # 풍속
+        "POP": "precipitation_prob",  # 강수확률
+        "PCP": "precipitation",  # 강수량
+        "SKY": "sky_condition",  # 하늘상태
     }
 
     seen_categories = set()

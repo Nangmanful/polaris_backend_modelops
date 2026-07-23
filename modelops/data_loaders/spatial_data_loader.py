@@ -9,10 +9,11 @@ Spatial Data Loader (DB 기반)
 """
 
 import logging
-from typing import Dict, Optional, Any
+from typing import Dict
 
 try:
     from ..database.connection import DatabaseConnection
+
     DB_AVAILABLE = True
 except ImportError:
     DB_AVAILABLE = False
@@ -30,13 +31,13 @@ class SpatialDataLoader:
 
     # 토지피복 코드 → 유형 매핑 (환경부 토지피복분류)
     LANDCOVER_MAP = {
-        1: {'type': 'water', 'impervious': 0.0, 'vegetation': 0.0, 'urban': 'none'},
-        2: {'type': 'urban', 'impervious': 0.9, 'vegetation': 0.1, 'urban': 'high'},
-        3: {'type': 'agricultural', 'impervious': 0.2, 'vegetation': 0.6, 'urban': 'low'},
-        4: {'type': 'forest', 'impervious': 0.05, 'vegetation': 0.95, 'urban': 'none'},
-        5: {'type': 'grassland', 'impervious': 0.1, 'vegetation': 0.8, 'urban': 'low'},
-        6: {'type': 'wetland', 'impervious': 0.1, 'vegetation': 0.7, 'urban': 'none'},
-        7: {'type': 'barren', 'impervious': 0.3, 'vegetation': 0.1, 'urban': 'low'},
+        1: {"type": "water", "impervious": 0.0, "vegetation": 0.0, "urban": "none"},
+        2: {"type": "urban", "impervious": 0.9, "vegetation": 0.1, "urban": "high"},
+        3: {"type": "agricultural", "impervious": 0.2, "vegetation": 0.6, "urban": "low"},
+        4: {"type": "forest", "impervious": 0.05, "vegetation": 0.95, "urban": "none"},
+        5: {"type": "grassland", "impervious": 0.1, "vegetation": 0.8, "urban": "low"},
+        6: {"type": "wetland", "impervious": 0.1, "vegetation": 0.7, "urban": "none"},
+        7: {"type": "barren", "impervious": 0.3, "vegetation": 0.1, "urban": "low"},
     }
 
     def __init__(self, base_dir: str = None):
@@ -75,7 +76,8 @@ class SpatialDataLoader:
                 cursor = conn.cursor()
 
                 # WGS84 좌표로 래스터 값 조회
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT ST_Value(
                         rast,
                         ST_Transform(ST_SetSRID(ST_MakePoint(%s, %s), 4326), ST_SRID(rast))
@@ -86,26 +88,31 @@ class SpatialDataLoader:
                         ST_Transform(ST_SetSRID(ST_MakePoint(%s, %s), 4326), ST_SRID(rast))
                     )
                     LIMIT 1
-                """, (lon, lat, lon, lat))
+                """,
+                    (lon, lat, lon, lat),
+                )
 
                 result = cursor.fetchone()
 
-                if result and result['landcover_code'] is not None:
-                    code = int(result['landcover_code'])
-                    landcover_info = self.LANDCOVER_MAP.get(code, {
-                        'type': 'unknown',
-                        'impervious': 0.5,
-                        'vegetation': 0.3,
-                        'urban': 'medium'
-                    })
+                if result and result["landcover_code"] is not None:
+                    code = int(result["landcover_code"])
+                    landcover_info = self.LANDCOVER_MAP.get(
+                        code,
+                        {
+                            "type": "unknown",
+                            "impervious": 0.5,
+                            "vegetation": 0.3,
+                            "urban": "medium",
+                        },
+                    )
 
                     return {
-                        'landcover_type': landcover_info['type'],
-                        'landcover_code': code,
-                        'impervious_ratio': landcover_info['impervious'],
-                        'vegetation_ratio': landcover_info['vegetation'],
-                        'urban_intensity': landcover_info['urban'],
-                        'data_source': 'DB'
+                        "landcover_type": landcover_info["type"],
+                        "landcover_code": code,
+                        "impervious_ratio": landcover_info["impervious"],
+                        "vegetation_ratio": landcover_info["vegetation"],
+                        "urban_intensity": landcover_info["urban"],
+                        "data_source": "DB",
                     }
 
                 return self._fallback_landcover()
@@ -139,7 +146,8 @@ class SpatialDataLoader:
                 cursor = conn.cursor()
 
                 # WGS84 좌표를 EPSG:5186으로 변환 후 가장 가까운 DEM 포인트 찾기
-                cursor.execute("""
+                cursor.execute(
+                    """
                     WITH target_point AS (
                         SELECT ST_Transform(
                             ST_SetSRID(ST_MakePoint(%s, %s), 4326),
@@ -153,17 +161,19 @@ class SpatialDataLoader:
                     FROM raw_dem d, target_point t
                     ORDER BY d.geom <-> t.geom
                     LIMIT 1
-                """, (lon, lat))
+                """,
+                    (lon, lat),
+                )
 
                 result = cursor.fetchone()
 
-                if result and result['distance_m'] < 1000:  # 1km 이내
+                if result and result["distance_m"] < 1000:  # 1km 이내
                     return {
-                        'elevation_m': float(result['elevation']),
-                        'slope_degree': 0.0,  # 별도 계산 필요
-                        'aspect': 'flat',  # 별도 계산 필요
-                        'region': result['region'],
-                        'data_source': 'DB'
+                        "elevation_m": float(result["elevation"]),
+                        "slope_degree": 0.0,  # 별도 계산 필요
+                        "aspect": "flat",  # 별도 계산 필요
+                        "region": result["region"],
+                        "data_source": "DB",
                     }
 
                 return self._fallback_dem()
@@ -199,7 +209,8 @@ class SpatialDataLoader:
             with DatabaseConnection.get_connection() as conn:
                 cursor = conn.cursor()
 
-                cursor.execute("""
+                cursor.execute(
+                    """
                     WITH river_distances AS (
                         SELECT
                             river_name,
@@ -236,20 +247,22 @@ class SpatialDataLoader:
                     FROM river_distances
                     ORDER BY distance_m ASC
                     LIMIT 1
-                """, (lon, lat, lon, lat))
+                """,
+                    (lon, lat, lon, lat),
+                )
 
                 result = cursor.fetchone()
 
                 if result:
                     return {
-                        'river_name': result['river_name'],
-                        'river_grade': result['river_grade'],
-                        'distance_to_river_m': float(result['distance_to_river_m']),
-                        'watershed_area_km2': float(result['watershed_area_km2']),
-                        'stream_order': int(result['stream_order']),
-                        'flood_capacity': result['flood_capacity'],
-                        'basin_name': result['basin_name'],
-                        'data_source': 'DB'
+                        "river_name": result["river_name"],
+                        "river_grade": result["river_grade"],
+                        "distance_to_river_m": float(result["distance_to_river_m"]),
+                        "watershed_area_km2": float(result["watershed_area_km2"]),
+                        "stream_order": int(result["stream_order"]),
+                        "flood_capacity": result["flood_capacity"],
+                        "basin_name": result["basin_name"],
+                        "data_source": "DB",
                     }
 
                 return self._fallback_river()
@@ -281,7 +294,8 @@ class SpatialDataLoader:
                 cursor = conn.cursor()
 
                 # sea_level_grid에서 가장 가까운 격자와의 거리 계산
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT
                         ST_Distance(
                             ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::geography,
@@ -290,17 +304,19 @@ class SpatialDataLoader:
                     FROM sea_level_grid
                     ORDER BY distance_m
                     LIMIT 1
-                """, (lon, lat))
+                """,
+                    (lon, lat),
+                )
 
                 result = cursor.fetchone()
 
                 if result:
-                    distance_m = float(result['distance_m'])
+                    distance_m = float(result["distance_m"])
                     # 해안 격자까지의 거리를 해안선 거리로 근사
                     return {
-                        'distance_to_coast_m': distance_m,
-                        'is_coastal': distance_m < 10000,  # 10km 이내면 해안지역
-                        'data_source': 'DB'
+                        "distance_to_coast_m": distance_m,
+                        "is_coastal": distance_m < 10000,  # 10km 이내면 해안지역
+                        "data_source": "DB",
                     }
 
                 return self._fallback_coast()
@@ -328,32 +344,28 @@ class SpatialDataLoader:
 
         return {
             # 토지피복
-            'landcover_type': landcover.get('landcover_type', 'urban'),
-            'landcover_code': landcover.get('landcover_code'),
-            'impervious_ratio': landcover.get('impervious_ratio', 0.6),
-            'imperviousness_ratio': landcover.get('impervious_ratio', 0.6),  # alias
-            'vegetation_ratio': landcover.get('vegetation_ratio', 0.2),
-            'urban_intensity': landcover.get('urban_intensity', 'medium'),
-
+            "landcover_type": landcover.get("landcover_type", "urban"),
+            "landcover_code": landcover.get("landcover_code"),
+            "impervious_ratio": landcover.get("impervious_ratio", 0.6),
+            "imperviousness_ratio": landcover.get("impervious_ratio", 0.6),  # alias
+            "vegetation_ratio": landcover.get("vegetation_ratio", 0.2),
+            "urban_intensity": landcover.get("urban_intensity", "medium"),
             # 고도
-            'elevation_m': dem.get('elevation_m', 50.0),
-            'slope_degree': dem.get('slope_degree', 0.0),
-            'region': dem.get('region'),
-
+            "elevation_m": dem.get("elevation_m", 50.0),
+            "slope_degree": dem.get("slope_degree", 0.0),
+            "region": dem.get("region"),
             # 하천
-            'river_name': river.get('river_name'),
-            'river_grade': river.get('river_grade'),
-            'distance_to_river_m': river.get('distance_to_river_m', 10000.0),
-            'watershed_area_km2': river.get('watershed_area_km2', 100.0),
-            'stream_order': river.get('stream_order', 2),
-            'flood_capacity': river.get('flood_capacity'),
-            'basin_name': river.get('basin_name'),
-
+            "river_name": river.get("river_name"),
+            "river_grade": river.get("river_grade"),
+            "distance_to_river_m": river.get("distance_to_river_m", 10000.0),
+            "watershed_area_km2": river.get("watershed_area_km2", 100.0),
+            "stream_order": river.get("stream_order", 2),
+            "flood_capacity": river.get("flood_capacity"),
+            "basin_name": river.get("basin_name"),
             # 해안
-            'distance_to_coast_m': coast.get('distance_to_coast_m', 50000.0),
-            'is_coastal': coast.get('is_coastal', False),
-
-            'data_source': 'DB'
+            "distance_to_coast_m": coast.get("distance_to_coast_m", 50000.0),
+            "is_coastal": coast.get("is_coastal", False),
+            "data_source": "DB",
         }
 
     def get_ndvi_data(self, lat: float, lon: float) -> Dict:
@@ -407,22 +419,25 @@ class SpatialDataLoader:
                 cursor = conn.cursor()
 
                 # location_grid에서 행정구역 정보 조회
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT sido, sigungu, dong, full_address
                     FROM location_grid
                     ORDER BY SQRT(POWER(longitude - %s, 2) + POWER(latitude - %s, 2))
                     LIMIT 1
-                """, (lon, lat))
+                """,
+                    (lon, lat),
+                )
 
                 result = cursor.fetchone()
 
                 if result:
                     return {
-                        'sido': result['sido'],
-                        'sigungu': result['sigungu'],
-                        'dong': result['dong'],
-                        'full_address': result['full_address'],
-                        'data_source': 'DB'
+                        "sido": result["sido"],
+                        "sigungu": result["sigungu"],
+                        "dong": result["dong"],
+                        "full_address": result["full_address"],
+                        "data_source": "DB",
                     }
 
                 return self._fallback_admin()
@@ -436,67 +451,55 @@ class SpatialDataLoader:
     def _fallback_landcover(self) -> Dict:
         """토지피복 기본값"""
         return {
-            'landcover_type': 'urban',
-            'landcover_code': 2,
-            'impervious_ratio': 0.6,
-            'vegetation_ratio': 0.2,
-            'urban_intensity': 'medium',
-            'data_source': 'fallback'
+            "landcover_type": "urban",
+            "landcover_code": 2,
+            "impervious_ratio": 0.6,
+            "vegetation_ratio": 0.2,
+            "urban_intensity": "medium",
+            "data_source": "fallback",
         }
 
     def _fallback_dem(self) -> Dict:
         """DEM 기본값"""
         return {
-            'elevation_m': 50.0,
-            'slope_degree': 5.0,
-            'aspect': 'flat',
-            'region': None,
-            'data_source': 'fallback'
+            "elevation_m": 50.0,
+            "slope_degree": 5.0,
+            "aspect": "flat",
+            "region": None,
+            "data_source": "fallback",
         }
 
     def _fallback_river(self) -> Dict:
         """하천 기본값"""
         return {
-            'river_name': None,
-            'river_grade': None,
-            'distance_to_river_m': 10000.0,
-            'watershed_area_km2': 100.0,
-            'stream_order': 2,
-            'flood_capacity': None,
-            'basin_name': None,
-            'data_source': 'fallback'
+            "river_name": None,
+            "river_grade": None,
+            "distance_to_river_m": 10000.0,
+            "watershed_area_km2": 100.0,
+            "stream_order": 2,
+            "flood_capacity": None,
+            "basin_name": None,
+            "data_source": "fallback",
         }
 
     def _fallback_coast(self) -> Dict:
         """해안 기본값"""
-        return {
-            'distance_to_coast_m': 50000.0,
-            'is_coastal': False,
-            'data_source': 'fallback'
-        }
+        return {"distance_to_coast_m": 50000.0, "is_coastal": False, "data_source": "fallback"}
 
     def _fallback_ndvi(self) -> Dict:
         """NDVI 기본값"""
-        return {
-            'ndvi': 0.5,
-            'vegetation_health': 'moderate',
-            'data_source': 'fallback'
-        }
+        return {"ndvi": 0.5, "vegetation_health": "moderate", "data_source": "fallback"}
 
     def _fallback_soil_moisture(self) -> Dict:
         """토양수분 기본값"""
-        return {
-            'soil_moisture': 0.5,
-            'moisture_level': 'moderate',
-            'data_source': 'fallback'
-        }
+        return {"soil_moisture": 0.5, "moisture_level": "moderate", "data_source": "fallback"}
 
     def _fallback_admin(self) -> Dict:
         """행정구역 기본값"""
         return {
-            'sido': None,
-            'sigungu': None,
-            'dong': None,
-            'full_address': None,
-            'data_source': 'fallback'
+            "sido": None,
+            "sigungu": None,
+            "dong": None,
+            "full_address": None,
+            "data_source": "fallback",
         }

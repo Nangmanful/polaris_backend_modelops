@@ -25,11 +25,14 @@ class StationMapper:
     MIN_STATIONS = 3  # 최소 필요 관측소 수
 
     @staticmethod
-    def interpolate_to_grid(grid_lat: float, grid_lon: float,
-                           station_data: List[Dict[str, Any]],
-                           value_key: str = 'value',
-                           power: float = DEFAULT_POWER,
-                           max_distance_km: float = DEFAULT_MAX_DISTANCE_KM) -> float:
+    def interpolate_to_grid(
+        grid_lat: float,
+        grid_lon: float,
+        station_data: List[Dict[str, Any]],
+        value_key: str = "value",
+        power: float = DEFAULT_POWER,
+        max_distance_km: float = DEFAULT_MAX_DISTANCE_KM,
+    ) -> float:
         """
         IDW를 이용한 관측소 데이터 → 격자 보간
 
@@ -60,14 +63,12 @@ class StationMapper:
             if value_key not in station:
                 continue
 
-            s_lat = station.get('latitude')
-            s_lon = station.get('longitude')
+            s_lat = station.get("latitude")
+            s_lon = station.get("longitude")
             if s_lat is None or s_lon is None:
                 continue
 
-            distance_km = StationMapper._haversine_distance(
-                grid_lat, grid_lon, s_lat, s_lon
-            )
+            distance_km = StationMapper._haversine_distance(grid_lat, grid_lon, s_lat, s_lon)
 
             # 최대 거리 이내만 사용
             if distance_km <= max_distance_km:
@@ -83,14 +84,10 @@ class StationMapper:
                 distances_and_values.sort(key=lambda x: x[0])
                 return distances_and_values[0][1]
             else:
-                raise ValueError(
-                    f"최대 거리 {max_distance_km}km 이내에 관측소가 없습니다"
-                )
+                raise ValueError(f"최대 거리 {max_distance_km}km 이내에 관측소가 없습니다")
 
         # 2. IDW 보간
-        interpolated_value = StationMapper._idw_interpolation(
-            distances_and_values, power
-        )
+        interpolated_value = StationMapper._idw_interpolation(distances_and_values, power)
 
         logger.debug(
             f"IDW 보간: ({grid_lat}, {grid_lon}) = {interpolated_value:.2f} "
@@ -100,8 +97,7 @@ class StationMapper:
         return interpolated_value
 
     @staticmethod
-    def _idw_interpolation(distances_and_values: List[Tuple[float, float]],
-                          power: float) -> float:
+    def _idw_interpolation(distances_and_values: List[Tuple[float, float]], power: float) -> float:
         """
         IDW (Inverse Distance Weighting) 보간 계산
 
@@ -125,15 +121,14 @@ class StationMapper:
         weighted_value_sum = 0.0
 
         for dist, value in distances_and_values:
-            weight = 1.0 / (dist ** power)
+            weight = 1.0 / (dist**power)
             weighted_value_sum += weight * value
             weight_sum += weight
 
         return weighted_value_sum / weight_sum if weight_sum > 0 else 0.0
 
     @staticmethod
-    def _haversine_distance(lat1: float, lon1: float,
-                           lat2: float, lon2: float) -> float:
+    def _haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
         """
         Haversine 공식을 이용한 두 좌표 간 거리 계산 (km)
 
@@ -156,18 +151,23 @@ class StationMapper:
         dlat = lat2_rad - lat1_rad
         dlon = lon2_rad - lon1_rad
 
-        a = (math.sin(dlat / 2) ** 2 +
-             math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlon / 2) ** 2)
+        a = (
+            math.sin(dlat / 2) ** 2
+            + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlon / 2) ** 2
+        )
         c = 2 * math.asin(math.sqrt(a))
 
         distance = R * c
         return distance
 
     @staticmethod
-    def find_nearest_stations(grid_lat: float, grid_lon: float,
-                             station_list: List[Dict[str, Any]],
-                             n_nearest: int = 5,
-                             max_distance_km: float = DEFAULT_MAX_DISTANCE_KM) -> List[Dict[str, Any]]:
+    def find_nearest_stations(
+        grid_lat: float,
+        grid_lon: float,
+        station_list: List[Dict[str, Any]],
+        n_nearest: int = 5,
+        max_distance_km: float = DEFAULT_MAX_DISTANCE_KM,
+    ) -> List[Dict[str, Any]]:
         """
         격자에서 가장 가까운 N개 관측소 찾기
 
@@ -192,32 +192,32 @@ class StationMapper:
         stations_with_distance = []
 
         for station in station_list:
-            s_lat = station.get('latitude')
-            s_lon = station.get('longitude')
+            s_lat = station.get("latitude")
+            s_lon = station.get("longitude")
             if s_lat is None or s_lon is None:
                 continue
 
-            distance_km = StationMapper._haversine_distance(
-                grid_lat, grid_lon, s_lat, s_lon
-            )
+            distance_km = StationMapper._haversine_distance(grid_lat, grid_lon, s_lat, s_lon)
 
             if distance_km <= max_distance_km:
                 station_copy = station.copy()
-                station_copy['distance_km'] = distance_km
+                station_copy["distance_km"] = distance_km
                 stations_with_distance.append(station_copy)
 
         # 거리순 정렬
-        stations_with_distance.sort(key=lambda x: x['distance_km'])
+        stations_with_distance.sort(key=lambda x: x["distance_km"])
 
         # N개만 반환
         return stations_with_distance[:n_nearest]
 
     @staticmethod
-    def batch_interpolate(grid_coords: List[Tuple[float, float]],
-                         station_data: List[Dict[str, Any]],
-                         value_key: str = 'value',
-                         power: float = DEFAULT_POWER,
-                         max_distance_km: float = DEFAULT_MAX_DISTANCE_KM) -> Dict[Tuple[float, float], float]:
+    def batch_interpolate(
+        grid_coords: List[Tuple[float, float]],
+        station_data: List[Dict[str, Any]],
+        value_key: str = "value",
+        power: float = DEFAULT_POWER,
+        max_distance_km: float = DEFAULT_MAX_DISTANCE_KM,
+    ) -> Dict[Tuple[float, float], float]:
         """
         여러 격자에 대한 일괄 보간
 
@@ -236,16 +236,16 @@ class StationMapper:
         for grid_lat, grid_lon in grid_coords:
             try:
                 interpolated = StationMapper.interpolate_to_grid(
-                    grid_lat, grid_lon, station_data,
+                    grid_lat,
+                    grid_lon,
+                    station_data,
                     value_key=value_key,
                     power=power,
-                    max_distance_km=max_distance_km
+                    max_distance_km=max_distance_km,
                 )
                 result[(grid_lat, grid_lon)] = interpolated
             except ValueError as e:
-                logger.warning(
-                    f"보간 실패: ({grid_lat}, {grid_lon}) - {e}"
-                )
+                logger.warning(f"보간 실패: ({grid_lat}, {grid_lon}) - {e}")
                 result[(grid_lat, grid_lon)] = None
 
         logger.info(
@@ -256,9 +256,12 @@ class StationMapper:
         return result
 
     @staticmethod
-    def calculate_coverage(grid_lat: float, grid_lon: float,
-                          station_data: List[Dict[str, Any]],
-                          max_distance_km: float = DEFAULT_MAX_DISTANCE_KM) -> Dict[str, Any]:
+    def calculate_coverage(
+        grid_lat: float,
+        grid_lon: float,
+        station_data: List[Dict[str, Any]],
+        max_distance_km: float = DEFAULT_MAX_DISTANCE_KM,
+    ) -> Dict[str, Any]:
         """
         격자의 관측소 커버리지 분석
 
@@ -278,24 +281,22 @@ class StationMapper:
         """
         distances = []
         for station in station_data:
-            s_lat = station.get('latitude')
-            s_lon = station.get('longitude')
+            s_lat = station.get("latitude")
+            s_lon = station.get("longitude")
             if s_lat is None or s_lon is None:
                 continue
 
-            distance_km = StationMapper._haversine_distance(
-                grid_lat, grid_lon, s_lat, s_lon
-            )
+            distance_km = StationMapper._haversine_distance(grid_lat, grid_lon, s_lat, s_lon)
 
             if distance_km <= max_distance_km:
                 distances.append(distance_km)
 
         if not distances:
             return {
-                'n_stations': 0,
-                'nearest_distance_km': None,
-                'avg_distance_km': None,
-                'coverage_quality': 'poor'
+                "n_stations": 0,
+                "nearest_distance_km": None,
+                "avg_distance_km": None,
+                "coverage_quality": "poor",
             }
 
         distances.sort()
@@ -305,17 +306,17 @@ class StationMapper:
 
         # 품질 판정
         if n_stations >= 5 and nearest < 10:
-            quality = 'excellent'
+            quality = "excellent"
         elif n_stations >= 3 and nearest < 20:
-            quality = 'good'
+            quality = "good"
         elif n_stations >= 2 and nearest < 30:
-            quality = 'fair'
+            quality = "fair"
         else:
-            quality = 'poor'
+            quality = "poor"
 
         return {
-            'n_stations': n_stations,
-            'nearest_distance_km': nearest,
-            'avg_distance_km': avg_distance,
-            'coverage_quality': quality
+            "n_stations": n_stations,
+            "nearest_distance_km": nearest,
+            "avg_distance_km": avg_distance,
+            "coverage_quality": quality,
         }

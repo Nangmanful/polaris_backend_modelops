@@ -41,8 +41,7 @@ def setup_logging(name: str) -> logging.Logger:
 
         # 포맷 설정
         formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
         )
         console_handler.setFormatter(formatter)
         logger.addHandler(console_handler)
@@ -52,7 +51,7 @@ def setup_logging(name: str) -> logging.Logger:
         log_dir.mkdir(exist_ok=True)
 
         log_file = log_dir / f"{name}_{datetime.now().strftime('%Y%m%d')}.log"
-        file_handler = logging.FileHandler(log_file, encoding='utf-8')
+        file_handler = logging.FileHandler(log_file, encoding="utf-8")
         file_handler.setLevel(logging.INFO)
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
@@ -75,7 +74,7 @@ def get_db_connection() -> Connection:
         port=os.getenv("DW_PORT", "5555"),
         dbname=os.getenv("DW_NAME", "datawarehouse"),
         user=os.getenv("DW_USER", "skala"),
-        password=os.getenv("DW_PASSWORD", "skala1234")
+        password=os.getenv("DW_PASSWORD", "skala1234"),
     )
 
 
@@ -109,13 +108,16 @@ def table_exists(conn: Connection, table_name: str) -> bool:
         테이블이 존재하면 True
     """
     cursor = conn.cursor()
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT EXISTS (
             SELECT FROM information_schema.tables
             WHERE table_schema = 'public'
             AND table_name = %s
         )
-    """, (table_name,))
+    """,
+        (table_name,),
+    )
     exists = cursor.fetchone()[0]
     cursor.close()
     return exists
@@ -160,8 +162,9 @@ def truncate_table(conn: Connection, table_name: str, cascade: bool = False) -> 
     cursor.close()
 
 
-def batch_insert(conn: Connection, table_name: str, columns: list,
-                 data: list, batch_size: int = 1000) -> int:
+def batch_insert(
+    conn: Connection, table_name: str, columns: list, data: list, batch_size: int = 1000
+) -> int:
     """
     배치 삽입
 
@@ -185,7 +188,7 @@ def batch_insert(conn: Connection, table_name: str, columns: list,
 
     insert_count = 0
     for i in range(0, len(data), batch_size):
-        batch = data[i:i + batch_size]
+        batch = data[i : i + batch_size]
         cursor.executemany(sql, batch)
         insert_count += len(batch)
         conn.commit()

@@ -12,7 +12,6 @@ JSON 파일에서 그리드별 최근접 관측소 매핑을 로드
 
 import sys
 import json
-from pathlib import Path
 from tqdm import tqdm
 
 from utils import setup_logging, get_db_connection, get_data_dir, table_exists, get_row_count
@@ -62,7 +61,7 @@ def load_grid_station_mappings() -> None:
     # JSON 로드 (대용량 파일)
     logger.info("JSON 파일 읽는 중... (대용량 파일, 잠시 기다려주세요)")
     try:
-        with open(json_file, 'r', encoding='utf-8') as f:
+        with open(json_file, "r", encoding="utf-8") as f:
             mappings = json.load(f)
     except Exception as e:
         logger.error(f"JSON 파일 읽기 실패: {e}")
@@ -70,8 +69,8 @@ def load_grid_station_mappings() -> None:
         sys.exit(1)
 
     # grid_mapping 키가 있으면 그것을 사용
-    if isinstance(mappings, dict) and 'grid_mapping' in mappings:
-        actual_mappings = mappings['grid_mapping']
+    if isinstance(mappings, dict) and "grid_mapping" in mappings:
+        actual_mappings = mappings["grid_mapping"]
         logger.info(f"   메타데이터: k_nearest={mappings.get('k_nearest')}")
     else:
         actual_mappings = mappings
@@ -86,24 +85,24 @@ def load_grid_station_mappings() -> None:
     items = list(actual_mappings.items()) if isinstance(actual_mappings, dict) else actual_mappings
 
     for i in tqdm(range(0, len(items), batch_size), desc="매핑 로딩"):
-        batch = items[i:i + batch_size]
+        batch = items[i : i + batch_size]
 
         for item in batch:
             try:
                 if isinstance(item, tuple):
                     grid_key, station_info = item
                 else:
-                    grid_key = item.get('grid_id', item.get('grid_key'))
+                    grid_key = item.get("grid_id", item.get("grid_key"))
                     station_info = item
 
                 # grid_key 파싱 (실제 데이터: "row,col" 형식 또는 "lon_lat" 형식)
                 if isinstance(grid_key, str):
-                    if ',' in grid_key:
+                    if "," in grid_key:
                         # "row,col" 형식 - lat/lon은 station_info에서 추출
-                        grid_lat = station_info.get('lat')
-                        grid_lon = station_info.get('lon')
-                    elif '_' in grid_key:
-                        parts = grid_key.split('_')
+                        grid_lat = station_info.get("lat")
+                        grid_lon = station_info.get("lon")
+                    elif "_" in grid_key:
+                        parts = grid_key.split("_")
                         grid_lon = float(parts[0])
                         grid_lat = float(parts[1])
                     else:
@@ -119,16 +118,16 @@ def load_grid_station_mappings() -> None:
                 # station_info에서 관측소 정보 추출
                 # 실제 데이터 형식: {"lat": 33.21, "lon": 126.28, "nearest_stations": [...]}
                 if isinstance(station_info, dict):
-                    nearest_stations = station_info.get('nearest_stations', [])
+                    nearest_stations = station_info.get("nearest_stations", [])
 
                     if nearest_stations:
                         # 가장 가까운 관측소 사용
                         nearest = nearest_stations[0]
-                        station_id = nearest.get('obscd', nearest.get('station_id'))
-                        distance = nearest.get('distance_km', nearest.get('distance'))
+                        station_id = nearest.get("obscd", nearest.get("station_id"))
+                        distance = nearest.get("distance_km", nearest.get("distance"))
                     else:
-                        station_id = station_info.get('station_id', station_info.get('obscd'))
-                        distance = station_info.get('distance_km', station_info.get('distance'))
+                        station_id = station_info.get("station_id", station_info.get("obscd"))
+                        distance = station_info.get("distance_km", station_info.get("distance"))
                 elif isinstance(station_info, (list, tuple)):
                     station_id = station_info[0] if len(station_info) > 0 else None
                     distance = station_info[1] if len(station_info) > 1 else None
@@ -138,22 +137,23 @@ def load_grid_station_mappings() -> None:
 
                 # 실제 테이블 구조: grid_lat, grid_lon, basin_code, basin_name,
                 # station_rank (1-3), obscd, obsnm, station_lat, station_lon, distance_km, geom
-                basin_code = station_info.get('basin_code')
-                basin_name = station_info.get('basin_name')
-                nearest_stations = station_info.get('nearest_stations', [])
+                basin_code = station_info.get("basin_code")
+                basin_name = station_info.get("basin_name")
+                nearest_stations = station_info.get("nearest_stations", [])
 
                 # 최대 3개 관측소 삽입 (station_rank 1, 2, 3)
                 for rank, station in enumerate(nearest_stations[:3], start=1):
-                    obscd = station.get('obscd')
+                    obscd = station.get("obscd")
                     if not obscd:
                         continue
 
-                    obsnm = station.get('obsnm')
-                    station_lat = station.get('lat')
-                    station_lon = station.get('lon')
-                    distance = station.get('distance_km')
+                    obsnm = station.get("obsnm")
+                    station_lat = station.get("lat")
+                    station_lon = station.get("lon")
+                    distance = station.get("distance_km")
 
-                    cursor.execute("""
+                    cursor.execute(
+                        """
                         INSERT INTO grid_station_mappings (
                             grid_lat, grid_lon, basin_code, basin_name,
                             station_rank, obscd, obsnm, station_lat, station_lon,
@@ -162,11 +162,22 @@ def load_grid_station_mappings() -> None:
                             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                             ST_SetSRID(ST_MakePoint(%s, %s), 4326)
                         )
-                    """, (
-                        grid_lat, grid_lon, basin_code, basin_name,
-                        rank, obscd, obsnm, station_lat, station_lon,
-                        distance, grid_lon, grid_lat
-                    ))
+                    """,
+                        (
+                            grid_lat,
+                            grid_lon,
+                            basin_code,
+                            basin_name,
+                            rank,
+                            obscd,
+                            obsnm,
+                            station_lat,
+                            station_lon,
+                            distance,
+                            grid_lon,
+                            grid_lat,
+                        ),
+                    )
                     insert_count += 1
 
             except Exception as e:

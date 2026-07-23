@@ -11,7 +11,7 @@
 3. 자산 가치 계산
 """
 
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 import logging
 
 logger = logging.getLogger(__name__)
@@ -21,19 +21,19 @@ class BuildingClient:
     """건물 정보 클라이언트"""
 
     # 건물 용도 분류
-    USAGE_RESIDENTIAL = 'residential'     # 주거용
-    USAGE_COMMERCIAL = 'commercial'       # 상업용
-    USAGE_INDUSTRIAL = 'industrial'       # 산업용
-    USAGE_PUBLIC = 'public'               # 공공시설
-    USAGE_AGRICULTURAL = 'agricultural'   # 농업시설
-    USAGE_OTHER = 'other'                 # 기타
+    USAGE_RESIDENTIAL = "residential"  # 주거용
+    USAGE_COMMERCIAL = "commercial"  # 상업용
+    USAGE_INDUSTRIAL = "industrial"  # 산업용
+    USAGE_PUBLIC = "public"  # 공공시설
+    USAGE_AGRICULTURAL = "agricultural"  # 농업시설
+    USAGE_OTHER = "other"  # 기타
 
     # 구조 유형
-    STRUCTURE_REINFORCED_CONCRETE = 'rc'  # 철근콘크리트
-    STRUCTURE_STEEL = 'steel'             # 철골조
-    STRUCTURE_WOOD = 'wood'               # 목조
-    STRUCTURE_BRICK = 'brick'             # 벽돌조
-    STRUCTURE_OTHER = 'other'             # 기타
+    STRUCTURE_REINFORCED_CONCRETE = "rc"  # 철근콘크리트
+    STRUCTURE_STEEL = "steel"  # 철골조
+    STRUCTURE_WOOD = "wood"  # 목조
+    STRUCTURE_BRICK = "brick"  # 벽돌조
+    STRUCTURE_OTHER = "other"  # 기타
 
     def __init__(self, conn=None, cursor=None):
         """
@@ -44,8 +44,9 @@ class BuildingClient:
         self.conn = conn
         self.cursor = cursor
 
-    def get_buildings_in_grid(self, grid_lat: float, grid_lon: float,
-                              grid_resolution: float = 0.01) -> List[Dict[str, Any]]:
+    def get_buildings_in_grid(
+        self, grid_lat: float, grid_lon: float, grid_resolution: float = 0.01
+    ) -> List[Dict[str, Any]]:
         """
         격자 내 건물 조회
 
@@ -72,6 +73,7 @@ class BuildingClient:
         """
         if self.conn is None or self.cursor is None:
             from ..database.connection import DatabaseConnection
+
             with DatabaseConnection.get_connection() as temp_conn:
                 with temp_conn.cursor() as temp_cursor:
                     return self._get_buildings_in_grid_impl(
@@ -82,9 +84,9 @@ class BuildingClient:
                 grid_lat, grid_lon, grid_resolution, self.cursor
             )
 
-    def _get_buildings_in_grid_impl(self, grid_lat: float, grid_lon: float,
-                                    grid_resolution: float,
-                                    cursor) -> List[Dict[str, Any]]:
+    def _get_buildings_in_grid_impl(
+        self, grid_lat: float, grid_lon: float, grid_resolution: float, cursor
+    ) -> List[Dict[str, Any]]:
         """격자 내 건물 조회 구현"""
 
         # 격자 경계 계산
@@ -116,27 +118,27 @@ class BuildingClient:
 
         buildings = []
         for row in rows:
-            buildings.append({
-                'building_id': row[0],
-                'latitude': row[1],
-                'longitude': row[2],
-                'usage_type': row[3],
-                'structure_type': row[4],
-                'floors': row[5],
-                'area_sqm': row[6],
-                'built_year': row[7],
-                'asset_value': row[8]
-            })
+            buildings.append(
+                {
+                    "building_id": row[0],
+                    "latitude": row[1],
+                    "longitude": row[2],
+                    "usage_type": row[3],
+                    "structure_type": row[4],
+                    "floors": row[5],
+                    "area_sqm": row[6],
+                    "built_year": row[7],
+                    "asset_value": row[8],
+                }
+            )
 
-        logger.info(
-            f"격자 내 건물 조회: {len(buildings)}개 "
-            f"(위치=({grid_lat}, {grid_lon}))"
-        )
+        logger.info(f"격자 내 건물 조회: {len(buildings)}개 " f"(위치=({grid_lat}, {grid_lon}))")
 
         return buildings
 
-    def get_building_statistics(self, grid_lat: float, grid_lon: float,
-                               grid_resolution: float = 0.01) -> Dict[str, Any]:
+    def get_building_statistics(
+        self, grid_lat: float, grid_lon: float, grid_resolution: float = 0.01
+    ) -> Dict[str, Any]:
         """
         격자별 건물 통계 계산
 
@@ -169,44 +171,48 @@ class BuildingClient:
 
         # 전체 통계
         total_buildings = len(buildings)
-        total_asset_value = sum(b['asset_value'] for b in buildings)
+        total_asset_value = sum(b["asset_value"] for b in buildings)
         avg_asset_value = total_asset_value / total_buildings
 
         # 용도별 통계
         by_usage = {}
         for building in buildings:
-            usage = building['usage_type']
+            usage = building["usage_type"]
             if usage not in by_usage:
-                by_usage[usage] = {'count': 0, 'total_value': 0.0}
-            by_usage[usage]['count'] += 1
-            by_usage[usage]['total_value'] += building['asset_value']
+                by_usage[usage] = {"count": 0, "total_value": 0.0}
+            by_usage[usage]["count"] += 1
+            by_usage[usage]["total_value"] += building["asset_value"]
 
         # 구조별 통계
         by_structure = {}
         for building in buildings:
-            structure = building['structure_type']
+            structure = building["structure_type"]
             if structure not in by_structure:
-                by_structure[structure] = {'count': 0, 'total_value': 0.0}
-            by_structure[structure]['count'] += 1
-            by_structure[structure]['total_value'] += building['asset_value']
+                by_structure[structure] = {"count": 0, "total_value": 0.0}
+            by_structure[structure]["count"] += 1
+            by_structure[structure]["total_value"] += building["asset_value"]
 
         # 평균 층수, 총 면적
-        avg_floors = sum(b['floors'] for b in buildings) / total_buildings
-        total_area_sqm = sum(b['area_sqm'] for b in buildings)
+        avg_floors = sum(b["floors"] for b in buildings) / total_buildings
+        total_area_sqm = sum(b["area_sqm"] for b in buildings)
 
         return {
-            'total_buildings': total_buildings,
-            'total_asset_value': total_asset_value,
-            'avg_asset_value': avg_asset_value,
-            'by_usage': by_usage,
-            'by_structure': by_structure,
-            'avg_floors': avg_floors,
-            'total_area_sqm': total_area_sqm
+            "total_buildings": total_buildings,
+            "total_asset_value": total_asset_value,
+            "avg_asset_value": avg_asset_value,
+            "by_usage": by_usage,
+            "by_structure": by_structure,
+            "avg_floors": avg_floors,
+            "total_area_sqm": total_area_sqm,
         }
 
-    def find_high_value_buildings(self, grid_lat: float, grid_lon: float,
-                                  min_value: float = 1000000000.0,
-                                  grid_resolution: float = 0.01) -> List[Dict[str, Any]]:
+    def find_high_value_buildings(
+        self,
+        grid_lat: float,
+        grid_lon: float,
+        min_value: float = 1000000000.0,
+        grid_resolution: float = 0.01,
+    ) -> List[Dict[str, Any]]:
         """
         고가 건물 조회
 
@@ -221,9 +227,7 @@ class BuildingClient:
         """
         buildings = self.get_buildings_in_grid(grid_lat, grid_lon, grid_resolution)
 
-        high_value_buildings = [
-            b for b in buildings if b['asset_value'] >= min_value
-        ]
+        high_value_buildings = [b for b in buildings if b["asset_value"] >= min_value]
 
         logger.info(
             f"고가 건물 조회: {len(high_value_buildings)}개 "
@@ -232,9 +236,9 @@ class BuildingClient:
 
         return high_value_buildings
 
-    def get_buildings_by_usage(self, grid_lat: float, grid_lon: float,
-                              usage_type: str,
-                              grid_resolution: float = 0.01) -> List[Dict[str, Any]]:
+    def get_buildings_by_usage(
+        self, grid_lat: float, grid_lon: float, usage_type: str, grid_resolution: float = 0.01
+    ) -> List[Dict[str, Any]]:
         """
         용도별 건물 조회
 
@@ -249,9 +253,7 @@ class BuildingClient:
         """
         buildings = self.get_buildings_in_grid(grid_lat, grid_lon, grid_resolution)
 
-        filtered_buildings = [
-            b for b in buildings if b['usage_type'] == usage_type
-        ]
+        filtered_buildings = [b for b in buildings if b["usage_type"] == usage_type]
 
         logger.info(
             f"용도별 건물 조회: {len(filtered_buildings)}개 "
@@ -260,8 +262,9 @@ class BuildingClient:
 
         return filtered_buildings
 
-    def calculate_exposure_score(self, grid_lat: float, grid_lon: float,
-                                 grid_resolution: float = 0.01) -> float:
+    def calculate_exposure_score(
+        self, grid_lat: float, grid_lon: float, grid_resolution: float = 0.01
+    ) -> float:
         """
         격자별 노출도 점수 계산 (자산 가치 기반)
 
@@ -275,16 +278,16 @@ class BuildingClient:
         """
         stats = self.get_building_statistics(grid_lat, grid_lon, grid_resolution)
 
-        if stats['total_buildings'] == 0:
+        if stats["total_buildings"] == 0:
             return 0.0
 
         # 자산 가치 정규화 (100억 기준)
         max_value = 10000000000.0  # 100억
-        normalized_value = min(stats['total_asset_value'] / max_value, 1.0)
+        normalized_value = min(stats["total_asset_value"] / max_value, 1.0)
 
         # 건물 수 정규화 (100개 기준)
         max_buildings = 100.0
-        normalized_count = min(stats['total_buildings'] / max_buildings, 1.0)
+        normalized_count = min(stats["total_buildings"] / max_buildings, 1.0)
 
         # 노출도 점수 = 자산 가치 70% + 건물 수 30%
         exposure_score = normalized_value * 0.7 + normalized_count * 0.3
@@ -297,9 +300,9 @@ class BuildingClient:
 
         return exposure_score
 
-    def get_buildings_near_location(self, latitude: float, longitude: float,
-                                   radius_km: float = 1.0,
-                                   max_buildings: int = 100) -> List[Dict[str, Any]]:
+    def get_buildings_near_location(
+        self, latitude: float, longitude: float, radius_km: float = 1.0, max_buildings: int = 100
+    ) -> List[Dict[str, Any]]:
         """
         특정 위치 주변 건물 조회
 
@@ -314,6 +317,7 @@ class BuildingClient:
         """
         if self.conn is None or self.cursor is None:
             from ..database.connection import DatabaseConnection
+
             with DatabaseConnection.get_connection() as temp_conn:
                 with temp_conn.cursor() as temp_cursor:
                     return self._get_buildings_near_location_impl(
@@ -324,9 +328,9 @@ class BuildingClient:
                 latitude, longitude, radius_km, max_buildings, self.cursor
             )
 
-    def _get_buildings_near_location_impl(self, latitude: float, longitude: float,
-                                         radius_km: float, max_buildings: int,
-                                         cursor) -> List[Dict[str, Any]]:
+    def _get_buildings_near_location_impl(
+        self, latitude: float, longitude: float, radius_km: float, max_buildings: int, cursor
+    ) -> List[Dict[str, Any]]:
         """특정 위치 주변 건물 조회 구현"""
 
         radius_m = radius_km * 1000.0
@@ -356,24 +360,25 @@ class BuildingClient:
             LIMIT %s
         """
 
-        cursor.execute(query, (longitude, latitude, longitude, latitude,
-                              radius_m, max_buildings))
+        cursor.execute(query, (longitude, latitude, longitude, latitude, radius_m, max_buildings))
         rows = cursor.fetchall()
 
         buildings = []
         for row in rows:
-            buildings.append({
-                'building_id': row[0],
-                'latitude': row[1],
-                'longitude': row[2],
-                'usage_type': row[3],
-                'structure_type': row[4],
-                'floors': row[5],
-                'area_sqm': row[6],
-                'built_year': row[7],
-                'asset_value': row[8],
-                'distance_km': row[9] / 1000.0
-            })
+            buildings.append(
+                {
+                    "building_id": row[0],
+                    "latitude": row[1],
+                    "longitude": row[2],
+                    "usage_type": row[3],
+                    "structure_type": row[4],
+                    "floors": row[5],
+                    "area_sqm": row[6],
+                    "built_year": row[7],
+                    "asset_value": row[8],
+                    "distance_km": row[9] / 1000.0,
+                }
+            )
 
         logger.info(
             f"위치 주변 건물 조회: {len(buildings)}개 "
@@ -385,11 +390,11 @@ class BuildingClient:
     def _default_statistics(self) -> Dict[str, Any]:
         """기본 통계 (건물 없음)"""
         return {
-            'total_buildings': 0,
-            'total_asset_value': 0.0,
-            'avg_asset_value': 0.0,
-            'by_usage': {},
-            'by_structure': {},
-            'avg_floors': 0.0,
-            'total_area_sqm': 0.0
+            "total_buildings": 0,
+            "total_asset_value": 0.0,
+            "avg_asset_value": 0.0,
+            "by_usage": {},
+            "by_structure": {},
+            "avg_floors": 0.0,
+            "total_area_sqm": 0.0,
         }

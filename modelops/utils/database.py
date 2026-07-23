@@ -7,6 +7,7 @@ Change History:
     - 2025-11-22: v01 - Initial creation
     - 2025-11-24: v02 - Updated to match actual ERD schema
 """
+
 import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -29,7 +30,7 @@ class DatabaseManager:
             database_url: PostgreSQL connection URL (from env if not provided)
                          Default: Datawarehouse (port 5433)
         """
-        self.database_url = database_url or os.getenv('DATABASE_URL')
+        self.database_url = database_url or os.getenv("DATABASE_URL")
         if not self.database_url:
             raise ValueError("DATABASE_URL is not set")
 
@@ -94,11 +95,7 @@ class DatabaseManager:
 
     # ==================== Location Queries ====================
 
-    def find_nearest_grid(
-        self,
-        latitude: float,
-        longitude: float
-    ) -> Optional[Dict[str, Any]]:
+    def find_nearest_grid(self, latitude: float, longitude: float) -> Optional[Dict[str, Any]]:
         """
         Find nearest climate grid point for given coordinates
 
@@ -146,11 +143,7 @@ class DatabaseManager:
         results = self.execute_query(query, (admin_code,))
         return results[0] if results else None
 
-    def find_admin_by_coords(
-        self,
-        latitude: float,
-        longitude: float
-    ) -> Optional[Dict[str, Any]]:
+    def find_admin_by_coords(self, latitude: float, longitude: float) -> Optional[Dict[str, Any]]:
         """
         Find administrative region containing the coordinates
 
@@ -185,7 +178,7 @@ class DatabaseManager:
         start_date: str,
         end_date: str,
         scenario: Optional[str] = None,
-        variables: Optional[List[str]] = None
+        variables: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         """
         Fetch monthly climate data for a grid point (Wide format - ERD v03)
@@ -205,22 +198,22 @@ class DatabaseManager:
             (or single scenario column if scenario is specified)
         """
         if variables is None:
-            variables = ['ta', 'rn', 'ws']
+            variables = ["ta", "rn", "ws"]
 
         result = {}
 
         # Table mapping
         table_map = {
-            'ta': 'ta_data',
-            'rn': 'rn_data',
-            'ws': 'ws_data',
-            'rhm': 'rhm_data',
-            'si': 'si_data',
-            'spei12': 'spei12_data'
+            "ta": "ta_data",
+            "rn": "rn_data",
+            "ws": "ws_data",
+            "rhm": "rhm_data",
+            "si": "si_data",
+            "spei12": "spei12_data",
         }
 
         # Validate scenario
-        valid_scenarios = ['ssp1', 'ssp2', 'ssp3', 'ssp5']
+        valid_scenarios = ["ssp1", "ssp2", "ssp3", "ssp5"]
         if scenario and scenario not in valid_scenarios:
             self.logger.warning(f"Invalid scenario: {scenario}. Using all scenarios.")
             scenario = None
@@ -247,21 +240,14 @@ class DatabaseManager:
                 ORDER BY observation_date
             """
 
-            result[var] = self.execute_query(
-                query,
-                (grid_id, start_date, end_date)
-            )
+            result[var] = self.execute_query(query, (grid_id, start_date, end_date))
 
         return result
 
     # ==================== Daily Admin Climate Data (Wide Format) ====================
 
     def fetch_daily_admin_data(
-        self,
-        admin_id: int,
-        start_date: str,
-        end_date: str,
-        variables: Optional[List[str]] = None
+        self, admin_id: int, start_date: str, end_date: str, variables: Optional[List[str]] = None
     ) -> Dict[str, Any]:
         """
         Fetch daily temperature data for administrative region (Wide format)
@@ -278,14 +264,11 @@ class DatabaseManager:
             Each row contains: time, ssp1, ssp2, ssp3, ssp5
         """
         if variables is None:
-            variables = ['tamax', 'tamin']
+            variables = ["tamax", "tamin"]
 
         result = {}
 
-        table_map = {
-            'tamax': 'tamax_data',
-            'tamin': 'tamin_data'
-        }
+        table_map = {"tamax": "tamax_data", "tamin": "tamin_data"}
 
         for var in variables:
             if var not in table_map:
@@ -303,10 +286,7 @@ class DatabaseManager:
                 ORDER BY time
             """
 
-            result[var] = self.execute_query(
-                query,
-                (admin_id, start_date, end_date)
-            )
+            result[var] = self.execute_query(query, (admin_id, start_date, end_date))
 
         return result
 
@@ -318,7 +298,7 @@ class DatabaseManager:
         start_year: int,
         end_year: int,
         scenario: Optional[str] = None,
-        variables: Optional[List[str]] = None
+        variables: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         """
         Fetch yearly climate indices for a grid point (Wide format - ERD v03)
@@ -339,23 +319,23 @@ class DatabaseManager:
             (or single scenario column if scenario is specified)
         """
         if variables is None:
-            variables = ['csdi', 'wsdi', 'rx1day', 'rx5day']
+            variables = ["csdi", "wsdi", "rx1day", "rx5day"]
 
         result = {}
 
         table_map = {
-            'csdi': 'csdi_data',
-            'wsdi': 'wsdi_data',
-            'rx1day': 'rx1day_data',
-            'rx5day': 'rx5day_data',
-            'cdd': 'cdd_data',
-            'rain80': 'rain80_data',
-            'sdii': 'sdii_data',
-            'ta_yearly': 'ta_yearly_data'
+            "csdi": "csdi_data",
+            "wsdi": "wsdi_data",
+            "rx1day": "rx1day_data",
+            "rx5day": "rx5day_data",
+            "cdd": "cdd_data",
+            "rain80": "rain80_data",
+            "sdii": "sdii_data",
+            "ta_yearly": "ta_yearly_data",
         }
 
         # Validate scenario
-        valid_scenarios = ['ssp1', 'ssp2', 'ssp3', 'ssp5']
+        valid_scenarios = ["ssp1", "ssp2", "ssp3", "ssp5"]
         if scenario and scenario not in valid_scenarios:
             self.logger.warning(f"Invalid scenario: {scenario}. Using all scenarios.")
             scenario = None
@@ -382,10 +362,7 @@ class DatabaseManager:
                 ORDER BY year
             """
 
-            result[var] = self.execute_query(
-                query,
-                (grid_id, start_year, end_year)
-            )
+            result[var] = self.execute_query(query, (grid_id, start_year, end_year))
 
         return result
 
@@ -397,7 +374,7 @@ class DatabaseManager:
         longitude: float,
         start_year: int,
         end_year: int,
-        scenario: Optional[str] = None
+        scenario: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """
         Fetch sea level rise data for coastal location (Wide format - ERD v03)
@@ -427,18 +404,15 @@ class DatabaseManager:
             ORDER BY geom <-> ST_SetSRID(ST_MakePoint(%s, %s), 4326)
             LIMIT 1
         """
-        grid_result = self.execute_query(
-            grid_query,
-            (longitude, latitude, longitude, latitude)
-        )
+        grid_result = self.execute_query(grid_query, (longitude, latitude, longitude, latitude))
 
         if not grid_result:
             return []
 
-        grid_id = grid_result[0]['grid_id']
+        grid_id = grid_result[0]["grid_id"]
 
         # Validate scenario
-        valid_scenarios = ['ssp1', 'ssp2', 'ssp3', 'ssp5']
+        valid_scenarios = ["ssp1", "ssp2", "ssp3", "ssp5"]
         if scenario and scenario not in valid_scenarios:
             self.logger.warning(f"Invalid scenario: {scenario}. Using all scenarios.")
             scenario = None
@@ -459,10 +433,7 @@ class DatabaseManager:
             ORDER BY year
         """
 
-        return self.execute_query(
-            data_query,
-            (grid_id, start_year, end_year)
-        )
+        return self.execute_query(data_query, (grid_id, start_year, end_year))
 
     # ==================== Spatial Analysis Cache ====================
 
@@ -519,10 +490,7 @@ class DatabaseManager:
     # ==================== API Cache Queries ====================
 
     def fetch_nearby_hospitals(
-        self,
-        latitude: float,
-        longitude: float,
-        radius_km: float = 5.0
+        self, latitude: float, longitude: float, radius_km: float = 5.0
     ) -> List[Dict[str, Any]]:
         """
         Fetch hospitals within radius
@@ -554,15 +522,9 @@ class DatabaseManager:
             )
             ORDER BY distance_meters
         """
-        return self.execute_query(
-            query,
-            (longitude, latitude, longitude, latitude, radius_km)
-        )
+        return self.execute_query(query, (longitude, latitude, longitude, latitude, radius_km))
 
-    def fetch_nearby_shelters(
-        self,
-        admin_code: str
-    ) -> Optional[Dict[str, Any]]:
+    def fetch_nearby_shelters(self, admin_code: str) -> Optional[Dict[str, Any]]:
         """
         Fetch shelter information for administrative region
 
@@ -594,7 +556,7 @@ class DatabaseManager:
         longitude: float,
         radius_km: float = 100.0,
         start_year: Optional[int] = None,
-        end_year: Optional[int] = None
+        end_year: Optional[int] = None,
     ) -> List[Dict[str, Any]]:
         """
         Fetch historical typhoon tracks near location
@@ -652,7 +614,7 @@ class DatabaseManager:
         start_year: int,
         end_year: int,
         scenario: Optional[str] = None,  # Changed from scenario_id to scenario (ERD v03)
-        admin_code: Optional[str] = None
+        admin_code: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Comprehensive climate data collection for a location (ERD v03 Wide Format)
@@ -671,32 +633,26 @@ class DatabaseManager:
             All data uses Wide format (ssp1, ssp2, ssp3, ssp5 columns)
         """
         result = {
-            'location': {
-                'latitude': latitude,
-                'longitude': longitude
-            },
-            'period': {
-                'start_year': start_year,
-                'end_year': end_year
-            },
-            'scenario': scenario or 'all'  # Changed from scenario_id
+            "location": {"latitude": latitude, "longitude": longitude},
+            "period": {"start_year": start_year, "end_year": end_year},
+            "scenario": scenario or "all",  # Changed from scenario_id
         }
 
         # 1. Find nearest grid
         grid = self.find_nearest_grid(latitude, longitude)
         if grid:
-            result['grid'] = grid
-            grid_id = grid['grid_id']
+            result["grid"] = grid
+            grid_id = grid["grid_id"]
 
             # 2. Fetch monthly grid data (Wide format)
             start_date = f"{start_year}-01-01"
             end_date = f"{end_year}-12-31"
-            result['monthly_data'] = self.fetch_monthly_grid_data(
+            result["monthly_data"] = self.fetch_monthly_grid_data(
                 grid_id, start_date, end_date, scenario
             )
 
             # 3. Fetch yearly grid data (Wide format)
-            result['yearly_data'] = self.fetch_yearly_grid_data(
+            result["yearly_data"] = self.fetch_yearly_grid_data(
                 grid_id, start_year, end_year, scenario
             )
 
@@ -707,18 +663,16 @@ class DatabaseManager:
             admin = self.find_admin_by_coords(latitude, longitude)
 
         if admin:
-            result['admin'] = admin
-            admin_id = admin['admin_id']
+            result["admin"] = admin
+            admin_id = admin["admin_id"]
 
             # 5. Fetch daily admin data (Already Wide format)
             start_date = f"{start_year}-01-01"
             end_date = f"{end_year}-12-31"
-            result['daily_data'] = self.fetch_daily_admin_data(
-                admin_id, start_date, end_date
-            )
+            result["daily_data"] = self.fetch_daily_admin_data(admin_id, start_date, end_date)
 
         # 6. Sea level data (Wide format)
-        result['sea_level_data'] = self.fetch_sea_level_data(
+        result["sea_level_data"] = self.fetch_sea_level_data(
             latitude, longitude, start_year, end_year, scenario
         )
 
@@ -731,7 +685,7 @@ class DatabaseManager:
         latitude: float,
         longitude: float,
         target_years: Optional[List[str]] = None,
-        risk_type: Optional[str] = None
+        risk_type: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """
         Fetch Hazard Score results from ModelOps calculations
@@ -763,7 +717,7 @@ class DatabaseManager:
         params: List[Any] = [latitude, longitude]
 
         if target_years:
-            placeholders = ', '.join(['%s'] * len(target_years))
+            placeholders = ", ".join(["%s"] * len(target_years))
             query += f" AND target_year IN ({placeholders})"
             params.extend(target_years)
 
@@ -779,7 +733,7 @@ class DatabaseManager:
         self,
         site_id: str,
         target_years: Optional[List[str]] = None,
-        risk_type: Optional[str] = None
+        risk_type: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """
         Fetch Exposure Score results from ModelOps calculations
@@ -806,7 +760,7 @@ class DatabaseManager:
         params: List[Any] = [site_id]
 
         if target_years:
-            placeholders = ', '.join(['%s'] * len(target_years))
+            placeholders = ", ".join(["%s"] * len(target_years))
             query += f" AND target_year IN ({placeholders})"
             params.extend(target_years)
 
@@ -822,7 +776,7 @@ class DatabaseManager:
         self,
         site_id: str,
         target_years: Optional[List[str]] = None,
-        risk_type: Optional[str] = None
+        risk_type: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """
         Fetch Vulnerability Score results from ModelOps calculations
@@ -849,7 +803,7 @@ class DatabaseManager:
         params: List[Any] = [site_id]
 
         if target_years:
-            placeholders = ', '.join(['%s'] * len(target_years))
+            placeholders = ", ".join(["%s"] * len(target_years))
             query += f" AND target_year IN ({placeholders})"
             params.extend(target_years)
 
@@ -866,7 +820,7 @@ class DatabaseManager:
         latitude: float,
         longitude: float,
         target_years: Optional[List[str]] = None,
-        risk_type: Optional[str] = None
+        risk_type: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """
         Fetch Probability P(H) results from ModelOps calculations
@@ -900,7 +854,7 @@ class DatabaseManager:
         params: List[Any] = [latitude, longitude]
 
         if target_years:
-            placeholders = ', '.join(['%s'] * len(target_years))
+            placeholders = ", ".join(["%s"] * len(target_years))
             query += f" AND target_year IN ({placeholders})"
             params.extend(target_years)
 
@@ -916,7 +870,7 @@ class DatabaseManager:
         self,
         site_id: str,
         target_years: Optional[List[str]] = None,
-        risk_type: Optional[str] = None
+        risk_type: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """
         Fetch final AAL results (scaled by vulnerability) from ModelOps
@@ -946,7 +900,7 @@ class DatabaseManager:
         params: List[Any] = [site_id]
 
         if target_years:
-            placeholders = ', '.join(['%s'] * len(target_years))
+            placeholders = ", ".join(["%s"] * len(target_years))
             query += f" AND target_year IN ({placeholders})"
             params.extend(target_years)
 
@@ -964,7 +918,7 @@ class DatabaseManager:
         latitude: float,
         longitude: float,
         target_years: Optional[List[str]] = None,
-        risk_type: Optional[str] = None
+        risk_type: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Fetch all ModelOps calculation results for a location
@@ -986,11 +940,17 @@ class DatabaseManager:
             - aal_scaled_results: Final AAL (scaled by V)
         """
         return {
-            'hazard_results': self.fetch_hazard_results(latitude, longitude, target_years, risk_type),
-            'exposure_results': self.fetch_exposure_results(site_id, target_years, risk_type),
-            'vulnerability_results': self.fetch_vulnerability_results(site_id, target_years, risk_type),
-            'probability_results': self.fetch_probability_results(latitude, longitude, target_years, risk_type),
-            'aal_scaled_results': self.fetch_aal_scaled_results(site_id, target_years, risk_type)
+            "hazard_results": self.fetch_hazard_results(
+                latitude, longitude, target_years, risk_type
+            ),
+            "exposure_results": self.fetch_exposure_results(site_id, target_years, risk_type),
+            "vulnerability_results": self.fetch_vulnerability_results(
+                site_id, target_years, risk_type
+            ),
+            "probability_results": self.fetch_probability_results(
+                latitude, longitude, target_years, risk_type
+            ),
+            "aal_scaled_results": self.fetch_aal_scaled_results(site_id, target_years, risk_type),
         }
 
     # ==================== Batch Jobs Tracking ====================
@@ -1032,10 +992,7 @@ class DatabaseManager:
         return results[0] if results else None
 
     def fetch_batch_jobs_by_status(
-        self,
-        status: str,
-        job_type: Optional[str] = None,
-        limit: int = 100
+        self, status: str, job_type: Optional[str] = None, limit: int = 100
     ) -> List[Dict[str, Any]]:
         """
         Fetch batch jobs by status
@@ -1077,10 +1034,7 @@ class DatabaseManager:
     # ==================== Building Aggregate Cache Queries ====================
 
     def fetch_building_cache_by_coords(
-        self,
-        lat: float,
-        lon: float,
-        radius_km: float = 0.5
+        self, lat: float, lon: float, radius_km: float = 0.5
     ) -> Optional[Dict[str, Any]]:
         """
         좌표 기반으로 가장 가까운 건물 캐시 조회
@@ -1099,11 +1053,11 @@ class DatabaseManager:
         is_pangyo = (37.40 < lat < 37.41) and (127.09 < lon < 127.10)
 
         if is_daedeok:
-            sigungu_cd, bjdong_cd = '30200', '14200'
+            sigungu_cd, bjdong_cd = "30200", "14200"
         elif is_sk_u_tower:
-            sigungu_cd, bjdong_cd = '41135', '10300'
+            sigungu_cd, bjdong_cd = "41135", "10300"
         elif is_pangyo:
-            sigungu_cd, bjdong_cd = '41135', '10900'
+            sigungu_cd, bjdong_cd = "41135", "10900"
         else:
             return None  # 특정 사업장만 지원
 
@@ -1132,11 +1086,7 @@ class DatabaseManager:
         return results[0] if results else None
 
     def fetch_building_aggregate_cache(
-        self,
-        sigungu_cd: str,
-        bjdong_cd: str,
-        bun: str,
-        ji: str
+        self, sigungu_cd: str, bjdong_cd: str, bun: str, ji: str
     ) -> Optional[Dict[str, Any]]:
         """
         Fetch cached building aggregate data by address codes
@@ -1189,12 +1139,7 @@ class DatabaseManager:
         return results[0] if results else None
 
     def save_building_aggregate_cache(
-        self,
-        sigungu_cd: str,
-        bjdong_cd: str,
-        bun: str,
-        ji: str,
-        building_data: Dict[str, Any]
+        self, sigungu_cd: str, bjdong_cd: str, bun: str, ji: str, building_data: Dict[str, Any]
     ) -> bool:
         """
         Save or update building aggregate data to cache
@@ -1210,58 +1155,58 @@ class DatabaseManager:
             True if successful, False otherwise
         """
         try:
-            import json
             from psycopg2.extras import Json
 
             # building_data에서 필요한 값 추출
-            physical_specs = building_data.get('physical_specs', {})
-            meta = building_data.get('meta', {})
-            floor_details = building_data.get('floor_details', [])
+            physical_specs = building_data.get("physical_specs", {})
+            meta = building_data.get("meta", {})
+            floor_details = building_data.get("floor_details", [])
 
             # 구조 유형 추출
-            structure = physical_specs.get('structure', '')
+            structure = physical_specs.get("structure", "")
             structure_types = {structure: 1} if structure else {}
 
             # 용도 유형 추출
-            main_purpose = physical_specs.get('main_purpose', '')
+            main_purpose = physical_specs.get("main_purpose", "")
             purpose_types = {main_purpose: 1} if main_purpose else {}
 
             # 층수 정보 (API 형식과 DB 형식 모두 대응)
-            floors = physical_specs.get('floors', {})
-            transition_specs = building_data.get('transition_specs', {})
-            max_ground_floors = floors.get('ground', 0) or floors.get('max_ground', 0)
-            max_underground_floors = floors.get('underground', 0) or floors.get('max_underground', 0)
-            min_underground_floors = floors.get('min_underground', 0)
+            floors = physical_specs.get("floors", {})
+            transition_specs = building_data.get("transition_specs", {})
+            max_ground_floors = floors.get("ground", 0) or floors.get("max_ground", 0)
+            max_underground_floors = floors.get("underground", 0) or floors.get(
+                "max_underground", 0
+            )
+            min_underground_floors = floors.get("min_underground", 0)
 
             # 내진 설계 정보
-            seismic = physical_specs.get('seismic', {})
-            buildings_with_seismic = seismic.get('buildings_with_design', 0)
-            buildings_without_seismic = seismic.get('buildings_without_design', 0)
+            seismic = physical_specs.get("seismic", {})
+            buildings_with_seismic = seismic.get("buildings_with_design", 0)
+            buildings_without_seismic = seismic.get("buildings_without_design", 0)
 
             # 연식 정보
-            age_info = physical_specs.get('age', {})
-            oldest_building_age = age_info.get('years', 0)
+            age_info = physical_specs.get("age", {})
+            oldest_building_age = age_info.get("years", 0)
 
             # 면적 정보 (여러 형식 대응)
             # physical_specs 직접 확인 (total_area, arch_area)
             # area 딕셔너리 확인 (total_floor_area, building_area)
             # transition_specs 확인 (total_area, total_area_sum)
-            area = physical_specs.get('area', {})
+            area = physical_specs.get("area", {})
             total_floor_area = (
-                physical_specs.get('total_area', 0) or  # 직접 필드
-                area.get('total_floor_area', 0) or      # area 딕셔너리
-                transition_specs.get('total_area', 0) or
-                transition_specs.get('total_area_sum', 0)
+                physical_specs.get("total_area", 0)  # 직접 필드
+                or area.get("total_floor_area", 0)  # area 딕셔너리
+                or transition_specs.get("total_area", 0)
+                or transition_specs.get("total_area_sum", 0)
             )
-            total_building_area = (
-                physical_specs.get('arch_area', 0) or  # 직접 필드
-                area.get('building_area', 0)           # area 딕셔너리
-            )
+            total_building_area = physical_specs.get("arch_area", 0) or area.get(  # 직접 필드
+                "building_area", 0
+            )  # area 딕셔너리
 
             # 층별 용도 유형 집계
             floor_purpose_types = {}
             for floor in floor_details:
-                usage = floor.get('usage_main', '')
+                usage = floor.get("usage_main", "")
                 if usage:
                     floor_purpose_types[usage] = floor_purpose_types.get(usage, 0) + 1
 
@@ -1312,9 +1257,12 @@ class DatabaseManager:
             """
 
             params = (
-                sigungu_cd, bjdong_cd, bun, ji,
-                meta.get('jibun_address', ''),
-                meta.get('road_address', '') or meta.get('address', ''),
+                sigungu_cd,
+                bjdong_cd,
+                bun,
+                ji,
+                meta.get("jibun_address", ""),
+                meta.get("road_address", "") or meta.get("address", ""),
                 1,  # building_count (단일 건물 기준)
                 Json(structure_types),
                 Json(purpose_types),
@@ -1327,7 +1275,7 @@ class DatabaseManager:
                 total_floor_area,
                 total_building_area,
                 Json(floor_details),
-                Json(floor_purpose_types)
+                Json(floor_purpose_types),
             )
 
             self.execute_update(query, params)
@@ -1338,10 +1286,7 @@ class DatabaseManager:
             self.logger.error(f"Failed to save building cache: {e}")
             return False
 
-    def convert_cache_to_building_data(
-        self,
-        cache_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def convert_cache_to_building_data(self, cache_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Convert building_aggregate_cache format to BuildingDataFetcher format
 
@@ -1356,24 +1301,30 @@ class DatabaseManager:
 
         # 구조 유형 추출 (가장 많은 것)
         # DB에 list 또는 dict로 저장될 수 있음
-        structure_types = cache_data.get('structure_types', {})
+        structure_types = cache_data.get("structure_types", {})
         if isinstance(structure_types, list):
             # list인 경우: 첫 번째 요소 사용
-            main_structure = structure_types[0] if structure_types else ''
+            main_structure = structure_types[0] if structure_types else ""
         elif isinstance(structure_types, dict):
             # dict인 경우: 가장 많은 것 선택
-            main_structure = max(structure_types.keys(), key=lambda k: structure_types[k]) if structure_types else ''
+            main_structure = (
+                max(structure_types.keys(), key=lambda k: structure_types[k])
+                if structure_types
+                else ""
+            )
         else:
-            main_structure = ''
+            main_structure = ""
 
         # 용도 유형 추출
-        purpose_types = cache_data.get('purpose_types', {})
+        purpose_types = cache_data.get("purpose_types", {})
         if isinstance(purpose_types, list):
-            main_purpose = purpose_types[0] if purpose_types else ''
+            main_purpose = purpose_types[0] if purpose_types else ""
         elif isinstance(purpose_types, dict):
-            main_purpose = max(purpose_types.keys(), key=lambda k: purpose_types[k]) if purpose_types else ''
+            main_purpose = (
+                max(purpose_types.keys(), key=lambda k: purpose_types[k]) if purpose_types else ""
+            )
         else:
-            main_purpose = ''
+            main_purpose = ""
 
         # NULL 값 처리 헬퍼
         def safe_int(val, default=0):
@@ -1382,41 +1333,39 @@ class DatabaseManager:
         def safe_float(val, default=0.0):
             return float(val) if val is not None else default
 
-        buildings_with_seismic = safe_int(cache_data.get('buildings_with_seismic'))
-        buildings_without_seismic = safe_int(cache_data.get('buildings_without_seismic'))
+        buildings_with_seismic = safe_int(cache_data.get("buildings_with_seismic"))
+        buildings_without_seismic = safe_int(cache_data.get("buildings_without_seismic"))
 
         return {
-            'meta': {
-                'jibun_address': cache_data.get('jibun_address', '') or '',
-                'road_address': cache_data.get('road_address', '') or '',
-                'address': cache_data.get('road_address') or cache_data.get('jibun_address', '') or '',
-                'data_source': 'building_aggregate_cache'
+            "meta": {
+                "jibun_address": cache_data.get("jibun_address", "") or "",
+                "road_address": cache_data.get("road_address", "") or "",
+                "address": cache_data.get("road_address")
+                or cache_data.get("jibun_address", "")
+                or "",
+                "data_source": "building_aggregate_cache",
             },
-            'physical_specs': {
-                'structure': main_structure,
-                'main_purpose': main_purpose,
-                'floors': {
-                    'ground': safe_int(cache_data.get('max_ground_floors')),
-                    'max_underground': safe_int(cache_data.get('max_underground_floors')),
-                    'min_underground': safe_int(cache_data.get('min_underground_floors'))
+            "physical_specs": {
+                "structure": main_structure,
+                "main_purpose": main_purpose,
+                "floors": {
+                    "ground": safe_int(cache_data.get("max_ground_floors")),
+                    "max_underground": safe_int(cache_data.get("max_underground_floors")),
+                    "min_underground": safe_int(cache_data.get("min_underground_floors")),
                 },
-                'seismic': {
-                    'applied': 'Y' if buildings_with_seismic > 0 else 'N',
-                    'buildings_with_design': buildings_with_seismic,
-                    'buildings_without_design': buildings_without_seismic
+                "seismic": {
+                    "applied": "Y" if buildings_with_seismic > 0 else "N",
+                    "buildings_with_design": buildings_with_seismic,
+                    "buildings_without_design": buildings_without_seismic,
                 },
-                'age': {
-                    'years': safe_int(cache_data.get('oldest_building_age_years'))
+                "age": {"years": safe_int(cache_data.get("oldest_building_age_years"))},
+                "area": {
+                    "total_floor_area": safe_float(cache_data.get("total_floor_area_sqm")),
+                    "building_area": safe_float(cache_data.get("total_building_area_sqm")),
                 },
-                'area': {
-                    'total_floor_area': safe_float(cache_data.get('total_floor_area_sqm')),
-                    'building_area': safe_float(cache_data.get('total_building_area_sqm'))
-                }
             },
-            'floor_details': cache_data.get('floor_details') or [],
-            'transition_specs': {
-                'total_area': safe_float(cache_data.get('total_floor_area_sqm'))
-            }
+            "floor_details": cache_data.get("floor_details") or [],
+            "transition_specs": {"total_area": safe_float(cache_data.get("total_floor_area_sqm"))},
         }
 
     # ==================== Site Additional Data Queries ====================
@@ -1426,7 +1375,7 @@ class DatabaseManager:
         site_id: str,
         structured_data: Dict[str, Any],
         metadata: Dict[str, Any] = None,
-        data_category: str = None  # deprecated, stored in metadata
+        data_category: str = None,  # deprecated, stored in metadata
     ) -> bool:
         """
         Save additional data to site_additional_data table
@@ -1445,7 +1394,7 @@ class DatabaseManager:
 
             # data_category는 metadata에 저장
             if data_category and metadata:
-                metadata['data_category'] = data_category
+                metadata["data_category"] = data_category
 
             query = """
                 INSERT INTO site_additional_data
@@ -1453,11 +1402,7 @@ class DatabaseManager:
                 VALUES (%s, %s, %s, NOW())
             """
 
-            params = (
-                site_id,
-                Json(structured_data),
-                Json(metadata or {})
-            )
+            params = (site_id, Json(structured_data), Json(metadata or {}))
 
             self.execute_update(query, params)
             self.logger.info(f"Additional data saved: site_id={site_id[:8]}...")
@@ -1468,9 +1413,7 @@ class DatabaseManager:
             return False
 
     def fetch_additional_data(
-        self,
-        site_id: str,
-        data_category: str = None
+        self, site_id: str, data_category: str = None
     ) -> List[Dict[str, Any]]:
         """
         Fetch additional data from site_additional_data table
@@ -1521,11 +1464,7 @@ class DatabaseManager:
 
     # ==================== Reports Queries (Application DB) ====================
 
-    def save_report(
-        self,
-        user_id: str,
-        report_content: Dict[str, Any]
-    ) -> Optional[str]:
+    def save_report(self, user_id: str, report_content: Dict[str, Any]) -> Optional[str]:
         """
         Save TCFD report to reports table (Application DB)
 
@@ -1579,11 +1518,7 @@ class DatabaseManager:
         results = self.execute_query(query, (report_id,))
         return results[0] if results else None
 
-    def fetch_reports_by_user(
-        self,
-        user_id: str,
-        limit: int = 10
-    ) -> List[Dict[str, Any]]:
+    def fetch_reports_by_user(self, user_id: str, limit: int = 10) -> List[Dict[str, Any]]:
         """
         Fetch reports by user ID
 

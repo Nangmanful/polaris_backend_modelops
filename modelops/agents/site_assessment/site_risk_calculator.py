@@ -28,18 +28,18 @@ class SiteRiskCalculator:
 
     # 9개 리스크 타입
     RISK_TYPES = [
-        'extreme_heat',
-        'extreme_cold',
-        'wildfire',
-        'drought',
-        'water_stress',
-        'sea_level_rise',
-        'river_flood',
-        'urban_flood',
-        'typhoon'
+        "extreme_heat",
+        "extreme_cold",
+        "wildfire",
+        "drought",
+        "water_stress",
+        "sea_level_rise",
+        "river_flood",
+        "urban_flood",
+        "typhoon",
     ]
 
-    def __init__(self, scenario='SSP245', target_year=2030):
+    def __init__(self, scenario="SSP245", target_year=2030):
         """
         SiteRiskCalculator 초기화
 
@@ -51,10 +51,7 @@ class SiteRiskCalculator:
         self.target_year = target_year
 
         # HazardDataCollector for E 계산용 데이터 수집
-        self.hazard_data_collector = HazardDataCollector(
-            scenario=scenario,
-            target_year=target_year
-        )
+        self.hazard_data_collector = HazardDataCollector(scenario=scenario, target_year=target_year)
 
         # E, V Agents
         self.exposure_agent = BaseExposureAgent()
@@ -66,7 +63,7 @@ class SiteRiskCalculator:
         longitude: float,
         building_info: Dict[str, Any],
         asset_info: Optional[Dict[str, Any]] = None,
-        site_id: Optional[str] = None
+        site_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         사업장 리스크 통합 계산
@@ -114,25 +111,25 @@ class SiteRiskCalculator:
             base_aals = DatabaseConnection.fetch_probability_results(latitude, longitude)
 
             if not hazard_data:
-                raise ValueError(f"Hazard data not found for ({latitude}, {longitude}). "
-                               "스케줄러가 해당 격자를 계산하지 않았을 수 있습니다.")
+                raise ValueError(
+                    f"Hazard data not found for ({latitude}, {longitude}). "
+                    "스케줄러가 해당 격자를 계산하지 않았을 수 있습니다."
+                )
 
             # Step 2: collected_data 구성
-            collected_data = self._prepare_collected_data(
-                latitude, longitude, building_info
-            )
+            collected_data = self._prepare_collected_data(latitude, longitude, building_info)
 
             # 결과 저장소
             results = {
-                'hazard': {},
-                'exposure': {},
-                'vulnerability': {},
-                'integrated_risk': {},
-                'aal_scaled': {}
+                "hazard": {},
+                "exposure": {},
+                "vulnerability": {},
+                "integrated_risk": {},
+                "aal_scaled": {},
             }
 
             # Step 3: 9개 리스크 순회
-            insurance_rate = asset_info.get('insurance_coverage_rate', 0.0) if asset_info else 0.0
+            insurance_rate = asset_info.get("insurance_coverage_rate", 0.0) if asset_info else 0.0
 
             for risk_type in self.RISK_TYPES:
                 logger.debug(f"  - {risk_type} 계산 중...")
@@ -142,11 +139,11 @@ class SiteRiskCalculator:
                     logger.warning(f"{risk_type} hazard data not found, 기본값 사용")
                     h_score_100 = 0.0
                     h_score = 0.0
-                    h_level = 'Very Low'
+                    h_level = "Very Low"
                 else:
-                    h_score_100 = hazard_data[risk_type].get('hazard_score_100', 0.0)
-                    h_score = hazard_data[risk_type].get('hazard_score', 0.0)
-                    h_level = hazard_data[risk_type].get('hazard_level', 'Very Low')
+                    h_score_100 = hazard_data[risk_type].get("hazard_score_100", 0.0)
+                    h_score = hazard_data[risk_type].get("hazard_score", 0.0)
+                    h_level = hazard_data[risk_type].get("hazard_level", "Very Low")
 
                 # E 계산
                 exposure_full = self.exposure_agent.calculate_exposure(collected_data)
@@ -155,16 +152,16 @@ class SiteRiskCalculator:
                 # V 계산
                 # VulnerabilityAgent는 collected_data에서 exposure_results를 사용
                 collected_data_with_exposure = collected_data.copy()
-                collected_data_with_exposure['exposure_results'] = exposure_full
+                collected_data_with_exposure["exposure_results"] = exposure_full
 
                 vulnerability_full = self.vulnerability_agent.calculate_vulnerability(
                     collected_data_with_exposure
                 )
 
                 v_info = vulnerability_full.get(risk_type, {})
-                v_score = v_info.get('score', 50.0)
-                v_level = v_info.get('level', 'medium')
-                v_factors = v_info.get('factors', {})
+                v_score = v_info.get("score", 50.0)
+                v_level = v_info.get("level", "medium")
+                v_factors = v_info.get("factors", {})
 
                 # Score 계산 (H × E × V / 10000)
                 integrated_score = (h_score_100 * e_score * v_score) / 10000.0
@@ -173,42 +170,46 @@ class SiteRiskCalculator:
                 risk_level = self._classify_risk_level(integrated_score)
 
                 # AAL 계산
-                base_aal = base_aals.get(risk_type, {}).get('aal', 0.01) if base_aals.get(risk_type) else 0.01
+                base_aal = (
+                    base_aals.get(risk_type, {}).get("aal", 0.01)
+                    if base_aals.get(risk_type)
+                    else 0.01
+                )
                 f_vuln = 0.9 + (v_score / 100.0) * 0.2
                 final_aal = base_aal * f_vuln * (1 - insurance_rate)
 
                 # 결과 저장
-                results['hazard'][risk_type] = {
-                    'hazard_score': h_score,
-                    'hazard_score_100': h_score_100,
-                    'hazard_level': h_level
+                results["hazard"][risk_type] = {
+                    "hazard_score": h_score,
+                    "hazard_score_100": h_score_100,
+                    "hazard_level": h_level,
                 }
 
-                results['exposure'][risk_type] = {
-                    'exposure_score': e_score,
-                    'details': exposure_full
+                results["exposure"][risk_type] = {
+                    "exposure_score": e_score,
+                    "details": exposure_full,
                 }
 
-                results['vulnerability'][risk_type] = {
-                    'vulnerability_score': v_score,
-                    'vulnerability_level': v_level,
-                    'factors': v_factors
+                results["vulnerability"][risk_type] = {
+                    "vulnerability_score": v_score,
+                    "vulnerability_level": v_level,
+                    "factors": v_factors,
                 }
 
-                results['integrated_risk'][risk_type] = {
-                    'h_score': round(h_score_100, 2),
-                    'e_score': round(e_score, 2),
-                    'v_score': round(v_score, 2),
-                    'integrated_risk_score': round(integrated_score, 2),
-                    'risk_level': risk_level,
-                    'formula': f'{h_score_100:.2f} × {e_score:.2f} × {v_score:.2f} / 10000 = {integrated_score:.2f}'
+                results["integrated_risk"][risk_type] = {
+                    "h_score": round(h_score_100, 2),
+                    "e_score": round(e_score, 2),
+                    "v_score": round(v_score, 2),
+                    "integrated_risk_score": round(integrated_score, 2),
+                    "risk_level": risk_level,
+                    "formula": f"{h_score_100:.2f} × {e_score:.2f} × {v_score:.2f} / 10000 = {integrated_score:.2f}",
                 }
 
-                results['aal_scaled'][risk_type] = {
-                    'base_aal': round(base_aal, 6),
-                    'vulnerability_scale': round(f_vuln, 4),
-                    'insurance_rate': round(insurance_rate, 4),
-                    'final_aal': round(final_aal, 6)
+                results["aal_scaled"][risk_type] = {
+                    "base_aal": round(base_aal, 6),
+                    "vulnerability_scale": round(f_vuln, 4),
+                    "insurance_rate": round(insurance_rate, 4),
+                    "final_aal": round(final_aal, 6),
                 }
 
             # Step 4: DB 저장
@@ -221,16 +222,16 @@ class SiteRiskCalculator:
             logger.info(f"사업장 리스크 계산 완료: {(end_time - start_time).total_seconds():.2f}초")
 
             return {
-                'site_id': site_id,
-                'latitude': latitude,
-                'longitude': longitude,
-                'hazard': results['hazard'],
-                'exposure': results['exposure'],
-                'vulnerability': results['vulnerability'],
-                'integrated_risk': results['integrated_risk'],
-                'aal_scaled': results['aal_scaled'],
-                'summary': summary,
-                'calculated_at': end_time
+                "site_id": site_id,
+                "latitude": latitude,
+                "longitude": longitude,
+                "hazard": results["hazard"],
+                "exposure": results["exposure"],
+                "vulnerability": results["vulnerability"],
+                "integrated_risk": results["integrated_risk"],
+                "aal_scaled": results["aal_scaled"],
+                "summary": summary,
+                "calculated_at": end_time,
             }
 
         except Exception as e:
@@ -238,10 +239,7 @@ class SiteRiskCalculator:
             raise
 
     def _prepare_collected_data(
-        self,
-        latitude: float,
-        longitude: float,
-        building_info: Dict[str, Any]
+        self, latitude: float, longitude: float, building_info: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
         ExposureAgent 및 VulnerabilityAgent 입력용 collected_data 구성
@@ -256,28 +254,26 @@ class SiteRiskCalculator:
         """
         # building_data 변환 (ExposureAgent 형식에 맞춤)
         building_data = {
-            'latitude': latitude,
-            'longitude': longitude,
-            'building_type': building_info.get('building_type', 'office'),
-            'structure': building_info.get('structure', '철근콘크리트'),
-            'building_age': building_info.get('building_age', 20),
-            'total_area_m2': building_info.get('total_area_m2', 1000),
-            'ground_floors': building_info.get('ground_floors', 3),
-            'basement_floors': building_info.get('basement_floors', 0),
-            'has_piloti': building_info.get('has_piloti', False),
-            'elevation_m': building_info.get('elevation_m', 0),
+            "latitude": latitude,
+            "longitude": longitude,
+            "building_type": building_info.get("building_type", "office"),
+            "structure": building_info.get("structure", "철근콘크리트"),
+            "building_age": building_info.get("building_age", 20),
+            "total_area_m2": building_info.get("total_area_m2", 1000),
+            "ground_floors": building_info.get("ground_floors", 3),
+            "basement_floors": building_info.get("basement_floors", 0),
+            "has_piloti": building_info.get("has_piloti", False),
+            "elevation_m": building_info.get("elevation_m", 0),
         }
 
         # spatial_data (토지피복 등)
-        spatial_data = {
-            'landcover_type': 'urban'  # 기본값
-        }
+        spatial_data = {"landcover_type": "urban"}  # 기본값
 
         return {
-            'latitude': latitude,
-            'longitude': longitude,
-            'building_data': building_data,
-            'spatial_data': spatial_data
+            "latitude": latitude,
+            "longitude": longitude,
+            "building_data": building_data,
+            "spatial_data": spatial_data,
         }
 
     def _extract_exposure_score(self, exposure_full: Dict, risk_type: str) -> float:
@@ -295,22 +291,22 @@ class SiteRiskCalculator:
             exposure_score (0-100)
         """
         # flood 관련
-        if risk_type in ['river_flood', 'urban_flood']:
-            if risk_type == 'river_flood':
-                return exposure_full.get('flood_exposure', {}).get('score', 50.0)
+        if risk_type in ["river_flood", "urban_flood"]:
+            if risk_type == "river_flood":
+                return exposure_full.get("flood_exposure", {}).get("score", 50.0)
             else:  # urban_flood
-                return exposure_full.get('urban_flood_exposure', {}).get('score', 50.0)
+                return exposure_full.get("urban_flood_exposure", {}).get("score", 50.0)
 
         # heat 관련
-        elif risk_type in ['extreme_heat']:
+        elif risk_type in ["extreme_heat"]:
             # UHI risk를 점수로 변환 (예: very_high=90, high=70, medium=50, low=30, very_low=10)
-            uhi_risk = exposure_full.get('heat_exposure', {}).get('uhi_risk', 'medium')
+            uhi_risk = exposure_full.get("heat_exposure", {}).get("uhi_risk", "medium")
             uhi_score_map = {
-                'very_high': 90.0,
-                'high': 70.0,
-                'medium': 50.0,
-                'low': 30.0,
-                'very_low': 10.0
+                "very_high": 90.0,
+                "high": 70.0,
+                "medium": 50.0,
+                "low": 30.0,
+                "very_low": 10.0,
             }
             return uhi_score_map.get(uhi_risk, 50.0)
 
@@ -321,61 +317,57 @@ class SiteRiskCalculator:
     def _classify_risk_level(self, integrated_score: float) -> str:
         """통합 리스크 점수를 등급으로 분류"""
         if integrated_score >= 80:
-            return 'Very High'
+            return "Very High"
         elif integrated_score >= 60:
-            return 'High'
+            return "High"
         elif integrated_score >= 40:
-            return 'Medium'
+            return "Medium"
         elif integrated_score >= 20:
-            return 'Low'
+            return "Low"
         else:
-            return 'Very Low'
+            return "Very Low"
 
     def _save_results(
-        self,
-        latitude: float,
-        longitude: float,
-        site_id: Optional[str],
-        results: Dict[str, Any]
+        self, latitude: float, longitude: float, site_id: Optional[str], results: Dict[str, Any]
     ):
         """계산 결과를 DB에 저장"""
         try:
             for risk_type in self.RISK_TYPES:
                 # exposure_results 저장
-                e_data = results['exposure'].get(risk_type, {})
+                e_data = results["exposure"].get(risk_type, {})
                 DatabaseConnection.save_exposure_results(
                     latitude=latitude,
                     longitude=longitude,
                     risk_type=risk_type,
-                    exposure_score=e_data.get('exposure_score', 0.0),
+                    exposure_score=e_data.get("exposure_score", 0.0),
                     proximity_factor=1.0,  # 기본값
-                    site_id=site_id
+                    site_id=site_id,
                 )
 
                 # vulnerability_results 저장
-                v_data = results['vulnerability'].get(risk_type, {})
+                v_data = results["vulnerability"].get(risk_type, {})
                 DatabaseConnection.save_vulnerability_results(
                     latitude=latitude,
                     longitude=longitude,
                     risk_type=risk_type,
-                    vulnerability_score=v_data.get('vulnerability_score', 0.0),
-                    vulnerability_level=v_data.get('vulnerability_level', 'medium'),
-                    factors=v_data.get('factors', {}),
-                    site_id=site_id
+                    vulnerability_score=v_data.get("vulnerability_score", 0.0),
+                    vulnerability_level=v_data.get("vulnerability_level", "medium"),
+                    factors=v_data.get("factors", {}),
+                    site_id=site_id,
                 )
 
                 # aal_scaled_results 저장
-                aal_data = results['aal_scaled'].get(risk_type, {})
+                aal_data = results["aal_scaled"].get(risk_type, {})
                 DatabaseConnection.save_aal_scaled_results(
                     latitude=latitude,
                     longitude=longitude,
                     risk_type=risk_type,
-                    base_aal=aal_data.get('base_aal', 0.0),
-                    vulnerability_scale=aal_data.get('vulnerability_scale', 1.0),
-                    final_aal=aal_data.get('final_aal', 0.0),
-                    insurance_rate=aal_data.get('insurance_rate', 0.0),
+                    base_aal=aal_data.get("base_aal", 0.0),
+                    vulnerability_scale=aal_data.get("vulnerability_scale", 1.0),
+                    final_aal=aal_data.get("final_aal", 0.0),
+                    insurance_rate=aal_data.get("insurance_rate", 0.0),
                     expected_loss=None,  # asset_value 없으면 None
-                    site_id=site_id
+                    site_id=site_id,
                 )
 
             logger.debug(f"DB 저장 완료: ({latitude}, {longitude})")
@@ -386,39 +378,47 @@ class SiteRiskCalculator:
 
     def _calculate_summary(self, results: Dict[str, Any]) -> Dict[str, Any]:
         """요약 통계 계산"""
-        hazard_scores = [h.get('hazard_score_100', 0.0) for h in results['hazard'].values()]
-        exposure_scores = [e.get('exposure_score', 0.0) for e in results['exposure'].values()]
-        vulnerability_scores = [v.get('vulnerability_score', 0.0) for v in results['vulnerability'].values()]
-        integrated_scores = [ir.get('integrated_risk_score', 0.0) for ir in results['integrated_risk'].values()]
-        final_aals = [aal.get('final_aal', 0.0) for aal in results['aal_scaled'].values()]
+        hazard_scores = [h.get("hazard_score_100", 0.0) for h in results["hazard"].values()]
+        exposure_scores = [e.get("exposure_score", 0.0) for e in results["exposure"].values()]
+        vulnerability_scores = [
+            v.get("vulnerability_score", 0.0) for v in results["vulnerability"].values()
+        ]
+        integrated_scores = [
+            ir.get("integrated_risk_score", 0.0) for ir in results["integrated_risk"].values()
+        ]
+        final_aals = [aal.get("final_aal", 0.0) for aal in results["aal_scaled"].values()]
 
         # 평균 계산
         avg_hazard = sum(hazard_scores) / len(hazard_scores) if hazard_scores else 0
         avg_exposure = sum(exposure_scores) / len(exposure_scores) if exposure_scores else 0
-        avg_vulnerability = sum(vulnerability_scores) / len(vulnerability_scores) if vulnerability_scores else 0
-        avg_integrated_risk = sum(integrated_scores) / len(integrated_scores) if integrated_scores else 0
+        avg_vulnerability = (
+            sum(vulnerability_scores) / len(vulnerability_scores) if vulnerability_scores else 0
+        )
+        avg_integrated_risk = (
+            sum(integrated_scores) / len(integrated_scores) if integrated_scores else 0
+        )
         total_final_aal = sum(final_aals)
 
         # 최고 통합 리스크
-        if results['integrated_risk']:
+        if results["integrated_risk"]:
             highest_risk = max(
-                results['integrated_risk'].items(),
-                key=lambda x: x[1].get('integrated_risk_score', 0.0)
+                results["integrated_risk"].items(),
+                key=lambda x: x[1].get("integrated_risk_score", 0.0),
             )
             highest_integrated_risk = {
-                'risk_type': highest_risk[0],
-                'integrated_risk_score': highest_risk[1].get('integrated_risk_score', 0.0),
-                'risk_level': highest_risk[1].get('risk_level', 'Very Low')
+                "risk_type": highest_risk[0],
+                "integrated_risk_score": highest_risk[1].get("integrated_risk_score", 0.0),
+                "risk_level": highest_risk[1].get("risk_level", "Very Low"),
             }
         else:
             highest_integrated_risk = None
 
         return {
-            'average_hazard': round(avg_hazard, 2),
-            'average_exposure': round(avg_exposure, 2),
-            'average_vulnerability': round(avg_vulnerability, 2),
-            'average_integrated_risk': round(avg_integrated_risk, 2),
-            'highest_integrated_risk': highest_integrated_risk,
-            'total_final_aal': round(total_final_aal, 6),
-            'risk_count': len(self.RISK_TYPES)
+            "average_hazard": round(avg_hazard, 2),
+            "average_exposure": round(avg_exposure, 2),
+            "average_vulnerability": round(avg_vulnerability, 2),
+            "average_integrated_risk": round(avg_integrated_risk, 2),
+            "highest_integrated_risk": highest_integrated_risk,
+            "total_final_aal": round(total_final_aal, 6),
+            "risk_count": len(self.RISK_TYPES),
         }

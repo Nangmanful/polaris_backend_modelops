@@ -12,7 +12,7 @@ from .typhoon_client import TyphoonClient
 from .building_client import BuildingClient
 
 __all__ = [
-    'WamisClient',
-    'TyphoonClient',
-    'BuildingClient',
+    "WamisClient",
+    "TyphoonClient",
+    "BuildingClient",
 ]

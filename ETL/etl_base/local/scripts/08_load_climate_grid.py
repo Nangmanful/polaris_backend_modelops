@@ -25,20 +25,20 @@ from utils import setup_logging, get_db_connection, get_data_dir, table_exists, 
 
 # SAMPLE_LIMIT: 처리할 시간 스텝 수 제한 (테스트용)
 # 예: SAMPLE_LIMIT=12 → 1년치(12개월)만 처리
-SAMPLE_LIMIT = int(os.environ.get('SAMPLE_LIMIT', 0))  # 0 = 전체(960개월)
+SAMPLE_LIMIT = int(os.environ.get("SAMPLE_LIMIT", 0))  # 0 = 전체(960개월)
 
 
 def decompress_if_gzip(file_path: Path) -> Path:
     """gzip 압축 파일이면 압축 해제"""
     import subprocess
 
-    result = subprocess.run(['file', str(file_path)], capture_output=True, text=True)
+    result = subprocess.run(["file", str(file_path)], capture_output=True, text=True)
 
-    if 'gzip' in result.stdout.lower():
+    if "gzip" in result.stdout.lower():
         # gzip 파일이면 압축 해제
-        decompressed_path = Path(tempfile.mktemp(suffix='.nc'))
-        with gzip.open(file_path, 'rb') as f_in:
-            with open(decompressed_path, 'wb') as f_out:
+        decompressed_path = Path(tempfile.mktemp(suffix=".nc"))
+        with gzip.open(file_path, "rb") as f_in:
+            with open(decompressed_path, "wb") as f_out:
                 shutil.copyfileobj(f_in, f_out)
         return decompressed_path
 
@@ -79,6 +79,7 @@ def load_climate_grid() -> None:
     # SSP 시나리오 디렉토리 찾기 (KMA_REAL/KMA X/downloads_kma_ssp_gridraw/SSP* 구조)
     # 같은 SSP의 파일들이 여러 KMA 폴더에 분산되어 있으므로 모두 수집
     from collections import defaultdict
+
     ssp_dirs_map = defaultdict(list)  # SSP 이름 -> [폴더 리스트]
     for kma_subdir in kma_base_dir.glob("KMA*"):
         gridraw_dir = kma_subdir / "downloads_kma_ssp_gridraw"
@@ -94,7 +95,9 @@ def load_climate_grid() -> None:
     conn.commit()
 
     # 첫 번째 NetCDF에서 그리드 좌표 추출
-    sample_files = list(kma_base_dir.glob("**/monthly/*_TA_*.nc")) + list(kma_base_dir.glob("**/monthly/*_ta_*.nc"))
+    sample_files = list(kma_base_dir.glob("**/monthly/*_TA_*.nc")) + list(
+        kma_base_dir.glob("**/monthly/*_ta_*.nc")
+    )
     if not sample_files:
         sample_files = list(kma_base_dir.glob("**/*.nc"))
 
@@ -107,8 +110,8 @@ def load_climate_grid() -> None:
     sample_file = decompress_if_gzip(sample_files[0])
     ds = nc.Dataset(sample_file)
 
-    lon_name = 'longitude' if 'longitude' in ds.variables else 'lon'
-    lat_name = 'latitude' if 'latitude' in ds.variables else 'lat'
+    lon_name = "longitude" if "longitude" in ds.variables else "lon"
+    lat_name = "latitude" if "latitude" in ds.variables else "lat"
 
     lon = ds.variables[lon_name][:]
     lat = ds.variables[lat_name][:]
@@ -117,9 +120,17 @@ def load_climate_grid() -> None:
 
     # 한반도 영역만 필터링 (유효 데이터가 있는 영역)
     # 첫 번째 변수에서 유효 데이터 위치 찾기
-    var_names = [v for v in ds.variables.keys() if v.upper() not in ['TIME', 'LON', 'LAT', 'LONGITUDE', 'LATITUDE']]
+    var_names = [
+        v
+        for v in ds.variables.keys()
+        if v.upper() not in ["TIME", "LON", "LAT", "LONGITUDE", "LATITUDE"]
+    ]
     if var_names:
-        sample_data = ds.variables[var_names[0]][0] if len(ds.variables[var_names[0]].shape) > 2 else ds.variables[var_names[0]][:]
+        sample_data = (
+            ds.variables[var_names[0]][0]
+            if len(ds.variables[var_names[0]].shape) > 2
+            else ds.variables[var_names[0]][:]
+        )
 
         # 유효 데이터 인덱스 찾기
         valid_mask = ~np.ma.getmaskarray(sample_data)
@@ -146,11 +157,19 @@ def load_climate_grid() -> None:
 
     for lat_idx in tqdm(range(lat_start, lat_end, 5), desc="그리드 생성"):  # 5 간격으로 샘플링
         for lon_idx in range(lon_start, lon_end, 5):
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO location_grid (longitude, latitude, geom)
                 VALUES (%s, %s, ST_SetSRID(ST_MakePoint(%s, %s), 4326))
                 RETURNING grid_id
-            """, (float(lon[lon_idx]), float(lat[lat_idx]), float(lon[lon_idx]), float(lat[lat_idx])))
+            """,
+                (
+                    float(lon[lon_idx]),
+                    float(lat[lat_idx]),
+                    float(lon[lon_idx]),
+                    float(lat[lat_idx]),
+                ),
+            )
             grid_id = cursor.fetchone()[0]
             grid_map[(lon_idx, lat_idx)] = grid_id
             insert_count += 1
@@ -163,10 +182,10 @@ def load_climate_grid() -> None:
 
     # 테이블별 변수 매핑
     table_var_map = {
-        'ta_data': ['ta', 'TA'],       # 기온
-        'rn_data': ['rn', 'RN'],       # 강수량
-        'rhm_data': ['rhm', 'RHM'],    # 상대습도
-        'ws_data': ['ws', 'WS'],       # 풍속
+        "ta_data": ["ta", "TA"],  # 기온
+        "rn_data": ["rn", "RN"],  # 강수량
+        "rhm_data": ["rhm", "RHM"],  # 상대습도
+        "ws_data": ["ws", "WS"],  # 풍속
     }
 
     for ssp_name, ssp_dir_list in ssp_dirs_map.items():
@@ -211,14 +230,14 @@ def load_climate_grid() -> None:
 
                 # SSP 컬럼 매핑
                 ssp_col = {
-                    'SSP126': 'ssp1',
-                    'SSP245': 'ssp2',
-                    'SSP370': 'ssp3',
-                    'SSP585': 'ssp5',
-                }.get(ssp_name, 'ssp1')
+                    "SSP126": "ssp1",
+                    "SSP245": "ssp2",
+                    "SSP370": "ssp3",
+                    "SSP585": "ssp5",
+                }.get(ssp_name, "ssp1")
 
                 # 기존 데이터는 첫 번째 SSP에서만 삭제
-                if ssp_name == 'SSP126':
+                if ssp_name == "SSP126":
                     cursor.execute(f"TRUNCATE TABLE {table_name}")
                     conn.commit()
 
@@ -228,7 +247,9 @@ def load_climate_grid() -> None:
                     max_steps = min(max_steps, SAMPLE_LIMIT)
 
                 insert_count = 0
-                for t_idx in tqdm(range(max_steps), desc=f"  {table_name}", leave=False):  # SAMPLE_LIMIT 적용
+                for t_idx in tqdm(
+                    range(max_steps), desc=f"  {table_name}", leave=False
+                ):  # SAMPLE_LIMIT 적용
                     year = 2021 + (t_idx // 12)
                     month = (t_idx % 12) + 1
                     obs_date = date(year, month, 1)
@@ -241,17 +262,23 @@ def load_climate_grid() -> None:
                         if np.ma.is_masked(val) or np.isnan(val):
                             continue
 
-                        if ssp_name == 'SSP126':
-                            cursor.execute(f"""
+                        if ssp_name == "SSP126":
+                            cursor.execute(
+                                f"""
                                 INSERT INTO {table_name} (grid_id, observation_date, {ssp_col})
                                 VALUES (%s, %s, %s)
-                            """, (grid_id, obs_date, float(val)))
+                            """,
+                                (grid_id, obs_date, float(val)),
+                            )
                         else:
-                            cursor.execute(f"""
+                            cursor.execute(
+                                f"""
                                 UPDATE {table_name}
                                 SET {ssp_col} = %s
                                 WHERE grid_id = %s AND observation_date = %s
-                            """, (float(val), grid_id, obs_date))
+                            """,
+                                (float(val), grid_id, obs_date),
+                            )
 
                         insert_count += 1
 
@@ -288,18 +315,23 @@ def load_climate_grid() -> None:
                     ds = nc.Dataset(nc_file)
 
                     # 변수 찾기
-                    var_names = [v for v in ds.variables.keys()
-                                if v.upper() not in ['TIME', 'LON', 'LAT', 'LONGITUDE', 'LATITUDE']]
+                    var_names = [
+                        v
+                        for v in ds.variables.keys()
+                        if v.upper() not in ["TIME", "LON", "LAT", "LONGITUDE", "LATITUDE"]
+                    ]
 
                     if var_names:
                         data = ds.variables[var_names[0]][:]
 
                         ssp_col = {
-                            'SSP126': 'ssp1', 'SSP245': 'ssp2',
-                            'SSP370': 'ssp3', 'SSP585': 'ssp5'
-                        }.get(ssp_name, 'ssp1')
+                            "SSP126": "ssp1",
+                            "SSP245": "ssp2",
+                            "SSP370": "ssp3",
+                            "SSP585": "ssp5",
+                        }.get(ssp_name, "ssp1")
 
-                        if ssp_name == 'SSP126':
+                        if ssp_name == "SSP126":
                             cursor.execute("TRUNCATE TABLE ta_yearly_data")
                             conn.commit()
 
@@ -320,17 +352,23 @@ def load_climate_grid() -> None:
                                 if np.ma.is_masked(val) or np.isnan(val):
                                     continue
 
-                                if ssp_name == 'SSP126':
-                                    cursor.execute(f"""
+                                if ssp_name == "SSP126":
+                                    cursor.execute(
+                                        f"""
                                         INSERT INTO ta_yearly_data (grid_id, year, {ssp_col})
                                         VALUES (%s, %s, %s)
-                                    """, (grid_id, year, float(val)))
+                                    """,
+                                        (grid_id, year, float(val)),
+                                    )
                                 else:
-                                    cursor.execute(f"""
+                                    cursor.execute(
+                                        f"""
                                         UPDATE ta_yearly_data
                                         SET {ssp_col} = %s
                                         WHERE grid_id = %s AND year = %s
-                                    """, (float(val), grid_id, year))
+                                    """,
+                                        (float(val), grid_id, year),
+                                    )
 
                                 insert_count += 1
                                 break  # 첫 번째 유효값만

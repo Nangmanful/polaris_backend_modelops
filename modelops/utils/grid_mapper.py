@@ -21,8 +21,9 @@ class GridMapper:
     GRID_RESOLUTION = 0.01  # 격자 해상도 (°)
 
     @staticmethod
-    def find_nearest_grid(latitude: float, longitude: float,
-                         conn=None, cursor=None) -> Optional[Tuple[int, float, float]]:
+    def find_nearest_grid(
+        latitude: float, longitude: float, conn=None, cursor=None
+    ) -> Optional[Tuple[int, float, float]]:
         """
         사업장 좌표 → 최근접 격자 찾기
 
@@ -40,29 +41,32 @@ class GridMapper:
         """
         if conn is None or cursor is None:
             from ..database.connection import DatabaseConnection
+
             with DatabaseConnection.get_connection() as temp_conn:
                 with temp_conn.cursor() as temp_cursor:
-                    return GridMapper._find_nearest_grid_impl(
-                        latitude, longitude, temp_cursor
-                    )
+                    return GridMapper._find_nearest_grid_impl(latitude, longitude, temp_cursor)
         else:
             return GridMapper._find_nearest_grid_impl(latitude, longitude, cursor)
 
     @staticmethod
-    def _find_nearest_grid_impl(latitude: float, longitude: float,
-                                cursor) -> Optional[Tuple[int, float, float]]:
+    def _find_nearest_grid_impl(
+        latitude: float, longitude: float, cursor
+    ) -> Optional[Tuple[int, float, float]]:
         """최근접 격자 찾기 구현"""
 
         # 1단계: 0.01° 단위로 반올림하여 직접 검색
         rounded_lat = GridMapper._round_to_grid(latitude)
         rounded_lon = GridMapper._round_to_grid(longitude)
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT grid_id, latitude, longitude
             FROM location_grid
             WHERE latitude = %s AND longitude = %s
             LIMIT 1
-        """, (rounded_lat, rounded_lon))
+        """,
+            (rounded_lat, rounded_lon),
+        )
 
         result = cursor.fetchone()
         if result:
@@ -70,11 +74,10 @@ class GridMapper:
             return (result[0], result[1], result[2])
 
         # 2단계: 직접 매칭 실패 시 ST_Distance로 최근접 격자 찾기
-        logger.warning(
-            f"직접 매칭 실패, ST_Distance 검색: ({latitude}, {longitude})"
-        )
+        logger.warning(f"직접 매칭 실패, ST_Distance 검색: ({latitude}, {longitude})")
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 grid_id,
                 latitude,
@@ -86,7 +89,9 @@ class GridMapper:
             FROM location_grid
             ORDER BY distance_m
             LIMIT 1
-        """, (longitude, latitude))
+        """,
+            (longitude, latitude),
+        )
 
         result = cursor.fetchone()
         if result:
@@ -154,15 +159,16 @@ class GridMapper:
         half_res = GridMapper.GRID_RESOLUTION / 2.0
 
         return {
-            'min_lat': grid_latitude - half_res,
-            'max_lat': grid_latitude + half_res,
-            'min_lon': grid_longitude - half_res,
-            'max_lon': grid_longitude + half_res
+            "min_lat": grid_latitude - half_res,
+            "max_lat": grid_latitude + half_res,
+            "min_lon": grid_longitude - half_res,
+            "max_lon": grid_longitude + half_res,
         }
 
     @staticmethod
-    def find_grids_in_radius(latitude: float, longitude: float,
-                            radius_km: float, conn=None, cursor=None) -> list:
+    def find_grids_in_radius(
+        latitude: float, longitude: float, radius_km: float, conn=None, cursor=None
+    ) -> list:
         """
         반경 내 격자 목록 조회
 
@@ -178,24 +184,25 @@ class GridMapper:
         """
         if conn is None or cursor is None:
             from ..database.connection import DatabaseConnection
+
             with DatabaseConnection.get_connection() as temp_conn:
                 with temp_conn.cursor() as temp_cursor:
                     return GridMapper._find_grids_in_radius_impl(
                         latitude, longitude, radius_km, temp_cursor
                     )
         else:
-            return GridMapper._find_grids_in_radius_impl(
-                latitude, longitude, radius_km, cursor
-            )
+            return GridMapper._find_grids_in_radius_impl(latitude, longitude, radius_km, cursor)
 
     @staticmethod
-    def _find_grids_in_radius_impl(latitude: float, longitude: float,
-                                   radius_km: float, cursor) -> list:
+    def _find_grids_in_radius_impl(
+        latitude: float, longitude: float, radius_km: float, cursor
+    ) -> list:
         """반경 내 격자 목록 조회 구현"""
 
         radius_m = radius_km * 1000.0
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 grid_id,
                 latitude,
@@ -211,12 +218,13 @@ class GridMapper:
                 %s
             )
             ORDER BY distance_m
-        """, (longitude, latitude, longitude, latitude, radius_m))
+        """,
+            (longitude, latitude, longitude, latitude, radius_m),
+        )
 
         results = cursor.fetchall()
         logger.info(
-            f"반경 {radius_km}km 내 격자 {len(results)}개 조회: "
-            f"({latitude}, {longitude})"
+            f"반경 {radius_km}km 내 격자 {len(results)}개 조회: " f"({latitude}, {longitude})"
         )
 
         return [(r[0], r[1], r[2], r[3]) for r in results]

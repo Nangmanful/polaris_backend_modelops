@@ -6,7 +6,4 @@ Site Assessment Agents
 from .site_risk_calculator import SiteRiskCalculator
 from .relocation_recommender import RelocationRecommender
 
-__all__ = [
-    "SiteRiskCalculator",
-    "RelocationRecommender"
-]
+__all__ = ["SiteRiskCalculator", "RelocationRecommender"]

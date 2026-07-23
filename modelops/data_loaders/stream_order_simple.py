@@ -8,7 +8,6 @@ import rasterio
 import numpy as np
 from pathlib import Path
 from typing import Optional, Dict
-from scipy import ndimage
 from pyproj import Transformer
 
 
@@ -21,7 +20,9 @@ class StreamOrderExtractor:
             dem_dir: DEM 파일이 있는 디렉토리 (기본값: data/DEM/)
         """
         if dem_dir is None:
-            base_dir = Path(__file__).parent.parent.parent  # src/data → src → Physical_RISK_calculate
+            base_dir = Path(
+                __file__
+            ).parent.parent.parent  # src/data → src → Physical_RISK_calculate
             # shared_data/DEM 대신 data/DEM 사용
             dem_dir = base_dir / "data" / "DEM"
 
@@ -45,18 +46,14 @@ class StreamOrderExtractor:
         for dem_file in dem_files:
             try:
                 with rasterio.open(dem_file) as src:
-                    transformer = Transformer.from_crs(
-                        src.crs, "EPSG:4326", always_xy=True
-                    )
+                    transformer = Transformer.from_crs(src.crs, "EPSG:4326", always_xy=True)
 
                     bounds = src.bounds
                     min_lon, min_lat = transformer.transform(bounds.left, bounds.bottom)
                     max_lon, max_lat = transformer.transform(bounds.right, bounds.top)
 
                     # 픽셀 좌표로 변환하여 실제로 범위 내인지 확인
-                    transformer_inv = Transformer.from_crs(
-                        "EPSG:4326", src.crs, always_xy=True
-                    )
+                    transformer_inv = Transformer.from_crs("EPSG:4326", src.crs, always_xy=True)
                     x, y = transformer_inv.transform(lon, lat)
                     row, col = src.index(x, y)
 
@@ -83,11 +80,7 @@ class StreamOrderExtractor:
         sorted_indices = np.argsort(dem.ravel())[::-1]
 
         # D8 방향 (8방향)
-        dirs = [
-            (-1, -1), (-1, 0), (-1, 1),
-            (0, -1),           (0, 1),
-            (1, -1),  (1, 0),  (1, 1)
-        ]
+        dirs = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
 
         for idx in sorted_indices:
             r, c = divmod(idx, cols)
@@ -114,9 +107,7 @@ class StreamOrderExtractor:
         return flow_acc
 
     def estimate_stream_order_from_flow_acc(
-        self,
-        flow_acc: np.ndarray,
-        threshold: int = 1000
+        self, flow_acc: np.ndarray, threshold: int = 1000
     ) -> int:
         """
         Flow Accumulation 값에서 하천 차수 추정
@@ -142,11 +133,7 @@ class StreamOrderExtractor:
             return 6
 
     def get_stream_order_at_point(
-        self,
-        lat: float,
-        lon: float,
-        flow_threshold: int = 1000,
-        search_radius: int = 100
+        self, lat: float, lon: float, flow_threshold: int = 1000, search_radius: int = 100
     ) -> Optional[Dict]:
         """
         특정 좌표에서의 하천 차수 추출
@@ -166,9 +153,7 @@ class StreamOrderExtractor:
             # 2. DEM 읽기
             with rasterio.open(dem_file) as src:
                 # WGS84 → DEM CRS 변환
-                transformer = Transformer.from_crs(
-                    "EPSG:4326", src.crs, always_xy=True
-                )
+                transformer = Transformer.from_crs("EPSG:4326", src.crs, always_xy=True)
                 x, y = transformer.transform(lon, lat)
 
                 # 픽셀 좌표
@@ -216,21 +201,21 @@ class StreamOrderExtractor:
                     point_flow_acc = max_flow
                     print(f"      → 주변에도 큰 하천 없음, 최대값 {max_flow:.0f} 사용")
 
-            stream_order = self.estimate_stream_order_from_flow_acc(
-                point_flow_acc, flow_threshold
-            )
+            stream_order = self.estimate_stream_order_from_flow_acc(point_flow_acc, flow_threshold)
 
             # 6. 결과 반환
             result = {
-                'stream_order': int(stream_order),
-                'flow_accumulation': float(point_flow_acc),
-                'elevation': float(elevation) if not np.isnan(elevation) else 0.0,
-                'method': 'D8 Flow Accumulation + Empirical Stream Order',
-                'dem_file': dem_file.name,
-                'flow_threshold': flow_threshold
+                "stream_order": int(stream_order),
+                "flow_accumulation": float(point_flow_acc),
+                "elevation": float(elevation) if not np.isnan(elevation) else 0.0,
+                "method": "D8 Flow Accumulation + Empirical Stream Order",
+                "dem_file": dem_file.name,
+                "flow_threshold": flow_threshold,
             }
 
-            print(f"   ✅ 하천 차수 추정 완료: {result['stream_order']}차 하천 (Flow Acc: {point_flow_acc:.0f})")
+            print(
+                f"   ✅ 하천 차수 추정 완료: {result['stream_order']}차 하천 (Flow Acc: {point_flow_acc:.0f})"
+            )
 
             return result
 
@@ -247,20 +232,20 @@ def get_stream_order_fallback(lat: float, lon: float) -> Dict:
     """
     print(f"   ⚠️  하천 차수 계산 불가 (의존성 없음), 기본값 3 사용")
     return {
-        'stream_order': 3,
-        'flow_accumulation': 0.0,
-        'elevation': 0.0,
-        'method': 'Fallback (default value)',
-        'dem_file': 'N/A',
-        'flow_threshold': 0
+        "stream_order": 3,
+        "flow_accumulation": 0.0,
+        "elevation": 0.0,
+        "method": "Fallback (default value)",
+        "dem_file": "N/A",
+        "flow_threshold": 0,
     }
 
 
 if __name__ == "__main__":
     # 테스트
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("하천 차수 추출 테스트 (Scipy/Numpy)")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
     try:
         extractor = StreamOrderExtractor()
@@ -275,9 +260,7 @@ if __name__ == "__main__":
             print(f"\n[테스트] {name} ({lat}, {lon})")
             try:
                 result = extractor.get_stream_order_at_point(
-                    lat, lon,
-                    flow_threshold=500,
-                    search_radius=50
+                    lat, lon, flow_threshold=500, search_radius=50
                 )
                 print(f"\n결과:")
                 print(f"  - 하천 차수: {result['stream_order']}")

@@ -9,13 +9,13 @@ from .typhoon_hscore_agent import TyphoonHScoreAgent
 from .wildfire_hscore_agent import WildfireHScoreAgent
 
 __all__ = [
-    'ExtremeHeatHScoreAgent',
-    'ExtremeColdHScoreAgent',
-    'DroughtHScoreAgent',
-    'WaterStressHScoreAgent',
-    'SeaLevelRiseHScoreAgent',
-    'RiverFloodHScoreAgent',
-    'UrbanFloodHScoreAgent',
-    'TyphoonHScoreAgent',
-    'WildfireHScoreAgent',
+    "ExtremeHeatHScoreAgent",
+    "ExtremeColdHScoreAgent",
+    "DroughtHScoreAgent",
+    "WaterStressHScoreAgent",
+    "SeaLevelRiseHScoreAgent",
+    "RiverFloodHScoreAgent",
+    "UrbanFloodHScoreAgent",
+    "TyphoonHScoreAgent",
+    "WildfireHScoreAgent",
 ]

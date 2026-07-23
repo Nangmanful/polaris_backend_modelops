@@ -19,7 +19,6 @@ from datetime import datetime
 
 from utils import setup_logging, get_db_connection, get_row_count
 
-
 # ETL 스크립트 순서 및 정보
 ETL_SCRIPTS = [
     ("01_load_admin_regions", "행정구역 데이터", "location_admin"),
@@ -69,6 +68,7 @@ def run_etl(script_name: str, description: str, tables: str, logger) -> bool:
     except Exception as e:
         logger.error(f"{description} 적재 실패: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -154,12 +154,21 @@ def main():
 
     conn = get_db_connection()
     tables_to_check = [
-        "location_admin", "weather_stations", "grid_station_mappings",
-        "location_grid", "raw_landcover", "raw_dem", "raw_drought",
-        "ta_data", "rn_data", "ta_yearly_data",
-        "sea_level_grid", "sea_level_data",
+        "location_admin",
+        "weather_stations",
+        "grid_station_mappings",
+        "location_grid",
+        "raw_landcover",
+        "raw_dem",
+        "raw_drought",
+        "ta_data",
+        "rn_data",
+        "ta_yearly_data",
+        "sea_level_grid",
+        "sea_level_data",
         "water_stress_rankings",
-        "site_dc_power_usage", "site_campus_energy_usage"
+        "site_dc_power_usage",
+        "site_campus_energy_usage",
     ]
 
     for table in tables_to_check:

@@ -1,4 +1,4 @@
-'''
+"""
 파일명: base_exposure_agent.py
 최종 수정일: 2025-12-14
 버전: v2
@@ -6,8 +6,9 @@
 변경 이력:
     - v1: 기본 Exposure 계산 Agent
     - v2: 원래 설계 복원 (DB 로직 제거, 순수 계산만)
-'''
-from typing import Dict, Any, Optional
+"""
+
+from typing import Dict, Any
 import logging
 
 try:
@@ -32,8 +33,9 @@ class BaseExposureAgent:
         self.logger = logger
         logger.debug("BaseExposureAgent initialized (pure calculation mode)")
 
-    def calculate_exposure(self, building_data: Dict[str, Any], spatial_data: Dict[str, Any],
-                          **kwargs) -> Dict[str, Any]:
+    def calculate_exposure(
+        self, building_data: Dict[str, Any], spatial_data: Dict[str, Any], **kwargs
+    ) -> Dict[str, Any]:
         """
         Calculate exposure for a specific hazard type.
         Must be implemented by child classes.
@@ -65,8 +67,9 @@ class BaseExposureAgent:
 
     # ==================== 유틸리티 메서드 ====================
 
-    def normalize_score(self, value: float, min_val: float, max_val: float,
-                        clip: bool = True) -> float:
+    def normalize_score(
+        self, value: float, min_val: float, max_val: float, clip: bool = True
+    ) -> float:
         """
         값을 0-1 범위로 정규화
 
@@ -105,8 +108,9 @@ class BaseExposureAgent:
                 return data[key]
         return fallback
 
-    def get_spatial_data(self, building_data: Dict[str, Any], spatial_data: Dict[str, Any],
-                        **kwargs) -> Dict[str, Any]:
+    def get_spatial_data(
+        self, building_data: Dict[str, Any], spatial_data: Dict[str, Any], **kwargs
+    ) -> Dict[str, Any]:
         """
         Spatial 데이터 조회 (입력된 데이터에서 추출, DB 조회 없음)
 
@@ -119,11 +123,11 @@ class BaseExposureAgent:
         """
         # 기본값 설정
         defaults = {
-            'distance_to_river_m': 10000.0,
-            'watershed_area_km2': 100.0,
-            'stream_order': 2,
-            'elevation_m': 50.0,
-            'distance_to_coast_m': 50000.0,
+            "distance_to_river_m": 10000.0,
+            "watershed_area_km2": 100.0,
+            "stream_order": 2,
+            "elevation_m": 50.0,
+            "distance_to_coast_m": 50000.0,
         }
 
         # 데이터 병합 (우선순위: spatial_data > building_data > defaults)
@@ -141,10 +145,10 @@ class BaseExposureAgent:
                     result[key] = spatial_data[key]
 
             # 추가 메타데이터
-            result['river_name'] = spatial_data.get('river_name')
-            result['basin_name'] = spatial_data.get('basin_name')
-            result['flood_capacity'] = spatial_data.get('flood_capacity')
-            result['landcover_type'] = spatial_data.get('landcover_type')
+            result["river_name"] = spatial_data.get("river_name")
+            result["basin_name"] = spatial_data.get("basin_name")
+            result["flood_capacity"] = spatial_data.get("flood_capacity")
+            result["landcover_type"] = spatial_data.get("landcover_type")
 
         return result
 
@@ -164,15 +168,15 @@ class BaseExposureAgent:
                 - 'Very Low': 20 미만
         """
         if exposure_score_100 >= 80:
-            return 'Very High'
+            return "Very High"
         elif exposure_score_100 >= 60:
-            return 'High'
+            return "High"
         elif exposure_score_100 >= 40:
-            return 'Medium'
+            return "Medium"
         elif exposure_score_100 >= 20:
-            return 'Low'
+            return "Low"
         else:
-            return 'Very Low'
+            return "Very Low"
 
     def classify_building_purpose(self, main_purpose: str) -> str:
         """
@@ -185,17 +189,24 @@ class BaseExposureAgent:
             분류된 용도 (residential, commercial, industrial, public, mixed)
         """
         if not main_purpose:
-            return 'residential'
+            return "residential"
 
         purpose_lower = main_purpose.lower()
 
-        if any(kw in purpose_lower for kw in ['주거', '아파트', '주택', '다세대', '연립', 'residential']):
-            return 'residential'
-        elif any(kw in purpose_lower for kw in ['상업', '사무', '오피스', '업무', 'commercial', 'office']):
-            return 'commercial'
-        elif any(kw in purpose_lower for kw in ['공장', '산업', '제조', '창고', 'industrial', 'factory']):
-            return 'industrial'
-        elif any(kw in purpose_lower for kw in ['공공', '관공서', '교육', '학교', 'public']):
-            return 'public'
+        if any(
+            kw in purpose_lower
+            for kw in ["주거", "아파트", "주택", "다세대", "연립", "residential"]
+        ):
+            return "residential"
+        elif any(
+            kw in purpose_lower for kw in ["상업", "사무", "오피스", "업무", "commercial", "office"]
+        ):
+            return "commercial"
+        elif any(
+            kw in purpose_lower for kw in ["공장", "산업", "제조", "창고", "industrial", "factory"]
+        ):
+            return "industrial"
+        elif any(kw in purpose_lower for kw in ["공공", "관공서", "교육", "학교", "public"]):
+            return "public"
         else:
-            return 'mixed'
+            return "mixed"

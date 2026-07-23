@@ -8,6 +8,7 @@ LangGraph 워크플로우 정의
 2) 병렬 수집 → 분석 → 품질체크 → 리포트 → 배포 파이프라인
 ==================================================================
 """
+
 from langgraph.graph import StateGraph, END
 
 from .state import ESGTrendsState, create_initial_state
@@ -79,7 +80,7 @@ def create_esg_trends_graph() -> StateGraph:
         {
             "continue": "supervise",
             "end": END,
-        }
+        },
     )
 
     # 수퍼바이저 → 품질 체크
@@ -92,7 +93,7 @@ def create_esg_trends_graph() -> StateGraph:
         {
             "regenerate": "supervise",  # 재분석
             "pass": "generate_report",  # 리포트 생성
-        }
+        },
     )
 
     # 리포트 생성 → 배포
@@ -157,6 +158,7 @@ def run_esg_trends_workflow(initial_state: ESGTrendsState = None) -> ESGTrendsSt
 # 병렬 수집 버전 (선택적)
 # =============================================================================
 
+
 def create_parallel_collection_graph() -> StateGraph:
     """병렬 수집이 가능한 워크플로우 그래프
 
@@ -185,10 +187,7 @@ def create_parallel_collection_graph() -> StateGraph:
         ]
 
         with ThreadPoolExecutor(max_workers=3) as executor:
-            futures = {
-                executor.submit(collector, state): name
-                for name, collector in collectors
-            }
+            futures = {executor.submit(collector, state): name for name, collector in collectors}
 
             for future in as_completed(futures):
                 name = futures[future]
@@ -236,7 +235,7 @@ def create_parallel_collection_graph() -> StateGraph:
         {
             "continue": "supervise",
             "end": END,
-        }
+        },
     )
 
     workflow.add_edge("supervise", "quality_check")
@@ -247,7 +246,7 @@ def create_parallel_collection_graph() -> StateGraph:
         {
             "regenerate": "supervise",
             "pass": "generate_report",
-        }
+        },
     )
 
     workflow.add_edge("generate_report", "distribute")

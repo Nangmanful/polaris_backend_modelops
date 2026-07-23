@@ -23,7 +23,7 @@ from utils import (
     get_api_key,
     batch_upsert,
     get_table_count,
-    API_ENDPOINTS
+    API_ENDPOINTS,
 )
 
 
@@ -39,13 +39,11 @@ def fetch_besttrack_data(api_key: str, year: int, logger) -> list:
     Returns:
         파싱된 데이터 리스트
     """
-    url = API_ENDPOINTS.get('typhoon_besttrack', 'https://apihub.kma.go.kr/api/typ01/url/typ_besttrack.php')
+    url = API_ENDPOINTS.get(
+        "typhoon_besttrack", "https://apihub.kma.go.kr/api/typ01/url/typ_besttrack.php"
+    )
 
-    params = {
-        'year': year,
-        'authKey': api_key,
-        'help': 0  # 값만 표시
-    }
+    params = {"year": year, "authKey": api_key, "help": 0}  # 값만 표시
 
     try:
         response = requests.get(url, params=params, timeout=60)
@@ -72,7 +70,7 @@ def parse_besttrack_response(text: str, logger) -> list:
     def safe_float(val):
         try:
             v = val.strip()
-            if v in ['-', '-999', '-999.9', '']:
+            if v in ["-", "-999", "-999.9", ""]:
                 return None
             return float(v)
         except:
@@ -81,17 +79,17 @@ def parse_besttrack_response(text: str, logger) -> list:
     def safe_int(val):
         try:
             v = val.strip()
-            if v in ['-', '']:
+            if v in ["-", ""]:
                 return None
             return int(float(v))
         except:
             return None
 
-    for line in text.split('\n'):
+    for line in text.split("\n"):
         line = line.strip()
 
         # 주석/빈줄/마커 건너뛰기
-        if not line or line.startswith('#'):
+        if not line or line.startswith("#"):
             continue
 
         # 공백 기준 분리
@@ -101,7 +99,7 @@ def parse_besttrack_response(text: str, logger) -> list:
             continue
 
         try:
-            grade = parts[0] if parts[0] not in ['-', ''] else None
+            grade = parts[0] if parts[0] not in ["-", ""] else None
             tcid = parts[1]
             year = safe_int(parts[2])
             month = safe_int(parts[3])
@@ -122,10 +120,10 @@ def parse_besttrack_response(text: str, logger) -> list:
 
             gale_long = safe_float(parts[10]) if len(parts) > 10 else None
             gale_short = safe_float(parts[11]) if len(parts) > 11 else None
-            gale_dir = parts[12] if len(parts) > 12 and parts[12] not in ['-', '-999.9'] else None
+            gale_dir = parts[12] if len(parts) > 12 and parts[12] not in ["-", "-999.9"] else None
             storm_long = safe_float(parts[13]) if len(parts) > 13 else None
             storm_short = safe_float(parts[14]) if len(parts) > 14 else None
-            storm_dir = parts[15] if len(parts) > 15 and parts[15] not in ['-', '-999.9'] else None
+            storm_dir = parts[15] if len(parts) > 15 and parts[15] not in ["-", "-999.9"] else None
             typhoon_name = parts[16] if len(parts) > 16 else None
 
             # 필터링: -999 값 정리
@@ -139,24 +137,24 @@ def parse_besttrack_response(text: str, logger) -> list:
                 storm_short = None
 
             record = {
-                'grade': grade,
-                'tcid': tcid,
-                'year': year,
-                'month': month,
-                'day': day,
-                'hour': hour,
-                'obs_datetime': obs_datetime,
-                'lon': lon,
-                'lat': lat,
-                'max_wind_speed': max_wind_speed,
-                'central_pressure': central_pressure,
-                'gale_long': gale_long,
-                'gale_short': gale_short,
-                'gale_dir': gale_dir,
-                'storm_long': storm_long,
-                'storm_short': storm_short,
-                'storm_dir': storm_dir,
-                'typhoon_name': typhoon_name
+                "grade": grade,
+                "tcid": tcid,
+                "year": year,
+                "month": month,
+                "day": day,
+                "hour": hour,
+                "obs_datetime": obs_datetime,
+                "lon": lon,
+                "lat": lat,
+                "max_wind_speed": max_wind_speed,
+                "central_pressure": central_pressure,
+                "gale_long": gale_long,
+                "gale_short": gale_short,
+                "gale_dir": gale_dir,
+                "storm_long": storm_long,
+                "storm_short": storm_short,
+                "storm_dir": storm_dir,
+                "typhoon_name": typhoon_name,
             }
 
             if tcid and year:
@@ -177,7 +175,7 @@ def load_typhoon_besttrack(sample_limit: int = None):
     logger.info("태풍 베스트트랙 API ETL 시작")
     logger.info("=" * 60)
 
-    api_key = get_api_key('TYPHOON_API_KEY')
+    api_key = get_api_key("TYPHOON_API_KEY")
     if not api_key:
         logger.error("TYPHOON_API_KEY 환경변수 필요")
         return
@@ -210,27 +208,27 @@ def load_typhoon_besttrack(sample_limit: int = None):
         logger.info(f"DB 적재 시작...")
         success_count = batch_upsert(
             conn,
-            'api_typhoon_besttrack',
+            "api_typhoon_besttrack",
             all_data,
-            unique_columns=['tcid', 'year', 'month', 'day', 'hour'],
-            batch_size=100
+            unique_columns=["tcid", "year", "month", "day", "hour"],
+            batch_size=100,
         )
         logger.info(f"DB 적재 완료: {success_count}건")
 
         # 통계
         grades = {}
         for d in all_data:
-            g = d.get('grade', 'UNKNOWN')
+            g = d.get("grade", "UNKNOWN")
             grades[g] = grades.get(g, 0) + 1
         logger.info(f"등급별: {grades}")
 
         # 태풍별 통계
-        typhoons = set(d.get('typhoon_name') for d in all_data if d.get('typhoon_name'))
+        typhoons = set(d.get("typhoon_name") for d in all_data if d.get("typhoon_name"))
         logger.info(f"총 태풍 수: {len(typhoons)}개")
     else:
         logger.warning("적재할 데이터 없음")
 
-    total_count = get_table_count(conn, 'api_typhoon_besttrack')
+    total_count = get_table_count(conn, "api_typhoon_besttrack")
     logger.info(f"api_typhoon_besttrack 테이블 총 레코드: {total_count}건")
 
     conn.close()
@@ -238,5 +236,5 @@ def load_typhoon_besttrack(sample_limit: int = None):
 
 
 if __name__ == "__main__":
-    sample_limit = int(os.getenv('SAMPLE_LIMIT', 0)) or None
+    sample_limit = int(os.getenv("SAMPLE_LIMIT", 0)) or None
     load_typhoon_besttrack(sample_limit=sample_limit)

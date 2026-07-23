@@ -10,6 +10,7 @@ from datetime import datetime
 
 class RiskAssessmentRequest(BaseModel):
     """리스크 평가 계산 요청"""
+
     # Required fields
     latitude: float = Field(..., ge=-90, le=90, description="위도")
     longitude: float = Field(..., ge=-180, le=180, description="경도")
@@ -17,7 +18,9 @@ class RiskAssessmentRequest(BaseModel):
     # Optional fields
     site_id: Optional[str] = Field(None, max_length=255, description="사업장 ID (추적용)")
 
-    building_info: Optional[Dict[str, Any]] = Field(None, description="""
+    building_info: Optional[Dict[str, Any]] = Field(
+        None,
+        description="""
         커스텀 건물 정보 (제공 시 API 호출 생략)
         - ground_floors: int (지상층수)
         - basement_floors: int (지하층수)
@@ -29,14 +32,18 @@ class RiskAssessmentRequest(BaseModel):
         - has_water_tank: bool (물탱크 여부)
         - distance_to_river_m: float (하천거리)
         - distance_to_coast_m: float (해안거리)
-    """)
+    """,
+    )
 
-    asset_info: Optional[Dict[str, Any]] = Field(None, description="""
+    asset_info: Optional[Dict[str, Any]] = Field(
+        None,
+        description="""
         커스텀 자산 정보
         - total_asset_value: float (총 자산가치, 원)
         - insurance_coverage_rate: float (보험 보전율, 0~1)
         - floor_area: float (전용면적, ㎡)
-    """)
+    """,
+    )
 
     class Config:
         json_schema_extra = {
@@ -50,18 +57,16 @@ class RiskAssessmentRequest(BaseModel):
                     "total_area_m2": 5000.0,
                     "building_age": 15,
                     "structure": "철근콘크리트",
-                    "main_purpose": "업무시설"
+                    "main_purpose": "업무시설",
                 },
-                "asset_info": {
-                    "total_asset_value": 50000000000,
-                    "insurance_coverage_rate": 0.7
-                }
+                "asset_info": {"total_asset_value": 50000000000, "insurance_coverage_rate": 0.7},
             }
         }
 
 
 class RiskAssessmentResponse(BaseModel):
     """리스크 평가 계산 응답"""
+
     request_id: str = Field(..., description="요청 ID")
     status: str = Field(..., description="상태 (queued, processing, completed, failed)")
     websocket_url: Optional[str] = Field(None, description="WebSocket URL")
@@ -75,13 +80,14 @@ class RiskAssessmentResponse(BaseModel):
                 "status": "queued",
                 "websocket_url": "ws://localhost:8001/api/v1/risk-assessment/ws/req-12345-67890",
                 "message": "계산이 큐에 등록되었습니다",
-                "site_id": "SITE-2025-001"
+                "site_id": "SITE-2025-001",
             }
         }
 
 
 class ProgressUpdate(BaseModel):
     """진행상황 업데이트"""
+
     status: str = Field(..., description="상태")
     current: int = Field(..., description="현재 진행")
     total: int = Field(..., description="전체 작업")
@@ -97,13 +103,14 @@ class ProgressUpdate(BaseModel):
                 "total": 9,
                 "current_risk": "wildfire",
                 "results": None,
-                "error": None
+                "error": None,
             }
         }
 
 
 class RiskResultsResponse(BaseModel):
     """저장된 리스크 결과 조회 응답"""
+
     latitude: float
     longitude: float
     exposure: Dict[str, Any] = Field(..., description="노출도 결과")
@@ -117,35 +124,25 @@ class RiskResultsResponse(BaseModel):
             "example": {
                 "latitude": 37.5665,
                 "longitude": 126.9780,
-                "exposure": {
-                    "extreme_heat": {
-                        "exposure_score": 0.75,
-                        "proximity_factor": 0.9
-                    }
-                },
+                "exposure": {"extreme_heat": {"exposure_score": 0.75, "proximity_factor": 0.9}},
                 "vulnerability": {
-                    "extreme_heat": {
-                        "vulnerability_score": 65.0,
-                        "vulnerability_level": "high"
-                    }
+                    "extreme_heat": {"vulnerability_score": 65.0, "vulnerability_level": "high"}
                 },
                 "aal_scaled": {
                     "extreme_heat": {
                         "base_aal": 0.012,
                         "vulnerability_scale": 1.03,
-                        "final_aal": 0.01236
+                        "final_aal": 0.01236,
                     }
                 },
-                "summary": {
-                    "total_final_aal": 0.0987,
-                    "average_vulnerability": 62.5
-                }
+                "summary": {"total_final_aal": 0.0987, "average_vulnerability": 62.5},
             }
         }
 
 
 class HealthResponse(BaseModel):
     """Health Check 응답"""
+
     status: str = Field(..., description="서버 상태")
     service: Optional[str] = Field(None, description="서비스 이름")
     database: Optional[str] = Field(None, description="데이터베이스 상태")
@@ -156,6 +153,6 @@ class HealthResponse(BaseModel):
             "example": {
                 "status": "healthy",
                 "service": "ModelOps Risk Assessment API",
-                "timestamp": "2025-12-01T10:30:00"
+                "timestamp": "2025-12-01T10:30:00",
             }
         }

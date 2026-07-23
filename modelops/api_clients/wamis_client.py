@@ -21,9 +21,9 @@ class WamisClient:
     """WAMIS API 클라이언트"""
 
     # 데이터 타입
-    DATA_TYPE_WATER_LEVEL = 'water_level'  # 수위 (m)
-    DATA_TYPE_FLOW_RATE = 'flow_rate'      # 유량 (m³/s)
-    DATA_TYPE_RAINFALL = 'rainfall'         # 강수량 (mm)
+    DATA_TYPE_WATER_LEVEL = "water_level"  # 수위 (m)
+    DATA_TYPE_FLOW_RATE = "flow_rate"  # 유량 (m³/s)
+    DATA_TYPE_RAINFALL = "rainfall"  # 강수량 (mm)
 
     def __init__(self, conn=None, cursor=None):
         """
@@ -34,8 +34,7 @@ class WamisClient:
         self.conn = conn
         self.cursor = cursor
 
-    def get_stations(self, data_type: str = None,
-                    region: str = None) -> List[Dict[str, Any]]:
+    def get_stations(self, data_type: str = None, region: str = None) -> List[Dict[str, Any]]:
         """
         WAMIS 관측소 목록 조회
 
@@ -58,16 +57,14 @@ class WamisClient:
         """
         if self.conn is None or self.cursor is None:
             from ..database.connection import DatabaseConnection
+
             with DatabaseConnection.get_connection() as temp_conn:
                 with temp_conn.cursor() as temp_cursor:
-                    return self._get_stations_impl(
-                        data_type, region, temp_cursor
-                    )
+                    return self._get_stations_impl(data_type, region, temp_cursor)
         else:
             return self._get_stations_impl(data_type, region, self.cursor)
 
-    def _get_stations_impl(self, data_type: str, region: str,
-                          cursor) -> List[Dict[str, Any]]:
+    def _get_stations_impl(self, data_type: str, region: str, cursor) -> List[Dict[str, Any]]:
         """관측소 목록 조회 구현"""
 
         # WHERE 조건 구성
@@ -105,25 +102,30 @@ class WamisClient:
 
         stations = []
         for row in rows:
-            stations.append({
-                'station_id': row[0],
-                'station_name': row[1],
-                'latitude': row[2],
-                'longitude': row[3],
-                'region': row[4],
-                'data_types': row[5]
-            })
+            stations.append(
+                {
+                    "station_id": row[0],
+                    "station_name": row[1],
+                    "latitude": row[2],
+                    "longitude": row[3],
+                    "region": row[4],
+                    "data_types": row[5],
+                }
+            )
 
         logger.info(
-            f"WAMIS 관측소 조회: {len(stations)}개 "
-            f"(data_type={data_type}, region={region})"
+            f"WAMIS 관측소 조회: {len(stations)}개 " f"(data_type={data_type}, region={region})"
         )
 
         return stations
 
-    def get_data(self, station_id: str, data_type: str,
-                start_date: datetime = None,
-                end_date: datetime = None) -> List[Dict[str, Any]]:
+    def get_data(
+        self,
+        station_id: str,
+        data_type: str,
+        start_date: datetime = None,
+        end_date: datetime = None,
+    ) -> List[Dict[str, Any]]:
         """
         WAMIS 데이터 조회
 
@@ -151,19 +153,18 @@ class WamisClient:
 
         if self.conn is None or self.cursor is None:
             from ..database.connection import DatabaseConnection
+
             with DatabaseConnection.get_connection() as temp_conn:
                 with temp_conn.cursor() as temp_cursor:
                     return self._get_data_impl(
                         station_id, data_type, start_date, end_date, temp_cursor
                     )
         else:
-            return self._get_data_impl(
-                station_id, data_type, start_date, end_date, self.cursor
-            )
+            return self._get_data_impl(station_id, data_type, start_date, end_date, self.cursor)
 
-    def _get_data_impl(self, station_id: str, data_type: str,
-                      start_date: datetime, end_date: datetime,
-                      cursor) -> List[Dict[str, Any]]:
+    def _get_data_impl(
+        self, station_id: str, data_type: str, start_date: datetime, end_date: datetime, cursor
+    ) -> List[Dict[str, Any]]:
         """데이터 조회 구현"""
 
         query = """
@@ -184,12 +185,9 @@ class WamisClient:
 
         data = []
         for row in rows:
-            data.append({
-                'station_id': row[0],
-                'data_type': row[1],
-                'observed_at': row[2],
-                'value': row[3]
-            })
+            data.append(
+                {"station_id": row[0], "data_type": row[1], "observed_at": row[2], "value": row[3]}
+            )
 
         logger.info(
             f"WAMIS 데이터 조회: {len(data)}건 "
@@ -212,18 +210,14 @@ class WamisClient:
         """
         if self.conn is None or self.cursor is None:
             from ..database.connection import DatabaseConnection
+
             with DatabaseConnection.get_connection() as temp_conn:
                 with temp_conn.cursor() as temp_cursor:
-                    return self._get_latest_value_impl(
-                        station_id, data_type, temp_cursor
-                    )
+                    return self._get_latest_value_impl(station_id, data_type, temp_cursor)
         else:
-            return self._get_latest_value_impl(
-                station_id, data_type, self.cursor
-            )
+            return self._get_latest_value_impl(station_id, data_type, self.cursor)
 
-    def _get_latest_value_impl(self, station_id: str, data_type: str,
-                               cursor) -> Optional[float]:
+    def _get_latest_value_impl(self, station_id: str, data_type: str, cursor) -> Optional[float]:
         """최신 관측값 조회 구현"""
 
         query = """
@@ -242,10 +236,14 @@ class WamisClient:
             return row[0]
         return None
 
-    def get_stations_near_grid(self, grid_lat: float, grid_lon: float,
-                              data_type: str = None,
-                              radius_km: float = 50.0,
-                              max_stations: int = 10) -> List[Dict[str, Any]]:
+    def get_stations_near_grid(
+        self,
+        grid_lat: float,
+        grid_lon: float,
+        data_type: str = None,
+        radius_km: float = 50.0,
+        max_stations: int = 10,
+    ) -> List[Dict[str, Any]]:
         """
         격자 주변 관측소 조회
 
@@ -271,21 +269,26 @@ class WamisClient:
         """
         if self.conn is None or self.cursor is None:
             from ..database.connection import DatabaseConnection
+
             with DatabaseConnection.get_connection() as temp_conn:
                 with temp_conn.cursor() as temp_cursor:
                     return self._get_stations_near_grid_impl(
-                        grid_lat, grid_lon, data_type, radius_km,
-                        max_stations, temp_cursor
+                        grid_lat, grid_lon, data_type, radius_km, max_stations, temp_cursor
                     )
         else:
             return self._get_stations_near_grid_impl(
-                grid_lat, grid_lon, data_type, radius_km,
-                max_stations, self.cursor
+                grid_lat, grid_lon, data_type, radius_km, max_stations, self.cursor
             )
 
-    def _get_stations_near_grid_impl(self, grid_lat: float, grid_lon: float,
-                                    data_type: str, radius_km: float,
-                                    max_stations: int, cursor) -> List[Dict[str, Any]]:
+    def _get_stations_near_grid_impl(
+        self,
+        grid_lat: float,
+        grid_lon: float,
+        data_type: str,
+        radius_km: float,
+        max_stations: int,
+        cursor,
+    ) -> List[Dict[str, Any]]:
         """격자 주변 관측소 조회 구현"""
 
         radius_m = radius_km * 1000.0
@@ -326,14 +329,16 @@ class WamisClient:
 
         stations = []
         for row in rows:
-            stations.append({
-                'station_id': row[0],
-                'station_name': row[1],
-                'latitude': row[2],
-                'longitude': row[3],
-                'data_types': row[4],
-                'distance_km': row[5] / 1000.0
-            })
+            stations.append(
+                {
+                    "station_id": row[0],
+                    "station_name": row[1],
+                    "latitude": row[2],
+                    "longitude": row[3],
+                    "data_types": row[4],
+                    "distance_km": row[5] / 1000.0,
+                }
+            )
 
         logger.info(
             f"격자 주변 WAMIS 관측소 조회: {len(stations)}개 "
@@ -342,11 +347,15 @@ class WamisClient:
 
         return stations
 
-    def calculate_grid_value(self, grid_lat: float, grid_lon: float,
-                            data_type: str,
-                            start_date: datetime = None,
-                            end_date: datetime = None,
-                            radius_km: float = 50.0) -> Optional[float]:
+    def calculate_grid_value(
+        self,
+        grid_lat: float,
+        grid_lon: float,
+        data_type: str,
+        start_date: datetime = None,
+        end_date: datetime = None,
+        radius_km: float = 50.0,
+    ) -> Optional[float]:
         """
         격자별 관측값 계산 (IDW 보간)
 
@@ -362,9 +371,7 @@ class WamisClient:
             격자별 평균 관측값 또는 None
         """
         # 1. 주변 관측소 조회
-        stations = self.get_stations_near_grid(
-            grid_lat, grid_lon, data_type, radius_km
-        )
+        stations = self.get_stations_near_grid(grid_lat, grid_lon, data_type, radius_km)
 
         if not stations:
             logger.warning(
@@ -376,34 +383,31 @@ class WamisClient:
         # 2. 각 관측소의 평균 데이터 조회
         station_data = []
         for station in stations:
-            data = self.get_data(
-                station['station_id'], data_type, start_date, end_date
-            )
+            data = self.get_data(station["station_id"], data_type, start_date, end_date)
 
             if data:
                 # 기간 내 평균값 계산
-                values = [d['value'] for d in data]
+                values = [d["value"] for d in data]
                 avg_value = sum(values) / len(values)
 
-                station_data.append({
-                    'latitude': station['latitude'],
-                    'longitude': station['longitude'],
-                    'value': avg_value
-                })
+                station_data.append(
+                    {
+                        "latitude": station["latitude"],
+                        "longitude": station["longitude"],
+                        "value": avg_value,
+                    }
+                )
 
         if not station_data:
-            logger.warning(
-                f"격자 주변 관측소 데이터 없음: ({grid_lat}, {grid_lon})"
-            )
+            logger.warning(f"격자 주변 관측소 데이터 없음: ({grid_lat}, {grid_lon})")
             return None
 
         # 3. IDW 보간
         from ..utils.station_mapper import StationMapper
+
         try:
             interpolated_value = StationMapper.interpolate_to_grid(
-                grid_lat, grid_lon, station_data,
-                value_key='value',
-                max_distance_km=radius_km
+                grid_lat, grid_lon, station_data, value_key="value", max_distance_km=radius_km
             )
             return interpolated_value
         except ValueError as e:

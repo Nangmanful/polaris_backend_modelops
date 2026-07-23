@@ -17,7 +17,7 @@ import os
 from pathlib import Path
 from tqdm import tqdm
 
-from utils import setup_logging, get_db_connection, get_data_dir, table_exists, get_row_count
+from utils import setup_logging, get_db_connection, get_data_dir, get_row_count
 
 
 def hdf5_to_geotiff(h5_path: Path, output_dir: Path, logger=None) -> list:
@@ -36,21 +36,17 @@ def hdf5_to_geotiff(h5_path: Path, output_dir: Path, logger=None) -> list:
 
     # SMAP L4 데이터셋 목록
     datasets = [
-        'Analysis_Data/sm_surface_analysis',
-        'Analysis_Data/sm_rootzone_analysis',
+        "Analysis_Data/sm_surface_analysis",
+        "Analysis_Data/sm_rootzone_analysis",
     ]
 
     for dataset in datasets:
-        var_name = dataset.split('/')[-1]
+        var_name = dataset.split("/")[-1]
         output_tif = output_dir / f"{h5_path.stem}_{var_name}.tif"
 
         try:
             # gdal_translate로 HDF5 서브데이터셋을 GeoTIFF로 변환
-            cmd = [
-                'gdal_translate', '-q',
-                f'HDF5:"{h5_path}"://{dataset}',
-                str(output_tif)
-            ]
+            cmd = ["gdal_translate", "-q", f'HDF5:"{h5_path}"://{dataset}', str(output_tif)]
 
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
 
@@ -102,8 +98,11 @@ def load_tif_to_raster(tif_path: Path, table_name: str, append: bool = False, lo
         psql_env["PGPASSWORD"] = db_password
 
         psql_proc = subprocess.Popen(
-            psql_cmd, stdin=raster_proc.stdout,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=psql_env
+            psql_cmd,
+            stdin=raster_proc.stdout,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=psql_env,
         )
 
         raster_proc.stdout.close()
@@ -166,9 +165,21 @@ def load_drought() -> None:
     drop_env = os.environ.copy()
     drop_env["PGPASSWORD"] = db_password
     subprocess.run(
-        ["psql", "-h", db_host, "-p", db_port, "-U", db_user, "-d", db_name,
-         "-c", "DROP TABLE IF EXISTS raw_drought CASCADE;"],
-        env=drop_env, capture_output=True
+        [
+            "psql",
+            "-h",
+            db_host,
+            "-p",
+            db_port,
+            "-U",
+            db_user,
+            "-d",
+            db_name,
+            "-c",
+            "DROP TABLE IF EXISTS raw_drought CASCADE;",
+        ],
+        env=drop_env,
+        capture_output=True,
     )
 
     # 임시 디렉토리
@@ -184,8 +195,7 @@ def load_drought() -> None:
 
         for tif_file in tif_files:
             success = load_tif_to_raster(
-                tif_file, "raw_drought",
-                append=not first_file, logger=logger
+                tif_file, "raw_drought", append=not first_file, logger=logger
             )
             if success:
                 success_count += 1
@@ -204,13 +214,14 @@ def load_drought() -> None:
         output_tif = tmp_dir / f"{nc_file.stem}.tif"
         try:
             result = subprocess.run(
-                ['gdal_translate', '-q', str(nc_file), str(output_tif)],
-                capture_output=True, text=True, timeout=120
+                ["gdal_translate", "-q", str(nc_file), str(output_tif)],
+                capture_output=True,
+                text=True,
+                timeout=120,
             )
             if result.returncode == 0 and output_tif.exists():
                 success = load_tif_to_raster(
-                    output_tif, "raw_drought",
-                    append=not first_file, logger=logger
+                    output_tif, "raw_drought", append=not first_file, logger=logger
                 )
                 if success:
                     success_count += 1
@@ -225,6 +236,7 @@ def load_drought() -> None:
     # 임시 디렉토리 정리
     try:
         import shutil
+
         shutil.rmtree(tmp_dir)
     except:
         pass

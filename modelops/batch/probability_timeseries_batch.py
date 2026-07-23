@@ -1,4 +1,4 @@
-'''
+"""
 파일명: probability_timeseries_batch.py
 최종 수정일: 2025-12-15
 버전: v01
@@ -12,7 +12,7 @@
         * SSP126, SSP245, SSP370, SSP585 4개 시나리오
         * 2021-2100년 (80년) 1년 단위 계산
         * 9개 리스크 타입별 P(H) 계산
-'''
+"""
 
 import logging
 from typing import List, Dict, Any, Tuple
@@ -22,22 +22,29 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from tqdm import tqdm
 
 # Probability Agents
-from ..agents.probability_calculate.extreme_heat_probability_agent import ExtremeHeatProbabilityAgent
-from ..agents.probability_calculate.extreme_cold_probability_agent import ExtremeColdProbabilityAgent
+from ..agents.probability_calculate.extreme_heat_probability_agent import (
+    ExtremeHeatProbabilityAgent,
+)
+from ..agents.probability_calculate.extreme_cold_probability_agent import (
+    ExtremeColdProbabilityAgent,
+)
 from ..agents.probability_calculate.drought_probability_agent import DroughtProbabilityAgent
 from ..agents.probability_calculate.river_flood_probability_agent import RiverFloodProbabilityAgent
 from ..agents.probability_calculate.urban_flood_probability_agent import UrbanFloodProbabilityAgent
-from ..agents.probability_calculate.sea_level_rise_probability_agent import SeaLevelRiseProbabilityAgent
+from ..agents.probability_calculate.sea_level_rise_probability_agent import (
+    SeaLevelRiseProbabilityAgent,
+)
 from ..agents.probability_calculate.typhoon_probability_agent import TyphoonProbabilityAgent
 from ..agents.probability_calculate.wildfire_probability_agent import WildfireProbabilityAgent
-from ..agents.probability_calculate.water_stress_probability_agent import WaterStressProbabilityAgent
+from ..agents.probability_calculate.water_stress_probability_agent import (
+    WaterStressProbabilityAgent,
+)
 
 # Utils
 from ..database.connection import DatabaseConnection
 
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -47,15 +54,15 @@ SCENARIOS = ["SSP126", "SSP245", "SSP370", "SSP585"]
 YEARS = list(range(2021, 2101))  # 2021-2100 (80년)
 
 RISK_TYPES = [
-    'extreme_heat',
-    'extreme_cold',
-    'wildfire',
-    'drought',
-    'water_stress',
-    'sea_level_rise',
-    'river_flood',
-    'urban_flood',
-    'typhoon'
+    "extreme_heat",
+    "extreme_cold",
+    "wildfire",
+    "drought",
+    "water_stress",
+    "sea_level_rise",
+    "river_flood",
+    "urban_flood",
+    "typhoon",
 ]
 
 
@@ -82,24 +89,24 @@ def _process_probability_task_worker(task: Dict[str, Any]) -> Dict[str, Any]:
             'error': str (실패 시)
         }
     """
-    lat = task['latitude']
-    lon = task['longitude']
-    scenario = task['scenario']
-    year = task['year']
-    risk_types = task['risk_types']
+    lat = task["latitude"]
+    lon = task["longitude"]
+    scenario = task["scenario"]
+    year = task["year"]
+    risk_types = task["risk_types"]
 
     try:
         # 각 워커마다 독립적으로 에이전트 생성
         probability_agents = {
-            'extreme_heat': ExtremeHeatProbabilityAgent(),
-            'extreme_cold': ExtremeColdProbabilityAgent(),
-            'drought': DroughtProbabilityAgent(),
-            'river_flood': RiverFloodProbabilityAgent(),
-            'urban_flood': UrbanFloodProbabilityAgent(),
-            'sea_level_rise': SeaLevelRiseProbabilityAgent(),
-            'typhoon': TyphoonProbabilityAgent(),
-            'wildfire': WildfireProbabilityAgent(),
-            'water_stress': WaterStressProbabilityAgent()
+            "extreme_heat": ExtremeHeatProbabilityAgent(),
+            "extreme_cold": ExtremeColdProbabilityAgent(),
+            "drought": DroughtProbabilityAgent(),
+            "river_flood": RiverFloodProbabilityAgent(),
+            "urban_flood": UrbanFloodProbabilityAgent(),
+            "sea_level_rise": SeaLevelRiseProbabilityAgent(),
+            "typhoon": TyphoonProbabilityAgent(),
+            "wildfire": WildfireProbabilityAgent(),
+            "water_stress": WaterStressProbabilityAgent(),
         }
 
         probability_results = []
@@ -110,56 +117,49 @@ def _process_probability_task_worker(task: Dict[str, Any]) -> Dict[str, Any]:
                 # P(H) 계산
                 p_agent = probability_agents[risk_type]
                 p_result = p_agent.calculate(
-                    lat=lat,
-                    lon=lon,
-                    ssp_scenario=scenario,
-                    start_year=2021,
-                    end_year=2100
+                    lat=lat, lon=lon, ssp_scenario=scenario, start_year=2021, end_year=2100
                 )
 
-                aal = p_result.get('aal', 0.0)
+                aal = p_result.get("aal", 0.0)
                 if aal >= 0.03:
-                    probability_level = 'Very High'
+                    probability_level = "Very High"
                 elif aal >= 0.02:
-                    probability_level = 'High'
+                    probability_level = "High"
                 elif aal >= 0.01:
-                    probability_level = 'Medium'
+                    probability_level = "Medium"
                 elif aal >= 0.005:
-                    probability_level = 'Low'
+                    probability_level = "Low"
                 else:
-                    probability_level = 'Very Low'
+                    probability_level = "Very Low"
 
-                probability_results.append({
-                    'latitude': lat,
-                    'longitude': lon,
-                    'scenario': scenario,
-                    'target_year': year,
-                    'risk_type': risk_type,
-                    'aal': aal,
-                    'bin_probabilities': p_result.get('bin_probabilities', []),
-                    'probability_level': probability_level
-                })
+                probability_results.append(
+                    {
+                        "latitude": lat,
+                        "longitude": lon,
+                        "scenario": scenario,
+                        "target_year": year,
+                        "risk_type": risk_type,
+                        "aal": aal,
+                        "bin_probabilities": p_result.get("bin_probabilities", []),
+                        "probability_level": probability_level,
+                    }
+                )
 
             except Exception as e:
                 # 개별 리스크 실패는 로깅만 하고 계속 진행
                 logger.error(
-                    f"Risk {risk_type} failed for {scenario} {year} "
-                    f"at ({lat}, {lon}): {e}"
+                    f"Risk {risk_type} failed for {scenario} {year} " f"at ({lat}, {lon}): {e}"
                 )
 
         return {
-            'status': 'success',
-            'task': task,
-            'probability_results': probability_results,
-            'risks_calculated': len(probability_results)
+            "status": "success",
+            "task": task,
+            "probability_results": probability_results,
+            "risks_calculated": len(probability_results),
         }
 
     except Exception as e:
-        return {
-            'status': 'failed',
-            'task': task,
-            'error': str(e)
-        }
+        return {"status": "failed", "task": task, "error": str(e)}
 
 
 # ========== 격자점 조회 ==========
@@ -198,7 +198,7 @@ def run_probability_batch(
     years: List[int] = None,
     risk_types: List[str] = None,
     batch_size: int = 100,
-    max_workers: int = 4
+    max_workers: int = 4,
 ) -> None:
     """
     모든 격자점에 대해 P(H) 시계열 계산 (병렬 처리)
@@ -228,13 +228,15 @@ def run_probability_batch(
     for scenario in scenarios:
         for year in years:
             for lat, lon in grid_points:
-                tasks.append({
-                    'latitude': lat,
-                    'longitude': lon,
-                    'scenario': scenario,
-                    'year': year,
-                    'risk_types': risk_types
-                })
+                tasks.append(
+                    {
+                        "latitude": lat,
+                        "longitude": lon,
+                        "scenario": scenario,
+                        "year": year,
+                        "risk_types": risk_types,
+                    }
+                )
 
     total_tasks = len(tasks)
     total_calculations = total_tasks * len(risk_types)  # 실제 계산량
@@ -258,10 +260,7 @@ def run_probability_batch(
     # ProcessPoolExecutor로 병렬 처리
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
         # 모든 태스크 제출
-        futures = {
-            executor.submit(_process_probability_task_worker, task): task
-            for task in tasks
-        }
+        futures = {executor.submit(_process_probability_task_worker, task): task for task in tasks}
 
         # tqdm으로 진행률 표시
         with tqdm(total=total_tasks, desc="Processing Probabilities", unit="task") as pbar:
@@ -270,23 +269,27 @@ def run_probability_batch(
                 try:
                     result = future.result(timeout=300)  # 개별 태스크 5분 timeout
 
-                    if result['status'] == 'success':
+                    if result["status"] == "success":
                         # 결과 배치에 추가
-                        probability_batch.extend(result['probability_results'])
+                        probability_batch.extend(result["probability_results"])
                         completed_count += 1
 
                         # 진행률 업데이트
-                        pbar.set_postfix({
-                            'success': completed_count,
-                            'failed': failed_count,
-                            'risks': f"{result['risks_calculated']}/{len(risk_types)}",
-                            'pending_save': len(probability_batch)
-                        })
+                        pbar.set_postfix(
+                            {
+                                "success": completed_count,
+                                "failed": failed_count,
+                                "risks": f"{result['risks_calculated']}/{len(risk_types)}",
+                                "pending_save": len(probability_batch),
+                            }
+                        )
 
                         # 배치 저장
                         if len(probability_batch) >= batch_size:
                             save_probability_results(probability_batch)
-                            logger.debug(f"Saved batch: {len(probability_batch)} probability results")
+                            logger.debug(
+                                f"Saved batch: {len(probability_batch)} probability results"
+                            )
                             probability_batch = []
 
                     else:
@@ -296,10 +299,7 @@ def run_probability_batch(
                             f"at ({task['latitude']}, {task['longitude']}): "
                             f"{result.get('error')}"
                         )
-                        pbar.set_postfix({
-                            'success': completed_count,
-                            'failed': failed_count
-                        })
+                        pbar.set_postfix({"success": completed_count, "failed": failed_count})
 
                 except Exception as e:
                     failed_count += 1
@@ -307,10 +307,7 @@ def run_probability_batch(
                         f"Task exception for {task['scenario']} {task['year']} "
                         f"at ({task['latitude']}, {task['longitude']}): {e}"
                     )
-                    pbar.set_postfix({
-                        'success': completed_count,
-                        'failed': failed_count
-                    })
+                    pbar.set_postfix({"success": completed_count, "failed": failed_count})
 
                 pbar.update(1)
 
@@ -359,37 +356,22 @@ if __name__ == "__main__":
     try:
         # CLI 인자 파싱
         import argparse
+
         parser = argparse.ArgumentParser(
-            description='Probability P(H) Timeseries Batch Calculation (Parallel Processing)'
+            description="Probability P(H) Timeseries Batch Calculation (Parallel Processing)"
         )
         parser.add_argument(
-            '--scenario',
-            type=str,
-            help='Single scenario (SSP126, SSP245, SSP370, SSP585)'
+            "--scenario", type=str, help="Single scenario (SSP126, SSP245, SSP370, SSP585)"
         )
         parser.add_argument(
-            '--start-year',
-            type=int,
-            default=2021,
-            help='Start year (default: 2021)'
+            "--start-year", type=int, default=2021, help="Start year (default: 2021)"
+        )
+        parser.add_argument("--end-year", type=int, default=2100, help="End year (default: 2100)")
+        parser.add_argument(
+            "--batch-size", type=int, default=100, help="DB batch size (default: 100)"
         )
         parser.add_argument(
-            '--end-year',
-            type=int,
-            default=2100,
-            help='End year (default: 2100)'
-        )
-        parser.add_argument(
-            '--batch-size',
-            type=int,
-            default=100,
-            help='DB batch size (default: 100)'
-        )
-        parser.add_argument(
-            '--workers',
-            type=int,
-            default=4,
-            help='Number of parallel workers (default: 4)'
+            "--workers", type=int, default=4, help="Number of parallel workers (default: 4)"
         )
 
         args = parser.parse_args()
@@ -398,25 +380,22 @@ if __name__ == "__main__":
         scenarios = [args.scenario] if args.scenario else SCENARIOS
 
         # 연도 설정
-        if args.time_scope == 'decadal':
+        if args.time_scope == "decadal":
             # 10년 단위 (2020, 2030, ..., 2090 등)
             # 입력된 시작 연도가 속한 10년대의 시작점 (내림 처리)
             start = (args.start_year // 10) * 10
-            
+
             # 데이터 시작 범위 보정
-            if start < 2020: 
+            if start < 2020:
                 start = 2020
-                
+
             years = list(range(start, args.end_year + 1, 10))
         else:
             years = list(range(args.start_year, args.end_year + 1))
 
         # 배치 실행
         run_probability_batch(
-            scenarios=scenarios,
-            years=years,
-            batch_size=args.batch_size,
-            max_workers=args.workers
+            scenarios=scenarios, years=years, batch_size=args.batch_size, max_workers=args.workers
         )
 
         sys.exit(0)

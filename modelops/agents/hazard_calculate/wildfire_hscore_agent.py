@@ -1,4 +1,4 @@
-'''
+"""
 파일명: wildfire_hscore_agent.py
 최종 수정일: 2025-12-14
 버전: v2
@@ -6,7 +6,8 @@
 변경 이력:
     - v1: HazardCalculator 로직 통합 (Canadian FWI 시스템 기반)
     - v2: 원래 설계 복원 (DB 로직 제거, 순수 계산만)
-'''
+"""
+
 from typing import Dict, Any
 from .base_hazard_hscore_agent import BaseHazardHScoreAgent
 
@@ -25,7 +26,7 @@ class WildfireHScoreAgent(BaseHazardHScoreAgent):
     """
 
     def __init__(self):
-        super().__init__(risk_type='wildfire')
+        super().__init__(risk_type="wildfire")
 
     def calculate_hazard(self, collected_data: Dict[str, Any]) -> float:
         """
@@ -39,40 +40,30 @@ class WildfireHScoreAgent(BaseHazardHScoreAgent):
         Returns:
             Hazard 점수 (0.0 ~ 1.0)
         """
-        climate_data = collected_data.get('climate_data', {})
-        spatial_data = collected_data.get('spatial_data', {})
+        climate_data = collected_data.get("climate_data", {})
+        spatial_data = collected_data.get("spatial_data", {})
 
         try:
             # 1. 데이터 추출 (data_loaders가 DB에서 수집한 데이터 사용)
             temp = self.get_value_with_fallback(
-                climate_data,
-                ['temperature', 'avg_temperature', 'ta', 'tamax'],
-                25.0
+                climate_data, ["temperature", "avg_temperature", "ta", "tamax"], 25.0
             )
             rh = self.get_value_with_fallback(
-                climate_data,
-                ['relative_humidity', 'humidity', 'rhm'],
-                50.0
+                climate_data, ["relative_humidity", "humidity", "rhm"], 50.0
             )
             wind_speed = self.get_value_with_fallback(
-                climate_data,
-                ['wind_speed', 'ws'],
-                3.0
+                climate_data, ["wind_speed", "ws"], 3.0
             )  # m/s
             annual_rainfall = self.get_value_with_fallback(
-                climate_data,
-                ['annual_rainfall_mm', 'rn', 'total_rainfall'],
-                1200.0
+                climate_data, ["annual_rainfall_mm", "rn", "total_rainfall"], 1200.0
             )
 
             landcover_type = self.get_value_with_fallback(
-                spatial_data,
-                ['landcover_type', 'land_cover_type'],
-                'mixed'
+                spatial_data, ["landcover_type", "land_cover_type"], "mixed"
             )
-            
+
             # 2. Canadian FWI 계산 (간단 근사 버전)
-            
+
             # FFMC (Fine Fuel Moisture Code): 세밀한 연료 수분
             # 온도와 습도에 의존
             ffmc = 85 - (rh / 100) * 50 + (temp / 50) * 15
@@ -105,31 +96,31 @@ class WildfireHScoreAgent(BaseHazardHScoreAgent):
             wildfire_risk_index = (fwi / 81) * 100
 
             # 토지피복도에 따른 조정
-            if landcover_type == 'forest':
+            if landcover_type == "forest":
                 wildfire_risk_index *= 1.3
-            elif landcover_type == 'grassland':
+            elif landcover_type == "grassland":
                 wildfire_risk_index *= 1.2
-            elif landcover_type == 'agricultural':
+            elif landcover_type == "agricultural":
                 wildfire_risk_index *= 0.8
 
             wildfire_risk_index = min(wildfire_risk_index, 100)
-            
+
             # Hazard Score (0~1)
             hazard_score = wildfire_risk_index / 100.0
 
             # 상세 결과 기록
-            if 'calculation_details' not in collected_data:
-                collected_data['calculation_details'] = {}
-            
-            collected_data['calculation_details']['wildfire'] = {
-                'hazard_score': hazard_score,
-                'ta': temp,              # DB에서 가져온 평균기온
-                'rhm': rh,               # DB에서 가져온 상대습도
-                'ws': wind_speed,        # DB에서 가져온 풍속
-                'rn': annual_rainfall,   # DB에서 가져온 연강수량
-                'fwi': fwi,
-                'wildfire_risk_index': wildfire_risk_index,
-                'sub_indices': {'ffmc': ffmc, 'dc': dc, 'isi': isi, 'bui': bui}
+            if "calculation_details" not in collected_data:
+                collected_data["calculation_details"] = {}
+
+            collected_data["calculation_details"]["wildfire"] = {
+                "hazard_score": hazard_score,
+                "ta": temp,  # DB에서 가져온 평균기온
+                "rhm": rh,  # DB에서 가져온 상대습도
+                "ws": wind_speed,  # DB에서 가져온 풍속
+                "rn": annual_rainfall,  # DB에서 가져온 연강수량
+                "fwi": fwi,
+                "wildfire_risk_index": wildfire_risk_index,
+                "sub_indices": {"ffmc": ffmc, "dc": dc, "isi": isi, "bui": bui},
             }
 
             return round(hazard_score, 4)

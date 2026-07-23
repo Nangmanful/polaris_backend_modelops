@@ -8,9 +8,10 @@
 2) Fallback 검색 지원
 ==================================================================
 """
+
 from typing import Dict
 from ..state import ESGTrendsState, ESGNewsItem
-from ..tools.kotra_api import fetch_kotra_esg_news, fetch_recent_esg_news
+from ..tools.kotra_api import fetch_recent_esg_news
 from ..tools.search import search_global_esg_trends
 from ..utils.config import Config
 from ..utils.logging import get_logger
@@ -35,10 +36,7 @@ def collect_global_news(state: ESGTrendsState) -> Dict:
     # 1. KOTRA API 시도
     try:
         logger.info("KOTRA ESG 동향뉴스 API 호출...")
-        kotra_news = fetch_recent_esg_news(
-            days=7,
-            limit=Config.MAX_NEWS_PER_SOURCE
-        )
+        kotra_news = fetch_recent_esg_news(days=7, limit=Config.MAX_NEWS_PER_SOURCE)
 
         for news in kotra_news:
             news_item = ESGNewsItem(
@@ -46,7 +44,9 @@ def collect_global_news(state: ESGTrendsState) -> Dict:
                 summary=news.get("summary", ""),
                 url=news.get("url", ""),
                 source="KOTRA",
-                category=_classify_esg_category(news.get("title", "") + " " + news.get("summary", "")),
+                category=_classify_esg_category(
+                    news.get("title", "") + " " + news.get("summary", "")
+                ),
                 published_at=news.get("published_at"),
                 region=news.get("country", news.get("region", "")),
             )
@@ -77,7 +77,9 @@ def collect_global_news(state: ESGTrendsState) -> Dict:
                         summary=news.get("summary", ""),
                         url=news.get("url", ""),
                         source=news.get("source", "웹검색"),
-                        category=_classify_esg_category(news.get("title", "") + " " + news.get("summary", "")),
+                        category=_classify_esg_category(
+                            news.get("title", "") + " " + news.get("summary", "")
+                        ),
                         published_at=None,
                         region=news.get("region", "글로벌"),
                     )
@@ -116,18 +118,52 @@ def _classify_esg_category(text: str) -> str:
 
     # Environmental 키워드 (영어 + 한국어)
     e_keywords = [
-        "환경", "탄소", "기후", "에너지", "재생", "폐기물", "오염", "생태",
-        "environment", "carbon", "climate", "energy", "renewable", "emission", "green"
+        "환경",
+        "탄소",
+        "기후",
+        "에너지",
+        "재생",
+        "폐기물",
+        "오염",
+        "생태",
+        "environment",
+        "carbon",
+        "climate",
+        "energy",
+        "renewable",
+        "emission",
+        "green",
     ]
     # Social 키워드
     s_keywords = [
-        "사회", "노동", "인권", "다양성", "안전", "지역사회", "공급망",
-        "social", "labor", "human rights", "diversity", "safety", "community"
+        "사회",
+        "노동",
+        "인권",
+        "다양성",
+        "안전",
+        "지역사회",
+        "공급망",
+        "social",
+        "labor",
+        "human rights",
+        "diversity",
+        "safety",
+        "community",
     ]
     # Governance 키워드
     g_keywords = [
-        "지배구조", "이사회", "윤리", "투명", "컴플라이언스", "반부패",
-        "governance", "board", "ethics", "transparency", "compliance", "corruption"
+        "지배구조",
+        "이사회",
+        "윤리",
+        "투명",
+        "컴플라이언스",
+        "반부패",
+        "governance",
+        "board",
+        "ethics",
+        "transparency",
+        "compliance",
+        "corruption",
     ]
 
     e_score = sum(1 for kw in e_keywords if kw in text_lower)

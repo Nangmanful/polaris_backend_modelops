@@ -1,6 +1,7 @@
 """
 Exposure calculation agents for different risk types.
 """
+
 from .base_exposure_agent import BaseExposureAgent
 from .river_flood_exposure_agent import RiverFloodExposureAgent
 from .extreme_heat_exposure_agent import ExtremeHeatExposureAgent
@@ -13,14 +14,14 @@ from .wildfire_exposure_agent import WildfireExposureAgent
 from .water_stress_exposure_agent import WaterStressExposureAgent
 
 __all__ = [
-    'BaseExposureAgent',
-    'RiverFloodExposureAgent',
-    'ExtremeHeatExposureAgent',
-    'ExtremeColdExposureAgent',
-    'UrbanFloodExposureAgent',
-    'DroughtExposureAgent',
-    'TyphoonExposureAgent',
-    'SeaLevelRiseExposureAgent',
-    'WildfireExposureAgent',
-    'WaterStressExposureAgent',
+    "BaseExposureAgent",
+    "RiverFloodExposureAgent",
+    "ExtremeHeatExposureAgent",
+    "ExtremeColdExposureAgent",
+    "UrbanFloodExposureAgent",
+    "DroughtExposureAgent",
+    "TyphoonExposureAgent",
+    "SeaLevelRiseExposureAgent",
+    "WildfireExposureAgent",
+    "WaterStressExposureAgent",
 ]

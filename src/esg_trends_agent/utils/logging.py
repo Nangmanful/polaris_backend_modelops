@@ -8,6 +8,7 @@
 2) 파일 및 콘솔 핸들러 설정
 ==================================================================
 """
+
 import logging
 import os
 from .config import Config
@@ -31,8 +32,7 @@ def setup_logger(name: str = "esg_agent") -> logging.Logger:
     logger.setLevel(level)
 
     formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S"
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
     )
 
     # 콘솔 핸들러

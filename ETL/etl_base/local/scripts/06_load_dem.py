@@ -18,17 +18,17 @@ import unicodedata
 from pathlib import Path
 from tqdm import tqdm
 
-from utils import setup_logging, get_db_connection, get_data_dir, table_exists, get_row_count
+from utils import setup_logging, get_db_connection, get_data_dir, get_row_count
 
 # SAMPLE_LIMIT: 소스(폴더/ZIP) 개수 제한 (테스트용)
-SAMPLE_LIMIT = int(os.environ.get('SAMPLE_LIMIT', 0))  # 0 = 전체
+SAMPLE_LIMIT = int(os.environ.get("SAMPLE_LIMIT", 0))  # 0 = 전체
 
 # 대상 지역 필터 (SK 사업장 + 울산)
 TARGET_REGIONS = [
-    "경기도",       # SK u-타워, 판교 캠퍼스, 수내 오피스, 판교 DC
-    "서울특별시",   # 서린 사옥, 보라매 DC, 애커튼 파트너스
-    "대전광역시",   # 대덕 데이터 센터
-    "울산광역시",   # 울산 지역
+    "경기도",  # SK u-타워, 판교 캠퍼스, 수내 오피스, 판교 DC
+    "서울특별시",  # 서린 사옥, 보라매 DC, 애커튼 파트너스
+    "대전광역시",  # 대덕 데이터 센터
+    "울산광역시",  # 울산 지역
 ]
 
 
@@ -46,11 +46,11 @@ def extract_zip_with_korean(zip_path: Path, extract_dir: Path) -> list:
     extracted_files = []
 
     try:
-        with zipfile.ZipFile(zip_path, 'r') as zf:
+        with zipfile.ZipFile(zip_path, "r") as zf:
             for info in zf.infolist():
                 try:
                     # CP437 → EUC-KR 변환 (한글 인코딩 문제 해결)
-                    decoded_name = info.filename.encode('cp437').decode('euc-kr')
+                    decoded_name = info.filename.encode("cp437").decode("euc-kr")
                 except:
                     decoded_name = info.filename
 
@@ -90,12 +90,12 @@ def load_dem() -> None:
         sys.exit(1)
 
     # 1. 압축 해제된 폴더 먼저 찾기 (우선순위)
-    all_dirs = [d for d in dem_dir.iterdir() if d.is_dir() and '_ascii' in d.name]
+    all_dirs = [d for d in dem_dir.iterdir() if d.is_dir() and "_ascii" in d.name]
     all_zips = list(dem_dir.glob("*.zip"))
 
     # TARGET_REGIONS 필터 적용 (macOS NFD → NFC 정규화)
     def matches_target_region(name: str) -> bool:
-        normalized_name = unicodedata.normalize('NFC', name)
+        normalized_name = unicodedata.normalize("NFC", name)
         return any(region in normalized_name for region in TARGET_REGIONS)
 
     extracted_dirs = [d for d in all_dirs if matches_target_region(d.name)]
@@ -104,15 +104,17 @@ def load_dem() -> None:
     # 이미 폴더가 있는 ZIP은 제외 (NFC 정규화 적용)
     extracted_regions = set()
     for d in extracted_dirs:
-        match = re.search(r'_(.+?)_ascii', d.name)
+        match = re.search(r"_(.+?)_ascii", d.name)
         if match:
             # NFC 정규화하여 저장
-            extracted_regions.add(unicodedata.normalize('NFC', match.group(1)))
+            extracted_regions.add(unicodedata.normalize("NFC", match.group(1)))
 
     # ZIP 필터링 시에도 NFC 정규화하여 비교
-    zip_files = [z for z in zip_files if not any(
-        region in unicodedata.normalize('NFC', z.name) for region in extracted_regions
-    )]
+    zip_files = [
+        z
+        for z in zip_files
+        if not any(region in unicodedata.normalize("NFC", z.name) for region in extracted_regions)
+    ]
 
     logger.info(f"대상 지역: {TARGET_REGIONS}")
     logger.info(f"압축 해제된 폴더: {len(extracted_dirs)}개 (전체 {len(all_dirs)}개 중)")
@@ -133,7 +135,9 @@ def load_dem() -> None:
         else:
             remaining = SAMPLE_LIMIT - len(extracted_dirs)
             zip_files = zip_files[:remaining]
-        logger.info(f"   SAMPLE_LIMIT={SAMPLE_LIMIT} 적용 → 폴더 {len(extracted_dirs)}개, ZIP {len(zip_files)}개")
+        logger.info(
+            f"   SAMPLE_LIMIT={SAMPLE_LIMIT} 적용 → 폴더 {len(extracted_dirs)}개, ZIP {len(zip_files)}개"
+        )
 
     # 테이블 재생성 (Point geometry 기반)
     logger.info("테이블 재생성 (Point geometry)")
@@ -161,11 +165,11 @@ def load_dem() -> None:
 
         try:
             # 여러 인코딩 시도
-            encodings = ['utf-8', 'cp949', 'euc-kr']
+            encodings = ["utf-8", "cp949", "euc-kr"]
             content = None
             for enc in encodings:
                 try:
-                    with open(txt_file, 'r', encoding=enc) as f:
+                    with open(txt_file, "r", encoding=enc) as f:
                         content = f.readlines()
                     break
                 except UnicodeDecodeError:
@@ -183,10 +187,13 @@ def load_dem() -> None:
                         batch_data.append((x, y, z, region_name, x, y))
 
                         if len(batch_data) >= batch_size:
-                            cursor.executemany("""
+                            cursor.executemany(
+                                """
                                 INSERT INTO raw_dem (x, y, elevation, region, geom)
                                 VALUES (%s, %s, %s, %s, ST_SetSRID(ST_MakePoint(%s, %s), 5186))
-                            """, batch_data)
+                            """,
+                                batch_data,
+                            )
                             insert_count += len(batch_data)
                             batch_data = []
                             conn.commit()
@@ -199,7 +206,7 @@ def load_dem() -> None:
 
     # 2. 압축 해제된 폴더 처리 (빠름)
     for extract_dir in tqdm(extracted_dirs, desc="폴더 처리"):
-        match = re.search(r'_(.+?)_ascii', extract_dir.name)
+        match = re.search(r"_(.+?)_ascii", extract_dir.name)
         region_name = match.group(1) if match else "Unknown"
 
         txt_files = list(extract_dir.glob("*.txt"))
@@ -210,15 +217,16 @@ def load_dem() -> None:
 
     # 3. ZIP 파일 처리 (폴더가 없는 경우만)
     import tempfile
+
     tmp_dir = Path(tempfile.mkdtemp())
 
     for zip_file in tqdm(zip_files, desc="ZIP 처리"):
-        match = re.search(r'_(.+?)_ascii', zip_file.name)
+        match = re.search(r"_(.+?)_ascii", zip_file.name)
         region_name = match.group(1) if match else "Unknown"
 
         try:
             extracted_files = extract_zip_with_korean(zip_file, tmp_dir)
-            txt_files = [f for f in extracted_files if str(f).endswith('.txt')]
+            txt_files = [f for f in extracted_files if str(f).endswith(".txt")]
 
             for txt_file in txt_files:
                 process_txt_file(txt_file, region_name)
@@ -233,10 +241,13 @@ def load_dem() -> None:
 
     # 남은 배치 처리
     if batch_data:
-        cursor.executemany("""
+        cursor.executemany(
+            """
             INSERT INTO raw_dem (x, y, elevation, region, geom)
             VALUES (%s, %s, %s, %s, ST_SetSRID(ST_MakePoint(%s, %s), 5186))
-        """, batch_data)
+        """,
+            batch_data,
+        )
         insert_count += len(batch_data)
         conn.commit()
 
@@ -249,6 +260,7 @@ def load_dem() -> None:
     # 임시 디렉토리 정리
     try:
         import shutil
+
         shutil.rmtree(tmp_dir)
     except:
         pass

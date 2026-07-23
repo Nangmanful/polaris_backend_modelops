@@ -8,12 +8,14 @@ ESG Trends Agent 상태 정의
 2) 각 에이전트 간 데이터 흐름 정의
 ==================================================================
 """
+
 from typing import TypedDict, List, Dict, Optional, Annotated
 from operator import add
 
 
 class WeatherData(TypedDict):
     """날씨 데이터"""
+
     location: str
     temperature: float
     humidity: int
@@ -27,6 +29,7 @@ class WeatherData(TypedDict):
 
 class PhysicalRiskAnalysis(TypedDict):
     """물리적 리스크 분석 결과"""
+
     risk_type: str  # 9대 물리적 리스크 중 하나
     risk_level: str  # "높음", "보통", "낮음"
     description: str
@@ -35,6 +38,7 @@ class PhysicalRiskAnalysis(TypedDict):
 
 class ESGNewsItem(TypedDict):
     """ESG 뉴스 아이템"""
+
     title: str
     summary: str
     url: str
@@ -49,6 +53,7 @@ class ESGTrendsState(TypedDict):
 
     LangGraph StateGraph에서 사용하는 전체 상태 정의
     """
+
     # ===== 수집 데이터 =====
     # 날씨 데이터 (지역별)
     weather_data: Annotated[List[WeatherData], add]
@@ -116,18 +121,15 @@ def create_initial_state() -> ESGTrendsState:
         physical_risks=[],
         domestic_news=[],
         global_news=[],
-
         # 분석 결과
         competitor_analysis="",
         trending_topics=[],
         sudden_changes=[],
         recommendations=[],
-
         # 리포트
         weather_summary="",
         esg_insight="",
         final_report="",
-
         # 메타데이터
         collection_status={},
         quality_score=0.0,

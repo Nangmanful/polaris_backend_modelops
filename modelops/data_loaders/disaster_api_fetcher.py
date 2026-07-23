@@ -8,13 +8,13 @@ import os
 import requests
 from pathlib import Path
 from dotenv import load_dotenv
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 from datetime import datetime, timedelta
-from geopy.distance import geodesic
 
 # 환경변수 로드
 BASE_DIR = Path(__file__).parent.parent.parent
 load_dotenv(BASE_DIR / ".env")
+
 
 class DisasterAPIFetcher:
     """재난안전데이터 API 조회 클래스"""
@@ -33,20 +33,20 @@ class DisasterAPIFetcher:
         url = "https://www.safetydata.go.kr/V2/api/DSSP-IF-10720"
 
         params = {
-            'serviceKey': self.river_api_key,
-            'returnType': 'json',
-            'pageNo': '1',
-            'numOfRows': '100'  # 100개 조회해서 가장 가까운 것 찾기
+            "serviceKey": self.river_api_key,
+            "returnType": "json",
+            "pageNo": "1",
+            "numOfRows": "100",  # 100개 조회해서 가장 가까운 것 찾기
         }
 
         try:
             response = requests.get(url, params=params, timeout=15)
             data = response.json()
 
-            if data.get('header', {}).get('resultCode') != '00':
+            if data.get("header", {}).get("resultCode") != "00":
                 raise ValueError(f"하천정보 API 오류: {data.get('header', {}).get('resultMsg')}")
 
-            rivers = data.get('body', [])
+            rivers = data.get("body", [])
             if not rivers:
                 raise ValueError("하천정보 API 응답 없음")
 
@@ -56,14 +56,16 @@ class DisasterAPIFetcher:
             river = rivers[0]
 
             result = {
-                'river_name': river.get('RVR_NM', '미상'),
-                'river_grade': int(river.get('RVR_GRD_CD', 3)),  # 하천등급 (1급, 2급 등)
-                'watershed_area_km2': float(river.get('DRAR', 0) or 0),  # 유역면적
-                'river_length_km': float(river.get('RVR_PRLG_LEN', 0) or 0),  # 하천연장
-                'distance_m': 1000,  # TODO: 실제 거리 계산 필요
+                "river_name": river.get("RVR_NM", "미상"),
+                "river_grade": int(river.get("RVR_GRD_CD", 3)),  # 하천등급 (1급, 2급 등)
+                "watershed_area_km2": float(river.get("DRAR", 0) or 0),  # 유역면적
+                "river_length_km": float(river.get("RVR_PRLG_LEN", 0) or 0),  # 하천연장
+                "distance_m": 1000,  # TODO: 실제 거리 계산 필요
             }
 
-            print(f"   ✅ 하천정보 API: {result['river_name']}, 등급 {result['river_grade']}, 유역 {result['watershed_area_km2']}km²")
+            print(
+                f"   ✅ 하천정보 API: {result['river_name']}, 등급 {result['river_grade']}, 유역 {result['watershed_area_km2']}km²"
+            )
             return result
 
         except Exception as e:
@@ -84,32 +86,34 @@ class DisasterAPIFetcher:
         url = "https://www.safetydata.go.kr/V2/api/DSSP-IF-00247"
 
         # 조회 시작일 (years 년 전)
-        start_date = (datetime.now() - timedelta(days=365*years)).strftime('%Y%m%d')
+        start_date = (datetime.now() - timedelta(days=365 * years)).strftime("%Y%m%d")
 
         params = {
-            'serviceKey': self.emergency_api_key,
-            'returnType': 'json',
-            'pageNo': '1',
-            'numOfRows': '1000',  # 최대한 많이 조회
-            'crtDt': start_date,
-            'rgnNm': region
+            "serviceKey": self.emergency_api_key,
+            "returnType": "json",
+            "pageNo": "1",
+            "numOfRows": "1000",  # 최대한 많이 조회
+            "crtDt": start_date,
+            "rgnNm": region,
         }
 
         try:
             response = requests.get(url, params=params, timeout=15)
             data = response.json()
 
-            if data.get('header', {}).get('resultCode') != '00':
-                raise ValueError(f"긴급재난문자 API 오류: {data.get('header', {}).get('resultMsg')}")
+            if data.get("header", {}).get("resultCode") != "00":
+                raise ValueError(
+                    f"긴급재난문자 API 오류: {data.get('header', {}).get('resultMsg')}"
+                )
 
-            messages = data.get('body', [])
+            messages = data.get("body", [])
 
             # 침수 관련 키워드
-            flood_keywords = ['침수', '홍수', '범람', '하천범람', '도로침수', '지하침수']
+            flood_keywords = ["침수", "홍수", "범람", "하천범람", "도로침수", "지하침수"]
 
             flood_count = 0
             for msg in messages:
-                msg_content = msg.get('MSG_CN', '')
+                msg_content = msg.get("MSG_CN", "")
                 if any(keyword in msg_content for keyword in flood_keywords):
                     flood_count += 1
 
@@ -133,46 +137,44 @@ class DisasterAPIFetcher:
         try:
             if not self.kma_api_key:
                 print("⚠️ [TCFD 경고] KMA_API_KEY가 설정되지 않았습니다.")
-                return {'typhoons': [], 'data_source': 'fallback'}
+                return {"typhoons": [], "data_source": "fallback"}
 
             # 모든 태풍 등급 조회
-            params = {
-                'year': str(year),
-                'help': '2',  # 값만 표시
-                'authKey': self.kma_api_key
-            }
+            params = {"year": str(year), "help": "2", "authKey": self.kma_api_key}  # 값만 표시
 
             response = requests.get(self.typhoon_api_base_url, params=params, timeout=30)
 
             if response.status_code == 200:
                 typhoons = []
-                lines = response.text.strip().split('\\n')
+                lines = response.text.strip().split("\\n")
 
                 for line in lines:
-                    if line and not line.startswith('#'):
+                    if line and not line.startswith("#"):
                         fields = line.split()
                         if len(fields) >= 10:
-                            typhoons.append({
-                                'grade': fields[0],
-                                'tcid': fields[1],
-                                'year': int(fields[2]),
-                                'month': int(fields[3]),
-                                'day': int(fields[4]),
-                                'hour': int(fields[5]),
-                                'lon': float(fields[6]),
-                                'lat': float(fields[7]),
-                                'max_wind_speed': int(fields[8]),
-                                'central_pressure': int(fields[9]),
-                            })
+                            typhoons.append(
+                                {
+                                    "grade": fields[0],
+                                    "tcid": fields[1],
+                                    "year": int(fields[2]),
+                                    "month": int(fields[3]),
+                                    "day": int(fields[4]),
+                                    "hour": int(fields[5]),
+                                    "lon": float(fields[6]),
+                                    "lat": float(fields[7]),
+                                    "max_wind_speed": int(fields[8]),
+                                    "central_pressure": int(fields[9]),
+                                }
+                            )
 
-                return {'typhoons': typhoons, 'data_source': 'kma_besttrack'}
+                return {"typhoons": typhoons, "data_source": "kma_besttrack"}
             else:
                 print(f"⚠️ [TCFD 경고] 태풍 API 조회 실패: HTTP {response.status_code}")
-                return {'typhoons': [], 'data_source': 'fallback'}
+                return {"typhoons": [], "data_source": "fallback"}
 
         except Exception as e:
             print(f"⚠️ [TCFD 경고] 태풍 베스트트랙 API 조회 실패: {e}")
-            return {'typhoons': [], 'data_source': 'fallback'}
+            return {"typhoons": [], "data_source": "fallback"}
 
 
 if __name__ == "__main__":

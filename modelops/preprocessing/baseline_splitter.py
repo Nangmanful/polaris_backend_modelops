@@ -8,7 +8,7 @@
 미래기간: 2081-2100 (20년)
 """
 
-from typing import Dict, List, Any, Tuple
+from typing import Dict, List, Tuple
 
 
 class BaselineSplitter:
@@ -48,8 +48,8 @@ class BaselineSplitter:
         baseline, future = self._split_by_period(rx1day_data)
 
         return {
-            'rx1day_baseline_mm': self._calculate_mean(baseline),
-            'rx1day_future_mm': self._calculate_mean(future)
+            "rx1day_baseline_mm": self._calculate_mean(baseline),
+            "rx1day_future_mm": self._calculate_mean(future),
         }
 
     def split_rx5day(self, rx5day_data: List[float]) -> Dict[str, float]:
@@ -68,8 +68,8 @@ class BaselineSplitter:
         baseline, future = self._split_by_period(rx5day_data)
 
         return {
-            'rx5day_baseline_mm': self._calculate_mean(baseline),
-            'rx5day_future_mm': self._calculate_mean(future)
+            "rx5day_baseline_mm": self._calculate_mean(baseline),
+            "rx5day_future_mm": self._calculate_mean(future),
         }
 
     def split_sdii(self, sdii_data: List[float]) -> Dict[str, float]:
@@ -88,8 +88,8 @@ class BaselineSplitter:
         baseline, future = self._split_by_period(sdii_data)
 
         return {
-            'sdii_baseline': self._calculate_mean(baseline),
-            'sdii_future': self._calculate_mean(future)
+            "sdii_baseline": self._calculate_mean(baseline),
+            "sdii_future": self._calculate_mean(future),
         }
 
     def split_rain80(self, rain80_data: List[float]) -> Dict[str, float]:
@@ -108,8 +108,8 @@ class BaselineSplitter:
         baseline, future = self._split_by_period(rain80_data)
 
         return {
-            'rain80_baseline_days': self._calculate_mean(baseline),
-            'rain80_future_days': self._calculate_mean(future)
+            "rain80_baseline_days": self._calculate_mean(baseline),
+            "rain80_future_days": self._calculate_mean(future),
         }
 
     def split_wind(self, wind_data: List[float]) -> Dict[str, float]:
@@ -128,12 +128,16 @@ class BaselineSplitter:
         baseline, future = self._split_by_period(wind_data)
 
         return {
-            'wind_95p_baseline': self._calculate_percentile(baseline, 95),
-            'wind_95p_future': self._calculate_percentile(future, 95)
+            "wind_95p_baseline": self._calculate_percentile(baseline, 95),
+            "wind_95p_future": self._calculate_percentile(future, 95),
         }
 
-    def split_by_period(self, data: List[float], baseline_years: Tuple[int, int] = None,
-                       future_years: Tuple[int, int] = None) -> Dict[str, List[float]]:
+    def split_by_period(
+        self,
+        data: List[float],
+        baseline_years: Tuple[int, int] = None,
+        future_years: Tuple[int, int] = None,
+    ) -> Dict[str, List[float]]:
         """
         커스텀 기간으로 데이터 분리
 
@@ -165,10 +169,7 @@ class BaselineSplitter:
         baseline_data = data[baseline_start_idx:baseline_end_idx]
         future_data = data[future_start_idx:future_end_idx]
 
-        return {
-            'baseline': baseline_data,
-            'future': future_data
-        }
+        return {"baseline": baseline_data, "future": future_data}
 
     # ===== 내부 함수 =====
 

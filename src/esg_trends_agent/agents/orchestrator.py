@@ -8,6 +8,7 @@
 2) 수집 완료 후 다음 단계 결정
 ==================================================================
 """
+
 from typing import Dict, Literal
 from ..state import ESGTrendsState
 from ..utils.logging import get_logger
@@ -50,7 +51,9 @@ def orchestrate(state: ESGTrendsState) -> Dict:
     domestic_count = len(state.get("domestic_news", []))
     global_count = len(state.get("global_news", []))
 
-    logger.info(f"수집 완료 - 날씨: {weather_count}개, 국내뉴스: {domestic_count}개, 글로벌뉴스: {global_count}개")
+    logger.info(
+        f"수집 완료 - 날씨: {weather_count}개, 국내뉴스: {domestic_count}개, 글로벌뉴스: {global_count}개"
+    )
 
     return {}
 

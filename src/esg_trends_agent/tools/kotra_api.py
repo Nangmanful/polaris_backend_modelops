@@ -8,6 +8,7 @@ KOTRA ESG 동향뉴스 API 래퍼
 2) 글로벌 ESG 뉴스 데이터 파싱
 ==================================================================
 """
+
 import requests
 from datetime import datetime, date
 from typing import Dict, List, Optional
@@ -21,9 +22,7 @@ KOTRA_API_URL = "https://apis.data.go.kr/B410001/trend-news/getTrend-news"
 
 
 def fetch_kotra_esg_news(
-    num_of_rows: int = 10,
-    pub_date: Optional[str] = None,
-    max_retries: int = 3
+    num_of_rows: int = 10, pub_date: Optional[str] = None, max_retries: int = 3
 ) -> List[Dict]:
     """KOTRA ESG 동향뉴스 조회
 
@@ -58,7 +57,9 @@ def fetch_kotra_esg_news(
             # 429/500/502/503 에러 시 대기 후 재시도
             if response.status_code in [429, 500, 502, 503]:
                 wait_time = (attempt + 1) * 5  # 5초, 10초, 15초
-                logger.warning(f"KOTRA API {response.status_code} 에러, {wait_time}초 대기 후 재시도...")
+                logger.warning(
+                    f"KOTRA API {response.status_code} 에러, {wait_time}초 대기 후 재시도..."
+                )
                 time.sleep(wait_time)
                 continue
 
@@ -114,12 +115,12 @@ def parse_kotra_items(items: List[Dict]) -> List[Dict]:
         try:
             # 새로운 API 필드명 사용
             news = {
-                "title": item.get("nttSj", ""),           # 뉴스 제목
-                "summary": item.get("smmarCn", ""),       # 요약 내용
+                "title": item.get("nttSj", ""),  # 뉴스 제목
+                "summary": item.get("smmarCn", ""),  # 요약 내용
                 "published_at": item.get("othbcDt", ""),  # 발행일 (YYYY-MM-DD)
-                "country": item.get("nat", ""),           # 국가
-                "region": item.get("regn", ""),           # 지역
-                "trade_office": item.get("kbc", ""),      # 무역관
+                "country": item.get("nat", ""),  # 국가
+                "region": item.get("regn", ""),  # 지역
+                "trade_office": item.get("kbc", ""),  # 무역관
                 "source": "KOTRA",
                 "url": "",  # API에서 URL 미제공
             }

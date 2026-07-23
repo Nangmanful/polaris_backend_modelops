@@ -4,12 +4,12 @@ from .risk_models import (
     RiskAssessmentRequest,
     RiskAssessmentResponse,
     ProgressUpdate,
-    RiskResultsResponse
+    RiskResultsResponse,
 )
 
 __all__ = [
-    'RiskAssessmentRequest',
-    'RiskAssessmentResponse',
-    'ProgressUpdate',
-    'RiskResultsResponse'
+    "RiskAssessmentRequest",
+    "RiskAssessmentResponse",
+    "ProgressUpdate",
+    "RiskResultsResponse",
 ]

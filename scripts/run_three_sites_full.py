@@ -19,7 +19,6 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
 sys.path.insert(0, str(REPO_ROOT / "ETL"))
 
-from modelops.batch.hazard_timeseries_batch import run_hazard_batch  # noqa: E402
 from modelops.batch.probability_timeseries_batch import run_probability_batch  # noqa: E402
 from modelops.batch.evaal_ondemand_api import calculate_evaal_ondemand  # noqa: E402
 from modelops.config.settings import settings, _require_database_password  # noqa: E402
@@ -41,37 +40,34 @@ args = parser.parse_args()
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler(args.log_file),
-        logging.StreamHandler()
-    ]
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[logging.FileHandler(args.log_file), logging.StreamHandler()],
 )
 logger = logging.getLogger(__name__)
 
 # 3개 사업장 정보
 SITES = [
     {
-        'id': 'c6a81920-9aa9-4aa7-9298-f4f1896e7529',
-        'name': '대덕 데이터센터',
-        'latitude': 36.38012284,
-        'longitude': 127.39798889,
-        'type': 'data_center'
+        "id": "c6a81920-9aa9-4aa7-9298-f4f1896e7529",
+        "name": "대덕 데이터센터",
+        "latitude": 36.38012284,
+        "longitude": 127.39798889,
+        "type": "data_center",
     },
     {
-        'id': '1fd4921d-a9b1-46b0-835f-58b9a27cf24e',
-        'name': 'SK u타워',
-        'latitude': 37.36633726,
-        'longitude': 127.10661717,
-        'type': 'office'
+        "id": "1fd4921d-a9b1-46b0-835f-58b9a27cf24e",
+        "name": "SK u타워",
+        "latitude": 37.36633726,
+        "longitude": 127.10661717,
+        "type": "office",
     },
     {
-        'id': 'c6122327-1eba-47c9-a61e-17fa6c2110cf',
-        'name': '판교 캠퍼스',
-        'latitude': 37.40588477,
-        'longitude': 127.09987781,
-        'type': 'office'
-    }
+        "id": "c6122327-1eba-47c9-a61e-17fa6c2110cf",
+        "name": "판교 캠퍼스",
+        "latitude": 37.40588477,
+        "longitude": 127.09987781,
+        "type": "office",
+    },
 ]
 
 # 시나리오 및 연도
@@ -79,15 +75,15 @@ SCENARIOS = ["SSP126", "SSP245", "SSP370", "SSP585"]
 TARGET_YEARS = list(range(2021, 2101))  # 2021-2100년 전체
 
 RISK_TYPES = [
-    'extreme_heat',
-    'extreme_cold',
-    'drought',
-    'river_flood',
-    'urban_flood',
-    'sea_level_rise',
-    'typhoon',
-    'wildfire',
-    'water_stress'
+    "extreme_heat",
+    "extreme_cold",
+    "drought",
+    "river_flood",
+    "urban_flood",
+    "sea_level_rise",
+    "typhoon",
+    "wildfire",
+    "water_stress",
 ]
 
 
@@ -112,7 +108,7 @@ def main():
     logger.info("=" * 80)
 
     # 3개 사업장 좌표 리스트
-    grid_points = [(site['latitude'], site['longitude']) for site in SITES]
+    grid_points = [(site["latitude"], site["longitude"]) for site in SITES]
 
     # STEP 1-A: H 계산 (이미 완료됨 - 주석 처리)
     # logger.info("📍 STEP 1-A: H (Hazard) 계산 - 이미 DB에 있음, 건너뜀")
@@ -135,7 +131,9 @@ def main():
 
     # STEP 1-B: PH 계산 (실행 필요)
     logger.info("\n📍 STEP 1-B: PH (Probability) 계산 시작")
-    logger.info(f"   → 좌표 {len(grid_points)}개 × 시나리오 {len(SCENARIOS)}개 × 년도 {len(TARGET_YEARS)}개 × 리스크 {len(RISK_TYPES)}개")
+    logger.info(
+        f"   → 좌표 {len(grid_points)}개 × 시나리오 {len(SCENARIOS)}개 × 년도 {len(TARGET_YEARS)}개 × 리스크 {len(RISK_TYPES)}개"
+    )
 
     try:
         ph_start = datetime.now()
@@ -146,7 +144,7 @@ def main():
             years=TARGET_YEARS,  # int 리스트로 전달
             risk_types=RISK_TYPES,
             batch_size=100,
-            max_workers=2
+            max_workers=2,
         )
 
         ph_end = datetime.now()
@@ -190,13 +188,11 @@ def main():
 
             try:
                 building_data = loader.load_and_cache(
-                    lat=site['latitude'],
-                    lon=site['longitude'],
-                    address=None  # 좌표로 API 조회
+                    lat=site["latitude"], lon=site["longitude"], address=None  # 좌표로 API 조회
                 )
 
                 if building_data:
-                    meta = building_data.get('meta', {})
+                    meta = building_data.get("meta", {})
                     logger.info(f"   ✅ {site['name']} 건물 데이터 적재 완료")
                     logger.info(f"      주소: {meta.get('road_address', 'N/A')}")
                     logger.info(f"      건물 수: {meta.get('building_count', 0)}개")
@@ -247,34 +243,40 @@ def main():
 
                 try:
                     result = calculate_evaal_ondemand(
-                        latitude=site['latitude'],
-                        longitude=site['longitude'],
+                        latitude=site["latitude"],
+                        longitude=site["longitude"],
                         scenario=scenario,
                         target_year=target_year,
                         risk_types=RISK_TYPES,
                         save_to_db=True,
-                        site_id=site['id']
+                        site_id=site["id"],
                     )
 
-                    if result['status'] == 'success':
+                    if result["status"] == "success":
                         completed += 1
-                        summary = result.get('summary', {})
-                        save_summary = result.get('save_summary', {})
+                        summary = result.get("summary", {})
+                        save_summary = result.get("save_summary", {})
 
                         logger.info(f"✅ 계산 완료: {task_name}")
                         logger.info(f"   평균 H: {summary.get('average_hazard', 0):.2f}")
                         logger.info(f"   평균 E: {summary.get('average_exposure', 0):.2f}")
                         logger.info(f"   평균 V: {summary.get('average_vulnerability', 0):.2f}")
-                        logger.info(f"   평균 통합 리스크: {summary.get('average_integrated_risk', 0):.2f}")
-                        logger.info(f"   DB 저장: E={save_summary.get('exposure_saved', 0)}, "
-                                  f"V={save_summary.get('vulnerability_saved', 0)}, "
-                                  f"AAL={save_summary.get('aal_saved', 0)}")
+                        logger.info(
+                            f"   평균 통합 리스크: {summary.get('average_integrated_risk', 0):.2f}"
+                        )
+                        logger.info(
+                            f"   DB 저장: E={save_summary.get('exposure_saved', 0)}, "
+                            f"V={save_summary.get('vulnerability_saved', 0)}, "
+                            f"AAL={save_summary.get('aal_saved', 0)}"
+                        )
 
                         # 최고 리스크 출력
-                        highest = summary.get('highest_integrated_risk', {})
+                        highest = summary.get("highest_integrated_risk", {})
                         if highest:
-                            logger.info(f"   ⚠️  최고 리스크: {highest.get('risk_type')} "
-                                      f"({highest.get('score', 0):.2f}, {highest.get('level')})")
+                            logger.info(
+                                f"   ⚠️  최고 리스크: {highest.get('risk_type')} "
+                                f"({highest.get('score', 0):.2f}, {highest.get('level')})"
+                            )
                     else:
                         failed += 1
                         logger.error(f"❌ 계산 실패: {task_name}")
@@ -288,7 +290,9 @@ def main():
                 # 진행률 출력
                 if (completed + failed) % 10 == 0:
                     progress = ((completed + failed) / total_tasks) * 100
-                    logger.info(f"\n📊 진행률: {progress:.1f}% ({completed + failed}/{total_tasks})")
+                    logger.info(
+                        f"\n📊 진행률: {progress:.1f}% ({completed + failed}/{total_tasks})"
+                    )
 
     evaal_end = datetime.now()
     evaal_duration = (evaal_end - evaal_start).total_seconds()

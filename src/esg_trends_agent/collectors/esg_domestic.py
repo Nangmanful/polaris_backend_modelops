@@ -8,10 +8,11 @@
 2) Fallback 검색 지원
 ==================================================================
 """
+
 from typing import Dict
 from ..state import ESGTrendsState, ESGNewsItem
 from ..tools.scraper import scrape_esg_economy
-from ..tools.search import search_esg_news, search_web
+from ..tools.search import search_esg_news
 from ..utils.config import Config
 from ..utils.logging import get_logger
 
@@ -62,8 +63,7 @@ def collect_domestic_news(state: ESGTrendsState) -> Dict:
 
         try:
             search_results = search_esg_news(
-                query="한국 ESG 뉴스 동향",
-                max_results=Config.MAX_NEWS_PER_SOURCE - len(news_items)
+                query="한국 ESG 뉴스 동향", max_results=Config.MAX_NEWS_PER_SOURCE - len(news_items)
             )
 
             for news in search_results:
@@ -75,7 +75,9 @@ def collect_domestic_news(state: ESGTrendsState) -> Dict:
                         summary=news.get("summary", ""),
                         url=news.get("url", ""),
                         source=news.get("source", "검색"),
-                        category=_classify_esg_category(news.get("title", "") + " " + news.get("summary", "")),
+                        category=_classify_esg_category(
+                            news.get("title", "") + " " + news.get("summary", "")
+                        ),
                         published_at=None,
                         region="한국",
                     )
@@ -113,7 +115,18 @@ def _classify_esg_category(text: str) -> str:
     text_lower = text.lower()
 
     # Environmental 키워드
-    e_keywords = ["환경", "탄소", "기후", "에너지", "재생", "폐기물", "오염", "생태", "녹색", "친환경"]
+    e_keywords = [
+        "환경",
+        "탄소",
+        "기후",
+        "에너지",
+        "재생",
+        "폐기물",
+        "오염",
+        "생태",
+        "녹색",
+        "친환경",
+    ]
     # Social 키워드
     s_keywords = ["사회", "노동", "인권", "다양성", "안전", "지역사회", "공급망", "고용", "복지"]
     # Governance 키워드

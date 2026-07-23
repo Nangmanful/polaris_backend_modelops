@@ -23,7 +23,7 @@ class AALScalingAgent:
         base_aal: float,
         vulnerability_score: float,
         insurance_rate: float = 0.0,
-        asset_value: Optional[float] = None
+        asset_value: Optional[float] = None,
     ) -> Dict[str, Any]:
         """
         AAL 스케일링 계산
@@ -61,22 +61,22 @@ class AALScalingAgent:
 
             # 4. % 단위로 변환하여 반환
             return {
-                'base_aal': round(base_aal * 100, 6),
-                'vulnerability_scale': round(f_vuln, 4),
-                'final_aal': round(final_aal_ratio * 100, 6),
-                'insurance_rate': round(insurance_rate, 4),
-                'expected_loss': expected_loss
+                "base_aal": round(base_aal * 100, 6),
+                "vulnerability_scale": round(f_vuln, 4),
+                "final_aal": round(final_aal_ratio * 100, 6),
+                "insurance_rate": round(insurance_rate, 4),
+                "expected_loss": expected_loss,
             }
 
         except Exception as e:
             logger.error(f"AAL 스케일링 실패: {e}")
             return {
-                'base_aal': base_aal * 100,
-                'vulnerability_scale': 1.0,
-                'final_aal': base_aal * 100,
-                'insurance_rate': 0.0,
-                'expected_loss': None,
-                'error': str(e)
+                "base_aal": base_aal * 100,
+                "vulnerability_scale": 1.0,
+                "final_aal": base_aal * 100,
+                "insurance_rate": 0.0,
+                "expected_loss": None,
+                "error": str(e),
             }
 
     def _calculate_vulnerability_scale(self, vulnerability_score: float) -> float:
@@ -108,7 +108,7 @@ class AALScalingAgent:
         self,
         aal_data: Dict[str, Dict[str, float]],
         insurance_rate: float = 0.0,
-        asset_value: Optional[float] = None
+        asset_value: Optional[float] = None,
     ) -> Dict[str, Dict[str, Any]]:
         """
         여러 리스크에 대한 AAL 일괄 스케일링
@@ -129,14 +129,14 @@ class AALScalingAgent:
         results = {}
 
         for risk_type, data in aal_data.items():
-            base_aal = data.get('base_aal', 0.0)
-            v_score = data.get('vulnerability_score', 50.0)
+            base_aal = data.get("base_aal", 0.0)
+            v_score = data.get("vulnerability_score", 50.0)
 
             results[risk_type] = self.scale_aal(
                 base_aal=base_aal,
                 vulnerability_score=v_score,
                 insurance_rate=insurance_rate,
-                asset_value=asset_value
+                asset_value=asset_value,
             )
 
         return results
@@ -153,23 +153,22 @@ class AALScalingAgent:
         """
         # AAL 등급 기준 (% 단위, 0~100)
         if final_aal <= 0:  # 0% 이하 (발생 원천 없음)
-            return '-'
+            return "-"
         elif final_aal < 3.0:  # 0~3%
-            return '0~3%'
+            return "0~3%"
         elif final_aal < 6.0:  # 3~6%
-            return '~6%'
+            return "~6%"
         elif final_aal < 10.0:  # 6~10%
-            return '~10%'
+            return "~10%"
         elif final_aal < 16.0:  # 10~16%
-            return '~16%'
+            return "~16%"
         elif final_aal < 30.0:  # 16~30%
-            return '~30%'
+            return "~30%"
         else:  # 30% 이상
-            return '30%~'
+            return "30%~"
 
     def classify_aal_grades(
-        self,
-        scaled_aals: Dict[str, Dict[str, Any]]
+        self, scaled_aals: Dict[str, Dict[str, Any]]
     ) -> Dict[str, Dict[str, Any]]:
         """
         모든 리스크에 대한 AAL 등급 일괄 분류
@@ -191,7 +190,7 @@ class AALScalingAgent:
         results = {}
 
         for risk_type, aal_result in scaled_aals.items():
-            final_aal= aal_result.get('final_aal', 0.0)
+            final_aal = aal_result.get("final_aal", 0.0)
             # base_aal = aal_result.get('base_aal', 0.0)
 
             # 등급 분류
@@ -204,4 +203,3 @@ class AALScalingAgent:
             results[risk_type] = grade_info
 
         return results
-

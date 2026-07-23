@@ -16,13 +16,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from utils import (
-    setup_logging,
-    get_db_connection,
-    get_api_key,
-    batch_upsert,
-    get_table_count
-)
+from utils import setup_logging, get_db_connection, get_api_key, batch_upsert, get_table_count
 
 
 def geocode_reverse(api_key: str, lat: float, lon: float, logger) -> dict:
@@ -49,18 +43,18 @@ def geocode_reverse(api_key: str, lat: float, lon: float, logger) -> dict:
         "type": "BOTH",
         "zipcode": "true",
         "simple": "false",
-        "key": api_key
+        "key": api_key,
     }
 
     try:
         response = requests.get(url, params=params, timeout=10)
         data = response.json()
 
-        if data.get('response', {}).get('status') != 'OK':
+        if data.get("response", {}).get("status") != "OK":
             logger.warning(f"VWorld API 응답 실패: {data.get('response', {}).get('status')}")
             return None
 
-        results = data.get('response', {}).get('result', [])
+        results = data.get("response", {}).get("result", [])
         if not results:
             logger.warning(f"해당 좌표의 주소 정보 없음: ({lat}, {lon})")
             return None
@@ -70,52 +64,52 @@ def geocode_reverse(api_key: str, lat: float, lon: float, logger) -> dict:
         road_result = None
 
         for item in results:
-            if item.get('type') == 'parcel':
+            if item.get("type") == "parcel":
                 parcel_result = item
-            elif item.get('type') == 'road':
+            elif item.get("type") == "road":
                 road_result = item
 
         if not parcel_result:
             logger.warning("지번 주소 없음")
             return None
 
-        structure = parcel_result.get('structure', {})
+        structure = parcel_result.get("structure", {})
 
         # 번지 파싱
-        bun = structure.get('number1', '')
-        ji = structure.get('number2', '')
+        bun = structure.get("number1", "")
+        ji = structure.get("number2", "")
 
         if not bun:
-            level5 = structure.get('level5', '')
-            if level5 and '-' in level5:
-                parts = level5.split('-')
+            level5 = structure.get("level5", "")
+            if level5 and "-" in level5:
+                parts = level5.split("-")
                 bun = parts[0]
-                ji = parts[1] if len(parts) > 1 else ''
+                ji = parts[1] if len(parts) > 1 else ""
             elif level5:
                 bun = level5
-                ji = ''
+                ji = ""
 
         # 법정동코드에서 시군구/법정동 코드 추출
-        dong_code = structure.get('level4LC', '')  # 10자리
-        sigungu_cd = dong_code[:5] if len(dong_code) >= 5 else ''
-        bjdong_cd = dong_code[5:10] if len(dong_code) >= 10 else ''
+        dong_code = structure.get("level4LC", "")  # 10자리
+        sigungu_cd = dong_code[:5] if len(dong_code) >= 5 else ""
+        bjdong_cd = dong_code[5:10] if len(dong_code) >= 10 else ""
 
         return {
-            'latitude': lat,
-            'longitude': lon,
-            'sido': structure.get('level1', ''),
-            'sigungu': structure.get('level2', ''),
-            'sigungu_cd': sigungu_cd,
-            'dong': structure.get('level4L', ''),
-            'bjdong_cd': bjdong_cd,
-            'dong_code': dong_code,
-            'bun': bun,
-            'ji': ji,
-            'zipcode': parcel_result.get('zipcode', ''),
-            'full_address': parcel_result.get('text', ''),
-            'parcel_address': parcel_result.get('text', ''),
-            'road_address': road_result.get('text', '') if road_result else '',
-            'api_response': data
+            "latitude": lat,
+            "longitude": lon,
+            "sido": structure.get("level1", ""),
+            "sigungu": structure.get("level2", ""),
+            "sigungu_cd": sigungu_cd,
+            "dong": structure.get("level4L", ""),
+            "bjdong_cd": bjdong_cd,
+            "dong_code": dong_code,
+            "bun": bun,
+            "ji": ji,
+            "zipcode": parcel_result.get("zipcode", ""),
+            "full_address": parcel_result.get("text", ""),
+            "parcel_address": parcel_result.get("text", ""),
+            "road_address": road_result.get("text", "") if road_result else "",
+            "api_response": data,
         }
 
     except Exception as e:
@@ -136,7 +130,7 @@ def load_vworld_geocode(sample_limit: int = None):
     logger.info("=" * 60)
 
     # API 키 확인
-    api_key = get_api_key('VWORLD_API_KEY')
+    api_key = get_api_key("VWORLD_API_KEY")
     if not api_key:
         logger.error("VWORLD_API_KEY 환경변수 필요")
         return
@@ -187,17 +181,17 @@ def load_vworld_geocode(sample_limit: int = None):
         logger.info(f"\n총 {len(all_data)}건 DB 적재 시작")
         success_count = batch_upsert(
             conn,
-            'api_vworld_geocode',
+            "api_vworld_geocode",
             all_data,
-            unique_columns=['latitude', 'longitude'],
-            batch_size=50
+            unique_columns=["latitude", "longitude"],
+            batch_size=50,
         )
         logger.info(f"DB 적재 완료: {success_count}건")
     else:
         logger.warning("적재할 데이터 없음")
 
     # 결과 확인
-    total_count = get_table_count(conn, 'api_vworld_geocode')
+    total_count = get_table_count(conn, "api_vworld_geocode")
     logger.info(f"api_vworld_geocode 테이블 총 레코드: {total_count}건")
 
     conn.close()
@@ -205,5 +199,5 @@ def load_vworld_geocode(sample_limit: int = None):
 
 
 if __name__ == "__main__":
-    sample_limit = int(os.getenv('SAMPLE_LIMIT', 0)) or None
+    sample_limit = int(os.getenv("SAMPLE_LIMIT", 0)) or None
     load_vworld_geocode(sample_limit=sample_limit)

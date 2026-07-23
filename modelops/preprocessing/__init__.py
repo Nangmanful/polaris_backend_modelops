@@ -14,7 +14,7 @@ from .baseline_splitter import BaselineSplitter
 from .aggregators import ClimateAggregators
 
 __all__ = [
-    'ClimateIndicatorCalculator',
-    'BaselineSplitter',
-    'ClimateAggregators',
+    "ClimateIndicatorCalculator",
+    "BaselineSplitter",
+    "ClimateAggregators",
 ]

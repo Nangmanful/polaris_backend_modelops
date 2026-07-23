@@ -24,7 +24,7 @@ from datetime import datetime
 from typing import Optional, Dict, List, Tuple
 
 sys.path.insert(0, str(Path(__file__).parent))
-from utils import setup_logging, get_db_connection, get_row_count, get_data_dir
+from utils import setup_logging, get_db_connection, get_data_dir
 
 # SK 사업장 좌표 (9개)
 SK_SITES: List[Tuple[str, float, float, str]] = [
@@ -42,74 +42,79 @@ SK_SITES: List[Tuple[str, float, float, str]] = [
 # 기후 데이터 테이블 매핑 (월별) - 파일 패턴과 변수명
 # format: (file_pattern, variable_names)
 MONTHLY_TABLE_MAP = {
-    'ta_data': ('_TA_', ['ta', 'TA', 'TAS']),
-    'rn_data': ('_RN_', ['rn', 'RN', 'PR']),
-    'rhm_data': ('_RHM_', ['rhm', 'RHM']),
-    'ws_data': ('_WS_', ['ws', 'WS']),
-    'si_data': ('_SI_', ['si', 'SI', 'RSDS']),
-    'spei12_data': ('_SPEI12_', ['spei12', 'SPEI12']),
-    'tamax_data': ('_TAMAX_', ['tamax', 'TAMAX', 'TASMAX']),
-    'tamin_data': ('_TAMIN_', ['tamin', 'TAMIN', 'TASMIN']),
+    "ta_data": ("_TA_", ["ta", "TA", "TAS"]),
+    "rn_data": ("_RN_", ["rn", "RN", "PR"]),
+    "rhm_data": ("_RHM_", ["rhm", "RHM"]),
+    "ws_data": ("_WS_", ["ws", "WS"]),
+    "si_data": ("_SI_", ["si", "SI", "RSDS"]),
+    "spei12_data": ("_SPEI12_", ["spei12", "SPEI12"]),
+    "tamax_data": ("_TAMAX_", ["tamax", "TAMAX", "TASMAX"]),
+    "tamin_data": ("_TAMIN_", ["tamin", "TAMIN", "TASMIN"]),
 }
 
 # 기후 데이터 테이블 매핑 (연간) - 파일 패턴과 변수명
 YEARLY_TABLE_MAP = {
-    'ta_yearly_data': ('_aii_', ['ta', 'TA', 'aii', 'AII']),
-    'cdd_data': ('_CDD_', ['cdd', 'CDD']),
-    'csdi_data': ('_CSDI_', ['csdi', 'CSDI']),
-    'rain80_data': ('_RAIN80_', ['rain80', 'RAIN80']),
-    'rx1day_data': ('_RX1DAY_', ['rx1day', 'RX1DAY']),
-    'rx5day_data': ('_RX5DAY_', ['rx5day', 'RX5DAY']),
-    'sdii_data': ('_SDII_', ['sdii', 'SDII']),
-    'wsdi_data': ('_WSDI_', ['wsdi', 'WSDI']),
+    "ta_yearly_data": ("_aii_", ["ta", "TA", "aii", "AII"]),
+    "cdd_data": ("_CDD_", ["cdd", "CDD"]),
+    "csdi_data": ("_CSDI_", ["csdi", "CSDI"]),
+    "rain80_data": ("_RAIN80_", ["rain80", "RAIN80"]),
+    "rx1day_data": ("_RX1DAY_", ["rx1day", "RX1DAY"]),
+    "rx5day_data": ("_RX5DAY_", ["rx5day", "RX5DAY"]),
+    "sdii_data": ("_SDII_", ["sdii", "SDII"]),
+    "wsdi_data": ("_WSDI_", ["wsdi", "WSDI"]),
 }
 
 # sgg261 일별 데이터 매핑
 SGG261_DAILY_TABLE_MAP = {
-    'tamax_daily_sgg261': 'TAMAX',
-    'tamin_daily_sgg261': 'TAMIN',
-    'rn_daily_sgg261': 'RN',
+    "tamax_daily_sgg261": "TAMAX",
+    "tamin_daily_sgg261": "TAMIN",
+    "rn_daily_sgg261": "RN",
 }
 
 # SK 사업장 시군구 코드 (sgg261 필터링용 - 10자리)
 SK_SIGUNGU_CODES = {
-    '3102300000',  # 경기도 성남시 분당구
-    '1101000000',  # 서울특별시 종로구
-    '2504000000',  # 대전광역시 유성구
-    '1121000000',  # 서울특별시 관악구
+    "3102300000",  # 경기도 성남시 분당구
+    "1101000000",  # 서울특별시 종로구
+    "2504000000",  # 대전광역시 유성구
+    "1121000000",  # 서울특별시 관악구
 }
+
 
 def geocode_reverse(api_key: str, lat: float, lon: float, logger) -> Optional[Dict]:
     """VWorld 역지오코딩 API 호출"""
     url = "https://api.vworld.kr/req/address"
     params = {
-        'service': 'address',
-        'request': 'getAddress',
-        'version': '2.0',
-        'crs': 'epsg:4326',
-        'point': f'{lon},{lat}',
-        'format': 'json',
-        'type': 'PARCEL',
-        'key': api_key
+        "service": "address",
+        "request": "getAddress",
+        "version": "2.0",
+        "crs": "epsg:4326",
+        "point": f"{lon},{lat}",
+        "format": "json",
+        "type": "PARCEL",
+        "key": api_key,
     }
 
     try:
         response = requests.get(url, params=params, timeout=10)
         data = response.json()
 
-        if data.get('response', {}).get('status') != 'OK':
+        if data.get("response", {}).get("status") != "OK":
             return None
 
-        result = data['response']['result'][0]
-        structure = result.get('structure', {})
+        result = data["response"]["result"][0]
+        structure = result.get("structure", {})
 
         return {
-            'sido': structure.get('level1', ''),
-            'sigungu': structure.get('level2', ''),
-            'bjdong': structure.get('level4L', ''),
-            'full_address': result.get('text', ''),
-            'sigungu_cd': structure.get('level2LC', '')[:5] if structure.get('level2LC') else None,
-            'bjdong_cd': structure.get('level4LC', '')[5:10] if len(structure.get('level4LC', '')) >= 10 else None,
+            "sido": structure.get("level1", ""),
+            "sigungu": structure.get("level2", ""),
+            "bjdong": structure.get("level4L", ""),
+            "full_address": result.get("text", ""),
+            "sigungu_cd": structure.get("level2LC", "")[:5] if structure.get("level2LC") else None,
+            "bjdong_cd": (
+                structure.get("level4LC", "")[5:10]
+                if len(structure.get("level4LC", "")) >= 10
+                else None
+            ),
         }
     except Exception as e:
         logger.warning(f"VWorld API 오류 ({lat}, {lon}): {e}")
@@ -123,30 +128,40 @@ def insert_sk_sites(conn, cursor, logger) -> List[Dict]:
     sk_grids = []
     for site_name, lat, lon, address in SK_SITES:
         try:
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT grid_id FROM location_grid
                 WHERE ABS(latitude - %s) < 0.0001 AND ABS(longitude - %s) < 0.0001
-            """, (lat, lon))
+            """,
+                (lat, lon),
+            )
 
             existing = cursor.fetchone()
             if existing:
-                grid_id = existing['grid_id'] if isinstance(existing, dict) else existing[0]
+                grid_id = existing["grid_id"] if isinstance(existing, dict) else existing[0]
                 logger.info(f"   {site_name}: 이미 존재 (grid_id={grid_id})")
-                sk_grids.append({'grid_id': grid_id, 'latitude': lat, 'longitude': lon, 'name': site_name})
+                sk_grids.append(
+                    {"grid_id": grid_id, "latitude": lat, "longitude": lon, "name": site_name}
+                )
                 continue
 
             cursor.execute("SELECT COALESCE(MAX(grid_id), 0) + 1 FROM location_grid")
             result = cursor.fetchone()
-            new_grid_id = result['max'] if isinstance(result, dict) else result[0]
+            new_grid_id = result["max"] if isinstance(result, dict) else result[0]
             if new_grid_id is None:
                 new_grid_id = 1
 
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO location_grid (grid_id, latitude, longitude, full_address)
                 VALUES (%s, %s, %s, %s)
-            """, (new_grid_id, lat, lon, f"[SK] {site_name}: {address}"))
+            """,
+                (new_grid_id, lat, lon, f"[SK] {site_name}: {address}"),
+            )
 
-            sk_grids.append({'grid_id': new_grid_id, 'latitude': lat, 'longitude': lon, 'name': site_name})
+            sk_grids.append(
+                {"grid_id": new_grid_id, "latitude": lat, "longitude": lon, "name": site_name}
+            )
             logger.info(f"   {site_name}: 삽입 완료 (grid_id={new_grid_id})")
 
         except Exception as e:
@@ -165,21 +180,28 @@ def geocode_sk_sites(conn, cursor, api_key: str, logger, sk_grids: List[Dict]):
 
     success = 0
     for grid in sk_grids:
-        result = geocode_reverse(api_key, float(grid['latitude']), float(grid['longitude']), logger)
+        result = geocode_reverse(api_key, float(grid["latitude"]), float(grid["longitude"]), logger)
 
         if result:
             try:
-                cursor.execute("""
+                cursor.execute(
+                    """
                     UPDATE location_grid
                     SET sido = %s, sigungu = %s, dong = %s,
                         full_address = %s, sigungu_cd = %s, bjdong_cd = %s,
                         geocoded_at = CURRENT_TIMESTAMP
                     WHERE grid_id = %s
-                """, (
-                    result['sido'], result['sigungu'], result['bjdong'],
-                    result['full_address'], result['sigungu_cd'], result['bjdong_cd'],
-                    grid['grid_id']
-                ))
+                """,
+                    (
+                        result["sido"],
+                        result["sigungu"],
+                        result["bjdong"],
+                        result["full_address"],
+                        result["sigungu_cd"],
+                        result["bjdong_cd"],
+                        grid["grid_id"],
+                    ),
+                )
                 conn.commit()
                 success += 1
                 logger.info(f"   {grid['name']}: {result['full_address']}")
@@ -227,8 +249,17 @@ def load_climate_data_for_sk(conn, cursor, logger, sk_grids: List[Dict]):
     logger.info("\n   [월별 데이터]")
     for table_name, (file_pattern, var_names) in MONTHLY_TABLE_MAP.items():
         try:
-            process_monthly_table(conn, cursor, logger, kma_dir, ssp_dirs,
-                                  table_name, file_pattern, var_names, sk_grids)
+            process_monthly_table(
+                conn,
+                cursor,
+                logger,
+                kma_dir,
+                ssp_dirs,
+                table_name,
+                file_pattern,
+                var_names,
+                sk_grids,
+            )
         except Exception as e:
             logger.warning(f"   {table_name} 처리 실패: {e}")
 
@@ -236,14 +267,24 @@ def load_climate_data_for_sk(conn, cursor, logger, sk_grids: List[Dict]):
     logger.info("\n   [연간 데이터]")
     for table_name, (file_pattern, var_names) in YEARLY_TABLE_MAP.items():
         try:
-            process_yearly_table(conn, cursor, logger, kma_dir, ssp_dirs,
-                                 table_name, file_pattern, var_names, sk_grids)
+            process_yearly_table(
+                conn,
+                cursor,
+                logger,
+                kma_dir,
+                ssp_dirs,
+                table_name,
+                file_pattern,
+                var_names,
+                sk_grids,
+            )
         except Exception as e:
             logger.warning(f"   {table_name} 처리 실패: {e}")
 
 
-def process_monthly_table(conn, cursor, logger, kma_dir, ssp_dirs,
-                          table_name, file_pattern, var_names, sk_grids):
+def process_monthly_table(
+    conn, cursor, logger, kma_dir, ssp_dirs, table_name, file_pattern, var_names, sk_grids
+):
     """월별 테이블 처리"""
     import netCDF4 as nc
 
@@ -251,7 +292,9 @@ def process_monthly_table(conn, cursor, logger, kma_dir, ssp_dirs,
 
     for ssp_dir in ssp_dirs:
         ssp_name = ssp_dir.name
-        ssp_col = {'SSP126': 'ssp1', 'SSP245': 'ssp2', 'SSP370': 'ssp3', 'SSP585': 'ssp5'}.get(ssp_name, 'ssp1')
+        ssp_col = {"SSP126": "ssp1", "SSP245": "ssp2", "SSP370": "ssp3", "SSP585": "ssp5"}.get(
+            ssp_name, "ssp1"
+        )
 
         monthly_dir = ssp_dir / "monthly"
         if not monthly_dir.exists():
@@ -267,10 +310,10 @@ def process_monthly_table(conn, cursor, logger, kma_dir, ssp_dirs,
         nc_file = nc_files[0]
 
         try:
-            dataset = nc.Dataset(nc_file, 'r')
+            dataset = nc.Dataset(nc_file, "r")
 
-            lats = dataset.variables.get('lat', dataset.variables.get('latitude', None))
-            lons = dataset.variables.get('lon', dataset.variables.get('longitude', None))
+            lats = dataset.variables.get("lat", dataset.variables.get("latitude", None))
+            lons = dataset.variables.get("lon", dataset.variables.get("longitude", None))
 
             if lats is None or lons is None:
                 dataset.close()
@@ -297,8 +340,8 @@ def process_monthly_table(conn, cursor, logger, kma_dir, ssp_dirs,
 
             # SK 사업장별 처리
             for grid in sk_grids:
-                lat_idx = np.argmin(np.abs(lats - grid['latitude']))
-                lon_idx = np.argmin(np.abs(lons - grid['longitude']))
+                lat_idx = np.argmin(np.abs(lats - grid["latitude"]))
+                lon_idx = np.argmin(np.abs(lons - grid["longitude"]))
 
                 for t_idx in range(min(data.shape[0], 960)):
                     if lat_idx >= data.shape[1] or lon_idx >= data.shape[2]:
@@ -313,17 +356,23 @@ def process_monthly_table(conn, cursor, logger, kma_dir, ssp_dirs,
                     obs_date = f"{year}-{month:02d}-01"
 
                     try:
-                        if ssp_name == 'SSP126':
-                            cursor.execute(f"""
+                        if ssp_name == "SSP126":
+                            cursor.execute(
+                                f"""
                                 INSERT INTO {table_name} (grid_id, observation_date, {ssp_col})
                                 VALUES (%s, %s, %s)
                                 ON CONFLICT (observation_date, grid_id) DO UPDATE SET {ssp_col} = EXCLUDED.{ssp_col}
-                            """, (grid['grid_id'], obs_date, float(val)))
+                            """,
+                                (grid["grid_id"], obs_date, float(val)),
+                            )
                         else:
-                            cursor.execute(f"""
+                            cursor.execute(
+                                f"""
                                 UPDATE {table_name} SET {ssp_col} = %s
                                 WHERE grid_id = %s AND observation_date = %s
-                            """, (float(val), grid['grid_id'], obs_date))
+                            """,
+                                (float(val), grid["grid_id"], obs_date),
+                            )
                         total_inserted += 1
                     except Exception:
                         pass
@@ -339,8 +388,9 @@ def process_monthly_table(conn, cursor, logger, kma_dir, ssp_dirs,
         logger.info(f"      {table_name}: {total_inserted:,}건")
 
 
-def process_yearly_table(conn, cursor, logger, kma_dir, ssp_dirs,
-                         table_name, file_pattern, var_names, sk_grids):
+def process_yearly_table(
+    conn, cursor, logger, kma_dir, ssp_dirs, table_name, file_pattern, var_names, sk_grids
+):
     """연간 테이블 처리"""
     import netCDF4 as nc
 
@@ -348,7 +398,9 @@ def process_yearly_table(conn, cursor, logger, kma_dir, ssp_dirs,
 
     for ssp_dir in ssp_dirs:
         ssp_name = ssp_dir.name
-        ssp_col = {'SSP126': 'ssp1', 'SSP245': 'ssp2', 'SSP370': 'ssp3', 'SSP585': 'ssp5'}.get(ssp_name, 'ssp1')
+        ssp_col = {"SSP126": "ssp1", "SSP245": "ssp2", "SSP370": "ssp3", "SSP585": "ssp5"}.get(
+            ssp_name, "ssp1"
+        )
 
         yearly_dir = ssp_dir / "yearly"
         if not yearly_dir.exists():
@@ -364,10 +416,10 @@ def process_yearly_table(conn, cursor, logger, kma_dir, ssp_dirs,
         nc_file = nc_files[0]
 
         try:
-            dataset = nc.Dataset(nc_file, 'r')
+            dataset = nc.Dataset(nc_file, "r")
 
-            lats = dataset.variables.get('lat', dataset.variables.get('latitude', None))
-            lons = dataset.variables.get('lon', dataset.variables.get('longitude', None))
+            lats = dataset.variables.get("lat", dataset.variables.get("latitude", None))
+            lons = dataset.variables.get("lon", dataset.variables.get("longitude", None))
 
             if lats is None or lons is None:
                 dataset.close()
@@ -392,8 +444,8 @@ def process_yearly_table(conn, cursor, logger, kma_dir, ssp_dirs,
             data = data_var[:]
 
             for grid in sk_grids:
-                lat_idx = np.argmin(np.abs(lats - grid['latitude']))
-                lon_idx = np.argmin(np.abs(lons - grid['longitude']))
+                lat_idx = np.argmin(np.abs(lats - grid["latitude"]))
+                lon_idx = np.argmin(np.abs(lons - grid["longitude"]))
 
                 for year_idx in range(min(data.shape[0], 80)):
                     if lat_idx >= data.shape[1] or lon_idx >= data.shape[2]:
@@ -406,17 +458,23 @@ def process_yearly_table(conn, cursor, logger, kma_dir, ssp_dirs,
                     year = 2021 + year_idx
 
                     try:
-                        if ssp_name == 'SSP126':
-                            cursor.execute(f"""
+                        if ssp_name == "SSP126":
+                            cursor.execute(
+                                f"""
                                 INSERT INTO {table_name} (grid_id, year, {ssp_col})
                                 VALUES (%s, %s, %s)
                                 ON CONFLICT (year, grid_id) DO UPDATE SET {ssp_col} = EXCLUDED.{ssp_col}
-                            """, (grid['grid_id'], year, float(val)))
+                            """,
+                                (grid["grid_id"], year, float(val)),
+                            )
                         else:
-                            cursor.execute(f"""
+                            cursor.execute(
+                                f"""
                                 UPDATE {table_name} SET {ssp_col} = %s
                                 WHERE grid_id = %s AND year = %s
-                            """, (float(val), grid['grid_id'], year))
+                            """,
+                                (float(val), grid["grid_id"], year),
+                            )
                         total_inserted += 1
                     except Exception:
                         pass
@@ -454,7 +512,7 @@ def load_sgg261_daily_data(conn, cursor, logger):
     admin_codes_cache = {}
 
     # SSP126 먼저
-    ssp_dirs = sorted(ssp_dirs, key=lambda x: 0 if 'SSP126' in x.name else 1)
+    ssp_dirs = sorted(ssp_dirs, key=lambda x: 0 if "SSP126" in x.name else 1)
 
     for table_name, var_name in SGG261_DAILY_TABLE_MAP.items():
         table_total = 0
@@ -473,11 +531,13 @@ def load_sgg261_daily_data(conn, cursor, logger):
                 continue
 
             asc_file = asc_files[0]
-            ssp_col = {'SSP126': 'ssp1', 'SSP245': 'ssp2', 'SSP370': 'ssp3', 'SSP585': 'ssp5'}.get(ssp_name, 'ssp1')
+            ssp_col = {"SSP126": "ssp1", "SSP245": "ssp2", "SSP370": "ssp3", "SSP585": "ssp5"}.get(
+                ssp_name, "ssp1"
+            )
 
             try:
-                with tarfile.open(asc_file, 'r:gz') as tar:
-                    members = [m for m in tar.getmembers() if m.name.endswith('.txt')]
+                with tarfile.open(asc_file, "r:gz") as tar:
+                    members = [m for m in tar.getmembers() if m.name.endswith(".txt")]
                     # 처음 5개 연도만 샘플 처리
                     members = members[:5]
 
@@ -488,7 +548,7 @@ def load_sgg261_daily_data(conn, cursor, logger):
                         if not f:
                             continue
 
-                        content = f.read().decode('utf-8')
+                        content = f.read().decode("utf-8")
                         reader = csv.reader(io.StringIO(content))
                         rows = list(reader)
 
@@ -500,24 +560,29 @@ def load_sgg261_daily_data(conn, cursor, logger):
                         sigungu_names = rows[2][1:]
 
                         # location_sgg261에 SK 시군구만 등록
-                        if ssp_name == 'SSP126' and not admin_codes_cache:
+                        if ssp_name == "SSP126" and not admin_codes_cache:
                             for i, admin_code in enumerate(admin_codes):
                                 if admin_code not in SK_SIGUNGU_CODES:
                                     continue
 
                                 if admin_code not in admin_codes_cache:
-                                    sido = sido_names[i] if i < len(sido_names) else ''
-                                    sigungu = sigungu_names[i] if i < len(sigungu_names) else ''
+                                    sido = sido_names[i] if i < len(sido_names) else ""
+                                    sigungu = sigungu_names[i] if i < len(sigungu_names) else ""
 
-                                    cursor.execute("""
+                                    cursor.execute(
+                                        """
                                         INSERT INTO location_sgg261 (admin_code, sido_name, sigungu_name)
                                         VALUES (%s, %s, %s)
                                         ON CONFLICT (admin_code) DO NOTHING
-                                    """, (admin_code, sido, sigungu))
+                                    """,
+                                        (admin_code, sido, sigungu),
+                                    )
                                     admin_codes_cache[admin_code] = True
 
                             conn.commit()
-                            logger.info(f"      location_sgg261: {len(admin_codes_cache)}개 행정구역")
+                            logger.info(
+                                f"      location_sgg261: {len(admin_codes_cache)}개 행정구역"
+                            )
 
                         # 데이터 행 처리
                         for row in rows[3:]:
@@ -526,7 +591,7 @@ def load_sgg261_daily_data(conn, cursor, logger):
 
                             date_str = row[0]
                             try:
-                                obs_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+                                obs_date = datetime.strptime(date_str, "%Y-%m-%d").date()
                             except ValueError:
                                 continue
 
@@ -542,17 +607,23 @@ def load_sgg261_daily_data(conn, cursor, logger):
                                     if val == -999 or np.isnan(val):
                                         continue
 
-                                    if ssp_name == 'SSP126':
-                                        cursor.execute(f"""
+                                    if ssp_name == "SSP126":
+                                        cursor.execute(
+                                            f"""
                                             INSERT INTO {table_name} (admin_code, observation_date, {ssp_col})
                                             VALUES (%s, %s, %s)
                                             ON CONFLICT (observation_date, admin_code) DO UPDATE SET {ssp_col} = EXCLUDED.{ssp_col}
-                                        """, (admin_code, obs_date, val))
+                                        """,
+                                            (admin_code, obs_date, val),
+                                        )
                                     else:
-                                        cursor.execute(f"""
+                                        cursor.execute(
+                                            f"""
                                             UPDATE {table_name} SET {ssp_col} = %s
                                             WHERE admin_code = %s AND observation_date = %s
-                                        """, (val, admin_code, obs_date))
+                                        """,
+                                            (val, admin_code, obs_date),
+                                        )
 
                                     ssp_inserted += 1
                                 except (ValueError, TypeError):
@@ -579,7 +650,7 @@ def main():
     logger.info("SK 사업장 전용 기후 데이터 ETL 시작")
     logger.info("=" * 60)
 
-    api_key = os.getenv('VWORLD_API_KEY')
+    api_key = os.getenv("VWORLD_API_KEY")
     if not api_key:
         logger.warning("VWORLD_API_KEY 없음 - 역지오코딩 스킵")
 
@@ -610,16 +681,19 @@ def main():
         logger.info(f"   SK 사업장: {sk_count}개")
 
         # SK 사업장 grid_id 목록
-        sk_grid_ids = [g['grid_id'] for g in sk_grids]
+        sk_grid_ids = [g["grid_id"] for g in sk_grids]
         if sk_grid_ids:
             # 월별 테이블 검증
             logger.info("   [월별 데이터]")
             for table in MONTHLY_TABLE_MAP.keys():
                 try:
-                    cursor.execute(f"""
+                    cursor.execute(
+                        f"""
                         SELECT COUNT(*) FROM {table}
                         WHERE grid_id = ANY(%s)
-                    """, (sk_grid_ids,))
+                    """,
+                        (sk_grid_ids,),
+                    )
                     count = cursor.fetchone()[0]
                     logger.info(f"      {table}: {count:,}건")
                 except:
@@ -629,10 +703,13 @@ def main():
             logger.info("   [연간 데이터]")
             for table in YEARLY_TABLE_MAP.keys():
                 try:
-                    cursor.execute(f"""
+                    cursor.execute(
+                        f"""
                         SELECT COUNT(*) FROM {table}
                         WHERE grid_id = ANY(%s)
-                    """, (sk_grid_ids,))
+                    """,
+                        (sk_grid_ids,),
+                    )
                     count = cursor.fetchone()[0]
                     logger.info(f"      {table}: {count:,}건")
                 except:

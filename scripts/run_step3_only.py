@@ -29,11 +29,8 @@ args = parser.parse_args()
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler(args.log_file),
-        logging.StreamHandler()
-    ]
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.FileHandler(args.log_file), logging.StreamHandler()],
 )
 
 logger = logging.getLogger(__name__)
@@ -41,37 +38,43 @@ logger = logging.getLogger(__name__)
 # ========== 설정 ==========
 SITES = [
     {
-        'id': '12c452cd-a34d-497c-8348-01c816618553',  # 대덕 데이터센터
-        'name': '대덕 데이터센터',
-        'latitude': 36.38012284,
-        'longitude': 127.39798889,
-        'type': 'data_center'
+        "id": "12c452cd-a34d-497c-8348-01c816618553",  # 대덕 데이터센터
+        "name": "대덕 데이터센터",
+        "latitude": 36.38012284,
+        "longitude": 127.39798889,
+        "type": "data_center",
     },
     {
-        'id': '1fd4921d-a9b1-46b0-835f-58b9a27cf24e',  # SK u타워
-        'name': 'SK u타워',
-        'latitude': 37.36633726,
-        'longitude': 127.10661717,
-        'type': 'office'
+        "id": "1fd4921d-a9b1-46b0-835f-58b9a27cf24e",  # SK u타워
+        "name": "SK u타워",
+        "latitude": 37.36633726,
+        "longitude": 127.10661717,
+        "type": "office",
     },
     {
-        'id': 'c6122327-1eba-47c9-a61e-17fa6c2110cf',  # 판교 캠퍼스
-        'name': '판교 캠퍼스',
-        'latitude': 37.40588477,
-        'longitude': 127.09987781,
-        'type': 'campus'
-    }
+        "id": "c6122327-1eba-47c9-a61e-17fa6c2110cf",  # 판교 캠퍼스
+        "name": "판교 캠퍼스",
+        "latitude": 37.40588477,
+        "longitude": 127.09987781,
+        "type": "campus",
+    },
 ]
 
-SCENARIOS = ['SSP126', 'SSP245', 'SSP370', 'SSP585']
+SCENARIOS = ["SSP126", "SSP245", "SSP370", "SSP585"]
 TARGET_YEARS = list(range(2021, 2101))  # 2021~2100 (80년)
 RISK_TYPES = [
-    'extreme_heat', 'extreme_cold', 'drought',
-    'river_flood', 'urban_flood', 'sea_level_rise',
-    'typhoon', 'wildfire', 'water_stress'
+    "extreme_heat",
+    "extreme_cold",
+    "drought",
+    "river_flood",
+    "urban_flood",
+    "sea_level_rise",
+    "typhoon",
+    "wildfire",
+    "water_stress",
 ]
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     start_time = datetime.now()
     logger.info("=" * 80)
     logger.info("📊 STEP 3: E, V, AAL 계산 시작")
@@ -100,26 +103,28 @@ if __name__ == '__main__':
 
                 try:
                     result = calculate_evaal_ondemand(
-                        latitude=site['latitude'],
-                        longitude=site['longitude'],
+                        latitude=site["latitude"],
+                        longitude=site["longitude"],
                         scenario=scenario,
                         target_year=target_year,
                         risk_types=RISK_TYPES,
                         save_to_db=True,
-                        site_id=site['id']
+                        site_id=site["id"],
                     )
 
-                    if result['status'] == 'success':
+                    if result["status"] == "success":
                         completed += 1
-                        summary = result.get('summary', {})
-                        save_summary = result.get('save_summary', {})
+                        summary = result.get("summary", {})
+                        save_summary = result.get("save_summary", {})
 
                         logger.info(f"✅ 계산 완료: {task_name}")
                         logger.info(f"   평균 E: {summary.get('average_exposure', 0):.2f}")
                         logger.info(f"   평균 V: {summary.get('average_vulnerability', 0):.2f}")
-                        logger.info(f"   DB 저장: E={save_summary.get('exposure_saved', 0)}, "
-                                  f"V={save_summary.get('vulnerability_saved', 0)}, "
-                                  f"AAL={save_summary.get('aal_saved', 0)}")
+                        logger.info(
+                            f"   DB 저장: E={save_summary.get('exposure_saved', 0)}, "
+                            f"V={save_summary.get('vulnerability_saved', 0)}, "
+                            f"AAL={save_summary.get('aal_saved', 0)}"
+                        )
                     else:
                         failed += 1
                         logger.error(f"❌ 계산 실패: {task_name}")
@@ -132,7 +137,11 @@ if __name__ == '__main__':
 
                 # 진행률 출력
                 progress = ((completed + failed) / total_tasks) * 100
-                print(f"\r📊 진행률: {progress:.1f}% ({completed + failed}/{total_tasks})", end='', flush=True)
+                print(
+                    f"\r📊 진행률: {progress:.1f}% ({completed + failed}/{total_tasks})",
+                    end="",
+                    flush=True,
+                )
 
     evaal_end = datetime.now()
     evaal_duration = (evaal_end - evaal_start).total_seconds()

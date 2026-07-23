@@ -51,7 +51,7 @@ class ClimateIndicatorCalculator:
                 'baseline_magnitude': float       # 기준기간 강도
             }
         """
-        tamax_data = self.raw_data.get('tamax', [])
+        tamax_data = self.raw_data.get("tamax", [])
 
         if not tamax_data:
             return self._default_heatwave_indicators()
@@ -66,16 +66,18 @@ class ClimateIndicatorCalculator:
         annual_max_temp = max(tamax_data) if tamax_data else 30.0
 
         # 4. 기준기간 값 (첫 20년 평균)
-        baseline_period = tamax_data[:int(len(tamax_data) * 0.25)]  # 첫 25%
-        baseline_hwd = self._calculate_heatwave_days(baseline_period, threshold=33.0, min_duration=3)
+        baseline_period = tamax_data[: int(len(tamax_data) * 0.25)]  # 첫 25%
+        baseline_hwd = self._calculate_heatwave_days(
+            baseline_period, threshold=33.0, min_duration=3
+        )
         baseline_magnitude = self._calculate_heatwave_magnitude(baseline_period, threshold=33.0)
 
         return {
-            'heatwave_days_per_year': heatwave_days,
-            'heat_wave_duration': max_duration,
-            'annual_max_temp_celsius': annual_max_temp,
-            'baseline_heatwave_days': baseline_hwd if baseline_hwd > 0 else 10.0,
-            'baseline_magnitude': baseline_magnitude if baseline_magnitude > 0 else 100.0
+            "heatwave_days_per_year": heatwave_days,
+            "heat_wave_duration": max_duration,
+            "annual_max_temp_celsius": annual_max_temp,
+            "baseline_heatwave_days": baseline_hwd if baseline_hwd > 0 else 10.0,
+            "baseline_magnitude": baseline_magnitude if baseline_magnitude > 0 else 100.0,
         }
 
     def get_coldwave_indicators(self) -> Dict[str, Any]:
@@ -90,7 +92,7 @@ class ClimateIndicatorCalculator:
                 'baseline_coldwave_days': float   # 기준기간 한파일수
             }
         """
-        tamin_data = self.raw_data.get('tamin', [])
+        tamin_data = self.raw_data.get("tamin", [])
 
         if not tamin_data:
             return self._default_coldwave_indicators()
@@ -105,14 +107,16 @@ class ClimateIndicatorCalculator:
         annual_min_temp = min(tamin_data) if tamin_data else -10.0
 
         # 4. 기준기간 값
-        baseline_period = tamin_data[:int(len(tamin_data) * 0.25)]
-        baseline_cwd = self._calculate_coldwave_days(baseline_period, threshold=-12.0, min_duration=2)
+        baseline_period = tamin_data[: int(len(tamin_data) * 0.25)]
+        baseline_cwd = self._calculate_coldwave_days(
+            baseline_period, threshold=-12.0, min_duration=2
+        )
 
         return {
-            'coldwave_days_per_year': coldwave_days,
-            'cold_wave_duration': max_duration,
-            'annual_min_temp_celsius': annual_min_temp,
-            'baseline_coldwave_days': baseline_cwd if baseline_cwd > 0 else 5.0
+            "coldwave_days_per_year": coldwave_days,
+            "cold_wave_duration": max_duration,
+            "annual_min_temp_celsius": annual_min_temp,
+            "baseline_coldwave_days": baseline_cwd if baseline_cwd > 0 else 5.0,
         }
 
     def get_wildfire_indicators(self) -> Dict[str, Any]:
@@ -131,10 +135,10 @@ class ClimateIndicatorCalculator:
                 'dry_days_future': float    # 미래기간 연속 건조일수
             }
         """
-        ta = self.raw_data.get('ta', [])
-        rhm = self.raw_data.get('rhm', [])
-        ws = self.raw_data.get('ws', [])
-        rn = self.raw_data.get('rn', [])
+        ta = self.raw_data.get("ta", [])
+        rhm = self.raw_data.get("rhm", [])
+        ws = self.raw_data.get("ws", [])
+        rn = self.raw_data.get("rn", [])
 
         if not (ta and rhm and ws and rn):
             return self._default_wildfire_indicators()
@@ -164,10 +168,10 @@ class ClimateIndicatorCalculator:
         dry_days_future = self._calculate_consecutive_dry_days(rn[split_idx:])
 
         return {
-            'fwi_baseline_max': max(baseline_fwi) if baseline_fwi else 0.5,
-            'fwi_future_max': max(future_fwi) if future_fwi else 0.6,
-            'dry_days_baseline': dry_days_baseline,
-            'dry_days_future': dry_days_future
+            "fwi_baseline_max": max(baseline_fwi) if baseline_fwi else 0.5,
+            "fwi_future_max": max(future_fwi) if future_fwi else 0.6,
+            "dry_days_baseline": dry_days_baseline,
+            "dry_days_future": dry_days_future,
         }
 
     def get_et0(self) -> float:
@@ -179,8 +183,8 @@ class ClimateIndicatorCalculator:
         Returns:
             월평균 ET0 (mm/월)
         """
-        ta = self.raw_data.get('ta', [])
-        si = self.raw_data.get('si', [])
+        ta = self.raw_data.get("ta", [])
+        si = self.raw_data.get("si", [])
 
         if not (ta and si):
             return 100.0  # 기본값
@@ -195,7 +199,9 @@ class ClimateIndicatorCalculator:
 
     # ===== 내부 계산 함수 =====
 
-    def _calculate_heatwave_days(self, temp_data: List[float], threshold: float = 33.0, min_duration: int = 3) -> float:
+    def _calculate_heatwave_days(
+        self, temp_data: List[float], threshold: float = 33.0, min_duration: int = 3
+    ) -> float:
         """폭염일수 계산 (연속 min_duration일 이상 threshold°C 초과)"""
         if not temp_data:
             return 0.0
@@ -219,7 +225,9 @@ class ClimateIndicatorCalculator:
         total_years = len(temp_data) / 365.0
         return heatwave_days / total_years if total_years > 0 else 0.0
 
-    def _calculate_max_heatwave_duration(self, temp_data: List[float], threshold: float = 33.0) -> float:
+    def _calculate_max_heatwave_duration(
+        self, temp_data: List[float], threshold: float = 33.0
+    ) -> float:
         """최장 폭염 지속기간 계산"""
         if not temp_data:
             return 0.0
@@ -236,7 +244,9 @@ class ClimateIndicatorCalculator:
 
         return float(max_duration)
 
-    def _calculate_heatwave_magnitude(self, temp_data: List[float], threshold: float = 33.0) -> float:
+    def _calculate_heatwave_magnitude(
+        self, temp_data: List[float], threshold: float = 33.0
+    ) -> float:
         """폭염 강도 계산 (임계값 초과 온도 누적)"""
         if not temp_data:
             return 0.0
@@ -244,7 +254,9 @@ class ClimateIndicatorCalculator:
         magnitude = sum(max(0, temp - threshold) for temp in temp_data)
         return magnitude
 
-    def _calculate_coldwave_days(self, temp_data: List[float], threshold: float = -12.0, min_duration: int = 2) -> float:
+    def _calculate_coldwave_days(
+        self, temp_data: List[float], threshold: float = -12.0, min_duration: int = 2
+    ) -> float:
         """한파일수 계산 (연속 min_duration일 이상 threshold°C 미만)"""
         if not temp_data:
             return 0.0
@@ -266,7 +278,9 @@ class ClimateIndicatorCalculator:
         total_years = len(temp_data) / 365.0
         return coldwave_days / total_years if total_years > 0 else 0.0
 
-    def _calculate_max_coldwave_duration(self, temp_data: List[float], threshold: float = -12.0) -> float:
+    def _calculate_max_coldwave_duration(
+        self, temp_data: List[float], threshold: float = -12.0
+    ) -> float:
         """최장 한파 지속기간 계산"""
         if not temp_data:
             return 0.0
@@ -305,27 +319,27 @@ class ClimateIndicatorCalculator:
     def _default_heatwave_indicators(self) -> Dict[str, Any]:
         """폭염 지표 기본값"""
         return {
-            'heatwave_days_per_year': 10.0,
-            'heat_wave_duration': 5.0,
-            'annual_max_temp_celsius': 35.0,
-            'baseline_heatwave_days': 10.0,
-            'baseline_magnitude': 100.0
+            "heatwave_days_per_year": 10.0,
+            "heat_wave_duration": 5.0,
+            "annual_max_temp_celsius": 35.0,
+            "baseline_heatwave_days": 10.0,
+            "baseline_magnitude": 100.0,
         }
 
     def _default_coldwave_indicators(self) -> Dict[str, Any]:
         """한파 지표 기본값"""
         return {
-            'coldwave_days_per_year': 5.0,
-            'cold_wave_duration': 3.0,
-            'annual_min_temp_celsius': -10.0,
-            'baseline_coldwave_days': 5.0
+            "coldwave_days_per_year": 5.0,
+            "cold_wave_duration": 3.0,
+            "annual_min_temp_celsius": -10.0,
+            "baseline_coldwave_days": 5.0,
         }
 
     def _default_wildfire_indicators(self) -> Dict[str, Any]:
         """산불 지표 기본값"""
         return {
-            'fwi_baseline_max': 0.5,
-            'fwi_future_max': 0.6,
-            'dry_days_baseline': 30.0,
-            'dry_days_future': 35.0
+            "fwi_baseline_max": 0.5,
+            "fwi_future_max": 0.6,
+            "dry_days_baseline": 30.0,
+            "dry_days_future": 35.0,
         }

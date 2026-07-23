@@ -3,7 +3,6 @@ Log Writer
 사업장별 계산 진행 로그 파일 작성 모듈
 """
 
-import os
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -47,7 +46,7 @@ class LogWriter:
         scenario: str,
         status: str = "success",
         error_message: Optional[str] = None,
-        task_type: str = "calculate"
+        task_type: str = "calculate",
     ):
         """
         1년치 계산 완료 로그 작성
@@ -75,20 +74,22 @@ class LogWriter:
                 f"Year: {year}",
                 f"Scenario: {scenario}",
                 f"Status: {status}",
-                f"Timestamp: {timestamp}"
+                f"Timestamp: {timestamp}",
             ]
 
             if error_message:
                 log_content.append(f"Error: {error_message}")
 
             # 파일에 쓰기
-            with open(log_filepath, 'w', encoding='utf-8') as f:
-                f.write('\n'.join(log_content))
+            with open(log_filepath, "w", encoding="utf-8") as f:
+                f.write("\n".join(log_content))
 
             logger.debug(f"로그 작성 완료: {log_filepath}")
 
         except Exception as e:
-            logger.error(f"로그 파일 작성 실패 (site_id={site_id}, year={year}): {e}", exc_info=True)
+            logger.error(
+                f"로그 파일 작성 실패 (site_id={site_id}, year={year}): {e}", exc_info=True
+            )
 
     def write_site_summary_log(
         self,
@@ -97,7 +98,7 @@ class LogWriter:
         completed_years: int,
         failed_years: int,
         task_type: str = "calculate",
-        scenarios: Optional[list] = None
+        scenarios: Optional[list] = None,
     ):
         """
         사업장 전체 계산 요약 로그 작성
@@ -124,15 +125,19 @@ class LogWriter:
                 f"Total Years: {total_years}",
                 f"Completed Years: {completed_years}",
                 f"Failed Years: {failed_years}",
-                f"Success Rate: {completed_years / total_years * 100:.1f}%" if total_years > 0 else "N/A",
-                f"Completed At: {timestamp}"
+                (
+                    f"Success Rate: {completed_years / total_years * 100:.1f}%"
+                    if total_years > 0
+                    else "N/A"
+                ),
+                f"Completed At: {timestamp}",
             ]
 
             if scenarios:
                 summary_content.append(f"Scenarios: {', '.join(scenarios)}")
 
-            with open(summary_filepath, 'w', encoding='utf-8') as f:
-                f.write('\n'.join(summary_content))
+            with open(summary_filepath, "w", encoding="utf-8") as f:
+                f.write("\n".join(summary_content))
 
             logger.info(f"요약 로그 작성 완료: {summary_filepath}")
 
@@ -140,11 +145,7 @@ class LogWriter:
             logger.error(f"요약 로그 작성 실패 (site_id={site_id}): {e}", exc_info=True)
 
     def write_task_start_log(
-        self,
-        site_id: str,
-        task_type: str,
-        total_years: int,
-        scenarios: Optional[list] = None
+        self, site_id: str, task_type: str, total_years: int, scenarios: Optional[list] = None
     ):
         """
         사업장 계산 시작 로그 작성
@@ -166,14 +167,14 @@ class LogWriter:
                 f"Task Type: {task_type}",
                 f"Site ID: {site_id}",
                 f"Total Years: {total_years}",
-                f"Started At: {timestamp}"
+                f"Started At: {timestamp}",
             ]
 
             if scenarios:
                 start_content.append(f"Scenarios: {', '.join(scenarios)}")
 
-            with open(start_filepath, 'w', encoding='utf-8') as f:
-                f.write('\n'.join(start_content))
+            with open(start_filepath, "w", encoding="utf-8") as f:
+                f.write("\n".join(start_content))
 
             logger.debug(f"시작 로그 작성 완료: {start_filepath}")
 

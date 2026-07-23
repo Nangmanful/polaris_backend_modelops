@@ -8,11 +8,11 @@ ESG Economy 웹 스크래핑
 2) HTML 파싱 및 데이터 추출
 ==================================================================
 """
+
 import requests
 from bs4 import BeautifulSoup
-from datetime import datetime, date
+from datetime import date
 from typing import Dict, List, Optional
-from ..utils.config import Config
 from ..utils.logging import get_logger
 
 logger = get_logger("esg_agent.scraper")
@@ -21,7 +21,9 @@ logger = get_logger("esg_agent.scraper")
 ESG_ECONOMY_NEWS_URL = "https://www.esgeconomy.com/news/articleList.html?view_type=sm"
 
 
-def scrape_esg_economy(limit: int = 10, target_date: Optional[date] = None, max_retries: int = 3) -> List[Dict]:
+def scrape_esg_economy(
+    limit: int = 10, target_date: Optional[date] = None, max_retries: int = 3
+) -> List[Dict]:
     """ESG Economy 뉴스 스크래핑
 
     Args:
@@ -57,12 +59,16 @@ def scrape_esg_economy(limit: int = 10, target_date: Optional[date] = None, max_
 
     for attempt in range(max_retries):
         try:
-            response = requests.get(ESG_ECONOMY_NEWS_URL, params=params, headers=headers, timeout=15)
+            response = requests.get(
+                ESG_ECONOMY_NEWS_URL, params=params, headers=headers, timeout=15
+            )
 
             # 429/500/502/503 에러 시 대기 후 재시도
             if response.status_code in [429, 500, 502, 503]:
                 wait_time = (attempt + 1) * 5
-                logger.warning(f"ESG Economy {response.status_code} 에러, {wait_time}초 대기 후 재시도...")
+                logger.warning(
+                    f"ESG Economy {response.status_code} 에러, {wait_time}초 대기 후 재시도..."
+                )
                 time.sleep(wait_time)
                 continue
 
@@ -101,7 +107,9 @@ def scrape_esg_economy(limit: int = 10, target_date: Optional[date] = None, max_
     return []
 
 
-def parse_esg_economy_page(soup: BeautifulSoup, limit: int, target_date: Optional[date]) -> List[Dict]:
+def parse_esg_economy_page(
+    soup: BeautifulSoup, limit: int, target_date: Optional[date]
+) -> List[Dict]:
     """ESG Economy 페이지 파싱
 
     Args:
@@ -151,7 +159,17 @@ def parse_esg_economy_page(soup: BeautifulSoup, limit: int, target_date: Optiona
                     published_at = date_text.split(" ")[0]
 
             # ESG 관련 키워드 필터링 (광고성 기사 제외)
-            esg_keywords = ["ESG", "탄소", "환경", "기후", "지속가능", "재생에너지", "녹색", "CBAM", "지배구조"]
+            esg_keywords = [
+                "ESG",
+                "탄소",
+                "환경",
+                "기후",
+                "지속가능",
+                "재생에너지",
+                "녹색",
+                "CBAM",
+                "지배구조",
+            ]
             is_esg_related = any(kw in title for kw in esg_keywords)
 
             # ESG 관련 기사만 포함 (또는 결과가 부족할 경우 모두 포함)

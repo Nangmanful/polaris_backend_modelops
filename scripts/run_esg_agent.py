@@ -12,6 +12,7 @@ ESG Trends Agent 실행 스크립트
     --verbose     상세 로깅 출력
 ==================================================================
 """
+
 import sys
 import os
 import argparse
@@ -23,7 +24,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.esg_trends_agent.utils.config import Config
 from src.esg_trends_agent.utils.logging import setup_logger, get_logger
 from src.esg_trends_agent.graph import run_esg_trends_workflow, run_parallel_workflow
-from src.esg_trends_agent.state import create_initial_state
 
 
 def validate_config() -> bool:
@@ -71,20 +71,10 @@ def main():
         description="ESG Trends Agent - ESG 트렌드 분석 및 리포트 생성"
     )
     parser.add_argument(
-        "--parallel",
-        action="store_true",
-        help="병렬 수집 모드 사용 (더 빠르지만 리소스 사용 증가)"
+        "--parallel", action="store_true", help="병렬 수집 모드 사용 (더 빠르지만 리소스 사용 증가)"
     )
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="실제 Slack 배포 없이 테스트"
-    )
-    parser.add_argument(
-        "--verbose",
-        action="store_true",
-        help="상세 로깅 출력"
-    )
+    parser.add_argument("--dry-run", action="store_true", help="실제 Slack 배포 없이 테스트")
+    parser.add_argument("--verbose", action="store_true", help="상세 로깅 출력")
 
     args = parser.parse_args()
 
@@ -153,6 +143,7 @@ def main():
     except Exception as e:
         logger.error(f"워크플로우 실행 중 오류 발생: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 

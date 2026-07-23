@@ -41,8 +41,8 @@ def setup_logging(log_name: str) -> logging.Logger:
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         handlers=[
             logging.FileHandler(log_file, encoding="utf-8"),
-            logging.StreamHandler(sys.stdout)
-        ]
+            logging.StreamHandler(sys.stdout),
+        ],
     )
 
     logger = logging.getLogger(log_name)
@@ -69,7 +69,7 @@ def get_db_connection() -> connection:
         "port": os.getenv("DW_PORT", "5433"),
         "database": os.getenv("DW_NAME", "skala_datawarehouse"),
         "user": os.getenv("DW_USER", "skala_dw_user"),
-        "password": os.getenv("DW_PASSWORD")
+        "password": os.getenv("DW_PASSWORD"),
     }
 
     # 필수 파라미터 검증
@@ -143,7 +143,7 @@ def table_exists(conn: connection, table_name: str) -> bool:
     try:
         cursor.execute(
             "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = %s)",
-            (table_name,)
+            (table_name,),
         )
         result = cursor.fetchone()[0]
         return result

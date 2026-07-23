@@ -19,7 +19,6 @@ Local + API 데이터를 한번에 전체 적재
 버전: v01
 """
 
-import os
 import sys
 import argparse
 import importlib.util
@@ -31,7 +30,6 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from utils import setup_logging, get_db_connection, get_row_count
 
-
 # =============================================================================
 # ETL 스크립트 정의
 # =============================================================================
@@ -42,25 +40,35 @@ API_SCRIPTS_DIR = Path(__file__).parent / "etl_base" / "api" / "scripts"
 
 # 테이블별 스킵 임계값 (이 수 이상이면 스킵, 0이면 항상 실행)
 SKIP_THRESHOLDS = {
-    "location_admin": 5000,           # 행정구역: 5000건 이상이면 스킵
-    "weather_stations": 1000,         # 기상관측소
+    "location_admin": 5000,  # 행정구역: 5000건 이상이면 스킵
+    "weather_stations": 1000,  # 기상관측소
     "grid_station_mappings": 200000,  # 그리드-관측소 매핑
-    "raw_landcover": 50,              # 토지피복
-    "raw_dem": 100000,                # DEM (4개 지역 기준)
-    "raw_drought": 1000,              # 가뭄 지수
-    "sea_level_data": 100,            # 해수면 상승
-    "water_stress_rankings": 100,     # 수자원 스트레스
-    "api_river_info": 100,            # 하천정보
-    "api_emergency_messages": 100,    # 재난문자
-    "api_typhoon_info": 10,           # 태풍 정보
+    "raw_landcover": 50,  # 토지피복
+    "raw_dem": 100000,  # DEM (4개 지역 기준)
+    "raw_drought": 1000,  # 가뭄 지수
+    "sea_level_data": 100,  # 해수면 상승
+    "water_stress_rankings": 100,  # 수자원 스트레스
+    "api_river_info": 100,  # 하천정보
+    "api_emergency_messages": 100,  # 재난문자
+    "api_typhoon_info": 10,  # 태풍 정보
 }
 
 # Local 스크립트 (제외: 08_load_climate_grid)
 LOCAL_SCRIPTS = [
     ("01_load_admin_regions", "load_admin_regions", "행정구역 경계", "location_admin"),
     ("02_load_weather_stations", "load_weather_stations", "기상관측소", "weather_stations"),
-    ("03_load_grid_station_mappings", "load_grid_station_mappings", "그리드-관측소 매핑", "grid_station_mappings"),
-    ("04_load_population", "load_population", "인구 전망", "none"),  # UPDATE 작업이므로 스킵 체크 제외
+    (
+        "03_load_grid_station_mappings",
+        "load_grid_station_mappings",
+        "그리드-관측소 매핑",
+        "grid_station_mappings",
+    ),
+    (
+        "04_load_population",
+        "load_population",
+        "인구 전망",
+        "none",
+    ),  # UPDATE 작업이므로 스킵 체크 제외
     ("05_load_landcover", "load_landcover", "토지피복", "raw_landcover"),
     ("06_load_dem", "load_dem", "수치표고모델(DEM)", "raw_dem"),
     ("07_load_drought", "load_drought", "가뭄 지수", "raw_drought"),
@@ -79,8 +87,18 @@ API_SCRIPTS = [
     ("05_load_wamis", "load_wamis_data", "WAMIS 용수이용량", "api_wamis"),
     # ("06_load_buildings", "load_building_data", "건축물대장", "building_aggregate_cache"),  # 제외 -> 03번
     ("15_load_disaster_yearbook", "load_disaster_yearbook", "재해연보", "api_disaster_yearbook"),
-    ("16_load_typhoon_besttrack", "load_typhoon_besttrack", "태풍 베스트트랙", "api_typhoon_besttrack"),
-    ("17_load_sgis_population", "load_sgis_population", "SGIS 인구통계", "none"),  # UPDATE이므로 스킵 체크 제외
+    (
+        "16_load_typhoon_besttrack",
+        "load_typhoon_besttrack",
+        "태풍 베스트트랙",
+        "api_typhoon_besttrack",
+    ),
+    (
+        "17_load_sgis_population",
+        "load_sgis_population",
+        "SGIS 인구통계",
+        "none",
+    ),  # UPDATE이므로 스킵 체크 제외
 ]
 
 
@@ -95,8 +113,9 @@ def load_module_from_path(module_name: str, file_path: Path):
     return module
 
 
-def run_etl_script(script_name: str, func_name: str, description: str,
-                   scripts_dir: Path, logger) -> bool:
+def run_etl_script(
+    script_name: str, func_name: str, description: str, scripts_dir: Path, logger
+) -> bool:
     """
     개별 ETL 스크립트 실행
 
@@ -140,6 +159,7 @@ def run_etl_script(script_name: str, func_name: str, description: str,
     except Exception as e:
         logger.error(f"   실패: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -168,8 +188,9 @@ def print_etl_list():
     print("=" * 70 + "\n")
 
 
-def run_all_etl(local_only: bool = False, api_only: bool = False,
-                only_steps: set = None, skip_steps: set = None):
+def run_all_etl(
+    local_only: bool = False, api_only: bool = False, only_steps: set = None, skip_steps: set = None
+):
     """
     전체 ETL 실행
 
@@ -230,14 +251,16 @@ def run_all_etl(local_only: bool = False, api_only: bool = False,
                 conn.commit()  # 락 해제를 위해 커밋
                 if current_count >= threshold:
                     logger.info(f"\n[{step_id}] {desc} - 스킵 (이미 {current_count:,}건 존재)")
-                    results.append({
-                        'step': step_id,
-                        'name': desc,
-                        'type': 'Local',
-                        'table': table,
-                        'status': 'SKIPPED',
-                        'duration': 0
-                    })
+                    results.append(
+                        {
+                            "step": step_id,
+                            "name": desc,
+                            "type": "Local",
+                            "table": table,
+                            "status": "SKIPPED",
+                            "duration": 0,
+                        }
+                    )
                     continue
 
             # 스크립트 실행 전 커넥션 커밋 (락 해제)
@@ -248,14 +271,16 @@ def run_all_etl(local_only: bool = False, api_only: bool = False,
             success = run_etl_script(script, func, desc, LOCAL_SCRIPTS_DIR, logger)
 
             duration = (datetime.now() - script_start).total_seconds()
-            results.append({
-                'step': step_id,
-                'name': desc,
-                'type': 'Local',
-                'table': table,
-                'status': 'SUCCESS' if success else 'FAILED',
-                'duration': duration
-            })
+            results.append(
+                {
+                    "step": step_id,
+                    "name": desc,
+                    "type": "Local",
+                    "table": table,
+                    "status": "SUCCESS" if success else "FAILED",
+                    "duration": duration,
+                }
+            )
 
     # API 스크립트 실행
     if not local_only:
@@ -282,14 +307,16 @@ def run_all_etl(local_only: bool = False, api_only: bool = False,
                 conn.commit()  # 락 해제를 위해 커밋
                 if current_count >= threshold:
                     logger.info(f"\n[{step_id}] {desc} - 스킵 (이미 {current_count:,}건 존재)")
-                    results.append({
-                        'step': step_id,
-                        'name': desc,
-                        'type': 'API',
-                        'table': table,
-                        'status': 'SKIPPED',
-                        'duration': 0
-                    })
+                    results.append(
+                        {
+                            "step": step_id,
+                            "name": desc,
+                            "type": "API",
+                            "table": table,
+                            "status": "SKIPPED",
+                            "duration": 0,
+                        }
+                    )
                     continue
 
             # 스크립트 실행 전 커넥션 커밋 (락 해제)
@@ -300,14 +327,16 @@ def run_all_etl(local_only: bool = False, api_only: bool = False,
             success = run_etl_script(script, func, desc, API_SCRIPTS_DIR, logger)
 
             duration = (datetime.now() - script_start).total_seconds()
-            results.append({
-                'step': step_id,
-                'name': desc,
-                'type': 'API',
-                'table': table,
-                'status': 'SUCCESS' if success else 'FAILED',
-                'duration': duration
-            })
+            results.append(
+                {
+                    "step": step_id,
+                    "name": desc,
+                    "type": "API",
+                    "table": table,
+                    "status": "SUCCESS" if success else "FAILED",
+                    "duration": duration,
+                }
+            )
 
     conn.close()
 
@@ -319,9 +348,9 @@ def run_all_etl(local_only: bool = False, api_only: bool = False,
     logger.info("ETL 실행 결과 요약")
     logger.info("=" * 70)
 
-    success_count = sum(1 for r in results if r['status'] == 'SUCCESS')
-    fail_count = sum(1 for r in results if r['status'] == 'FAILED')
-    skip_count = sum(1 for r in results if r['status'] == 'SKIPPED')
+    success_count = sum(1 for r in results if r["status"] == "SUCCESS")
+    fail_count = sum(1 for r in results if r["status"] == "FAILED")
+    skip_count = sum(1 for r in results if r["status"] == "SKIPPED")
 
     logger.info(f"총 스크립트: {len(results)}개")
     logger.info(f"성공: {success_count}개")
@@ -332,9 +361,9 @@ def run_all_etl(local_only: bool = False, api_only: bool = False,
 
     logger.info("\n상세 결과:")
     for r in results:
-        if r['status'] == 'SUCCESS':
+        if r["status"] == "SUCCESS":
             icon = "O"
-        elif r['status'] == 'SKIPPED':
+        elif r["status"] == "SKIPPED":
             icon = "-"
         else:
             icon = "X"
@@ -347,7 +376,7 @@ def run_all_etl(local_only: bool = False, api_only: bool = False,
 
     try:
         conn = get_db_connection()
-        tables_to_check = list(set([r['table'] for r in results]))
+        tables_to_check = list(set([r["table"] for r in results]))
         tables_to_check.sort()
 
         for table in tables_to_check:
@@ -397,7 +426,7 @@ def main():
   python 01_run_all_etl.py --only L1,L2,A1  # 특정 단계만
   python 01_run_all_etl.py --skip L5,L6     # 특정 단계 건너뛰기
   python 01_run_all_etl.py --list           # 단계 목록 출력
-        """
+        """,
     )
     parser.add_argument("--local-only", action="store_true", help="Local 스크립트만 실행")
     parser.add_argument("--api-only", action="store_true", help="API 스크립트만 실행")
@@ -418,7 +447,7 @@ def main():
         local_only=args.local_only,
         api_only=args.api_only,
         only_steps=only_steps,
-        skip_steps=skip_steps
+        skip_steps=skip_steps,
     )
 
 

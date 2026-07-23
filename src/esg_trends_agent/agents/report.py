@@ -8,6 +8,7 @@
 2) 마크다운 형식 리포트 출력
 ==================================================================
 """
+
 from typing import Dict
 from datetime import datetime
 from langchain_openai import ChatOpenAI
@@ -70,15 +71,27 @@ def generate_report(state: ESGTrendsState) -> Dict:
         for line in lines:
             line_lower = line.lower().strip()
             # ESG 리포트 제목/헤더 패턴 감지
-            if any(keyword in line_lower for keyword in ["esg 트렌드", "esg 일간", "esg트렌드", "발행일", "품질 점수"]):
-                if line.startswith("#") or "리포트" in line_lower or "발행일" in line_lower or "품질" in line_lower:
+            if any(
+                keyword in line_lower
+                for keyword in ["esg 트렌드", "esg 일간", "esg트렌드", "발행일", "품질 점수"]
+            ):
+                if (
+                    line.startswith("#")
+                    or "리포트" in line_lower
+                    or "발행일" in line_lower
+                    or "품질" in line_lower
+                ):
                     skip_until_section = True
                     continue
             # --- 구분선도 제거 (헤더 바로 다음에 오는 경우)
             if skip_until_section and line.strip() == "---":
                 continue
             # 실제 내용 시작 (1. 오늘의 핵심 포인트 등)
-            if skip_until_section and (line.strip().startswith("1.") or line.strip().startswith("## 1.") or line.strip().startswith("**1.")):
+            if skip_until_section and (
+                line.strip().startswith("1.")
+                or line.strip().startswith("## 1.")
+                or line.strip().startswith("**1.")
+            ):
                 skip_until_section = False
             if not skip_until_section:
                 cleaned_lines.append(line)
@@ -141,7 +154,9 @@ def _prepare_report_context(state: ESGTrendsState) -> str:
     global_news = state.get("global_news", [])[:10]
 
     # 1. 오늘의 핵심 포인트
-    context_parts.append("## 1. 오늘의 핵심 포인트\n(수집된 데이터를 바탕으로 오늘의 ESG 핵심 포인트 5개를 요약해주세요)")
+    context_parts.append(
+        "## 1. 오늘의 핵심 포인트\n(수집된 데이터를 바탕으로 오늘의 ESG 핵심 포인트 5개를 요약해주세요)"
+    )
 
     # 2. 사업장 위치 지역 날씨 및 물리적 리스크 현황
     if weather_summary:
@@ -150,7 +165,12 @@ def _prepare_report_context(state: ESGTrendsState) -> str:
         weather_main = []
         risk_assessment = ""
         for line in weather_lines:
-            if "현재 물리적 기후 리스크는" in line or line.startswith("⚠️") or line.startswith("✅") or line.startswith("🔶"):
+            if (
+                "현재 물리적 기후 리스크는" in line
+                or line.startswith("⚠️")
+                or line.startswith("✅")
+                or line.startswith("🔶")
+            ):
                 if "현재 물리적 기후 리스크는" in line:
                     risk_assessment = line
             else:
@@ -159,24 +179,30 @@ def _prepare_report_context(state: ESGTrendsState) -> str:
         weather_section = "\n".join(weather_main).strip()
         if risk_assessment:
             weather_section += f"\n\n> {risk_assessment}"
-        context_parts.append(f"## 2. 사업장 위치 지역 날씨 및 물리적 리스크 현황\n{weather_section}")
+        context_parts.append(
+            f"## 2. 사업장 위치 지역 날씨 및 물리적 리스크 현황\n{weather_section}"
+        )
     else:
-        context_parts.append("## 2. 사업장 위치 지역 날씨 및 물리적 리스크 현황\n날씨 데이터를 수집하지 못했습니다.")
+        context_parts.append(
+            "## 2. 사업장 위치 지역 날씨 및 물리적 리스크 현황\n날씨 데이터를 수집하지 못했습니다."
+        )
 
     # 3. ESG 트렌드 하이라이트
     if trending_topics:
         topics_str = "\n".join([f"• {topic}" for topic in trending_topics])
         context_parts.append(f"## 3. ESG 트렌드 하이라이트\n{topics_str}")
     else:
-        context_parts.append("## 3. ESG 트렌드 하이라이트\n(수집된 뉴스를 바탕으로 주요 ESG 트렌드를 분석해주세요)")
+        context_parts.append(
+            "## 3. ESG 트렌드 하이라이트\n(수집된 뉴스를 바탕으로 주요 ESG 트렌드를 분석해주세요)"
+        )
 
     # 4. 국내 동향 및 주요 뉴스 (통합)
     news_section = "## 4. 국내 동향 및 주요 뉴스\n"
     if domestic_news:
         for n in domestic_news:
-            title = n.get('title', '')
-            url = n.get('url', '')
-            summary = n.get('summary', '')[:150] or ''
+            title = n.get("title", "")
+            url = n.get("url", "")
+            summary = n.get("summary", "")[:150] or ""
             if summary:
                 news_section += f"• {title}\n"
             else:
@@ -191,9 +217,9 @@ def _prepare_report_context(state: ESGTrendsState) -> str:
     global_section = "## 5. 글로벌 동향\n"
     if global_news:
         for n in global_news:
-            title = n.get('title', '')
-            region = n.get('region', '')
-            summary = n.get('summary', '')[:150] or ''
+            title = n.get("title", "")
+            region = n.get("region", "")
+            summary = n.get("summary", "")[:150] or ""
             if region:
                 global_section += f"• [{region}] {title}\n"
             else:
@@ -207,7 +233,9 @@ def _prepare_report_context(state: ESGTrendsState) -> str:
         recs_str = "\n".join([f"{i}. {rec}" for i, rec in enumerate(recommendations, 1)])
         context_parts.append(f"## 6. ESG 관련 최근 권고사항\n{recs_str}")
     else:
-        context_parts.append("## 6. ESG 관련 최근 권고사항\n(수집된 데이터를 바탕으로 기업 ESG 담당자를 위한 권고사항을 작성해주세요)")
+        context_parts.append(
+            "## 6. ESG 관련 최근 권고사항\n(수집된 데이터를 바탕으로 기업 ESG 담당자를 위한 권고사항을 작성해주세요)"
+        )
 
     # 7. 경쟁사/업계 동향
     if competitor_analysis:
@@ -219,7 +247,9 @@ def _prepare_report_context(state: ESGTrendsState) -> str:
     if esg_insight:
         context_parts.append(f"## 8. ESG 인사이트 분석\n{esg_insight}")
     else:
-        context_parts.append("## 8. ESG 인사이트 분석\n(수집된 뉴스를 종합하여 ESG 인사이트를 작성해주세요)")
+        context_parts.append(
+            "## 8. ESG 인사이트 분석\n(수집된 뉴스를 종합하여 ESG 인사이트를 작성해주세요)"
+        )
 
     return "\n\n\n".join(context_parts)
 
@@ -253,7 +283,7 @@ def _generate_fallback_report(state: ESGTrendsState) -> str:
 """
     # 핵심 포인트 (esg_insight에서 추출하거나 기본 메시지)
     if esg_insight:
-        lines = esg_insight.split('\n')[:5]
+        lines = esg_insight.split("\n")[:5]
         for line in lines:
             if line.strip():
                 report += f"• {line.strip()}\n"
@@ -291,8 +321,8 @@ def _generate_fallback_report(state: ESGTrendsState) -> str:
     report += "\n\n**4. 국내 동향 및 주요 뉴스**\n\n"
     if domestic_news:
         for news in domestic_news[:10]:
-            title = news.get('title', '')
-            url = news.get('url', '')
+            title = news.get("title", "")
+            url = news.get("url", "")
             report += f"• {title}\n"
             if url:
                 report += f"  {url}\n"
@@ -303,8 +333,8 @@ def _generate_fallback_report(state: ESGTrendsState) -> str:
     report += "\n\n**5. 글로벌 동향**\n\n"
     if global_news:
         for news in global_news[:10]:
-            title = news.get('title', '')
-            region = news.get('region', '')
+            title = news.get("title", "")
+            region = news.get("region", "")
             if region:
                 report += f"• [{region}] {title}\n"
             else:

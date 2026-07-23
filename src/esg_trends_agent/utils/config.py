@@ -9,6 +9,7 @@ ESG Agent 설정 관리
 3) 타입 변환 및 기본값 처리
 ==================================================================
 """
+
 import os
 from typing import List
 from dotenv import load_dotenv
@@ -36,8 +37,7 @@ class Config:
     # 기상청 API
     KMA_API_KEY: str = os.getenv("KMA_API_KEY", "")
     WEATHER_LOCATIONS: List[str] = [
-        loc.strip()
-        for loc in os.getenv("WEATHER_LOCATIONS", "서울,성남,대전").split(",")
+        loc.strip() for loc in os.getenv("WEATHER_LOCATIONS", "서울,성남,대전").split(",")
     ]
 
     # ESG 뉴스 소스
@@ -59,7 +59,7 @@ class Config:
         keyword.strip()
         for keyword in os.getenv(
             "PHYSICAL_RISK_KEYWORDS",
-            "극심한 고온,극심한 한파,해안 홍수,도시 홍수,가뭄,물 부족,해수면 상승,태풍,산불"
+            "극심한 고온,극심한 한파,해안 홍수,도시 홍수,가뭄,물 부족,해수면 상승,태풍,산불",
         ).split(",")
     ]
 

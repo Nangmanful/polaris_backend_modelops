@@ -31,28 +31,27 @@ from utils import (
     get_api_key,
     batch_upsert,
     get_table_count,
-    API_ENDPOINTS
+    API_ENDPOINTS,
 )
-
 
 # 재난 유형 9종 키워드 (우선순위 순서)
 DISASTER_TYPES = {
-    '지진해일': ['지진해일', '쓰나미'],
-    '태풍': ['태풍'],
-    '호우': ['호우', '집중호우', '폭우', '강우', '폭풍우'],
-    '대설': ['대설', '폭설', '눈'],
-    '강풍': ['강풍', '폭풍'],
-    '풍랑': ['풍랑', '파도', '해상'],
-    '한파': ['한파', '혹한', '저온'],
-    '황사': ['황사', '미세먼지'],
-    '건조': ['건조', '화재주의보'],
-    '폭염': ['폭염', '고온', '무더위'],
+    "지진해일": ["지진해일", "쓰나미"],
+    "태풍": ["태풍"],
+    "호우": ["호우", "집중호우", "폭우", "강우", "폭풍우"],
+    "대설": ["대설", "폭설", "눈"],
+    "강풍": ["강풍", "폭풍"],
+    "풍랑": ["풍랑", "파도", "해상"],
+    "한파": ["한파", "혹한", "저온"],
+    "황사": ["황사", "미세먼지"],
+    "건조": ["건조", "화재주의보"],
+    "폭염": ["폭염", "고온", "무더위"],
 }
 
 # 강도 키워드
 SEVERITY_KEYWORDS = {
-    '경보': ['경보'],
-    '주의보': ['주의보', '주의'],
+    "경보": ["경보"],
+    "주의보": ["주의보", "주의"],
 }
 
 
@@ -92,21 +91,26 @@ def extract_severity(message_content: str) -> str:
         return None
 
     # 경보 우선 검색
-    for keyword in SEVERITY_KEYWORDS['경보']:
+    for keyword in SEVERITY_KEYWORDS["경보"]:
         if keyword in message_content:
-            return '경보'
+            return "경보"
 
     # 주의보 검색
-    for keyword in SEVERITY_KEYWORDS['주의보']:
+    for keyword in SEVERITY_KEYWORDS["주의보"]:
         if keyword in message_content:
-            return '주의보'
+            return "주의보"
 
     return None
 
 
-def fetch_emergency_messages(api_key: str, logger,
-                             region: str = None, start_date: str = None,
-                             page_no: int = 1, num_of_rows: int = 100):
+def fetch_emergency_messages(
+    api_key: str,
+    logger,
+    region: str = None,
+    start_date: str = None,
+    page_no: int = 1,
+    num_of_rows: int = 100,
+):
     """
     긴급재난문자 API 호출 (SSL verify=False 필요)
 
@@ -121,18 +125,18 @@ def fetch_emergency_messages(api_key: str, logger,
     Returns:
         API 응답 데이터
     """
-    url = API_ENDPOINTS['emergency_messages']
+    url = API_ENDPOINTS["emergency_messages"]
     params = {
-        'serviceKey': api_key,
-        'returnType': 'json',
-        'pageNo': str(page_no),
-        'numOfRows': str(num_of_rows)
+        "serviceKey": api_key,
+        "returnType": "json",
+        "pageNo": str(page_no),
+        "numOfRows": str(num_of_rows),
     }
 
     if region:
-        params['rgnNm'] = region
+        params["rgnNm"] = region
     if start_date:
-        params['crtDt'] = start_date
+        params["crtDt"] = start_date
 
     logger.info(f"긴급재난문자 API 호출: 페이지 {page_no}, 지역={region or '전체'}")
 
@@ -166,7 +170,7 @@ def parse_emergency_data(raw_data: dict, logger) -> list:
         return parsed
 
     # 본문 데이터 추출 (body는 리스트 형태)
-    body = raw_data.get('body', [])
+    body = raw_data.get("body", [])
     if not body:
         logger.warning("API 응답 body 없음")
         return parsed
@@ -180,7 +184,7 @@ def parse_emergency_data(raw_data: dict, logger) -> list:
     for item in items:
         try:
             # 메시지 내용
-            msg_content = item.get('MSG_CN', '')
+            msg_content = item.get("MSG_CN", "")
             if not msg_content:
                 continue
 
@@ -197,17 +201,17 @@ def parse_emergency_data(raw_data: dict, logger) -> list:
                 continue
 
             # 발령 일자 파싱 (YYYY-MM-DD만, 시간 제거)
-            crt_dt_str = item.get('CRT_DT', '')
+            crt_dt_str = item.get("CRT_DT", "")
             alert_date = None
             if crt_dt_str:
                 try:
                     # API 응답 형식: YYYY/MM/DD HH:MM:SS 또는 YYYYMMDDHHMMSS
-                    if '/' in crt_dt_str:
+                    if "/" in crt_dt_str:
                         # YYYY/MM/DD HH:MM:SS -> YYYY-MM-DD
-                        alert_date = datetime.strptime(crt_dt_str.split()[0], '%Y/%m/%d').date()
+                        alert_date = datetime.strptime(crt_dt_str.split()[0], "%Y/%m/%d").date()
                     else:
                         # YYYYMMDDHHMMSS -> YYYY-MM-DD
-                        alert_date = datetime.strptime(crt_dt_str[:8], '%Y%m%d').date()
+                        alert_date = datetime.strptime(crt_dt_str[:8], "%Y%m%d").date()
                 except Exception as e:
                     logger.warning(f"날짜 파싱 실패: {crt_dt_str} - {e}")
                     continue
@@ -215,15 +219,15 @@ def parse_emergency_data(raw_data: dict, logger) -> list:
                 continue
 
             # 지역명
-            region = item.get('RCPTN_RGN_NM', '') or item.get('RGN_NM', '')
+            region = item.get("RCPTN_RGN_NM", "") or item.get("RGN_NM", "")
             if not region:
                 continue
 
             record = {
-                'alert_date': alert_date,
-                'disaster_type': disaster_type,
-                'severity': severity,
-                'region': region,
+                "alert_date": alert_date,
+                "disaster_type": disaster_type,
+                "severity": severity,
+                "region": region,
             }
 
             parsed.append(record)
@@ -249,7 +253,7 @@ def load_emergency_messages(sample_limit: int = None, years: int = 5):
     logger.info("=" * 60)
 
     # API 키 확인
-    api_key = get_api_key('EMERGENCYMESSAGE_API_KEY')
+    api_key = get_api_key("EMERGENCYMESSAGE_API_KEY")
     if not api_key:
         logger.error("EMERGENCYMESSAGE_API_KEY 환경변수 필요")
         return
@@ -259,17 +263,30 @@ def load_emergency_messages(sample_limit: int = None, years: int = 5):
     logger.info("DB 연결 완료")
 
     # 조회 시작일 (N년 전)
-    start_date = (datetime.now() - timedelta(days=365 * years)).strftime('%Y%m%d')
+    start_date = (datetime.now() - timedelta(days=365 * years)).strftime("%Y%m%d")
     logger.info(f"조회 기간: {start_date} ~ 현재")
     logger.info(f"재난 유형: {', '.join(DISASTER_TYPES.keys())}")
     logger.info(f"강도 필터: {', '.join(SEVERITY_KEYWORDS.keys())}")
 
     # 주요 지역별 수집
     regions = [
-        '서울특별시', '부산광역시', '대구광역시', '인천광역시',
-        '광주광역시', '대전광역시', '울산광역시', '세종특별자치시',
-        '경기도', '강원특별자치도', '충청북도', '충청남도',
-        '전북특별자치도', '전라남도', '경상북도', '경상남도', '제주특별자치도'
+        "서울특별시",
+        "부산광역시",
+        "대구광역시",
+        "인천광역시",
+        "광주광역시",
+        "대전광역시",
+        "울산광역시",
+        "세종특별자치시",
+        "경기도",
+        "강원특별자치도",
+        "충청북도",
+        "충청남도",
+        "전북특별자치도",
+        "전라남도",
+        "경상북도",
+        "경상남도",
+        "제주특별자치도",
     ]
 
     all_data = []
@@ -296,9 +313,12 @@ def load_emergency_messages(sample_limit: int = None, years: int = 5):
                 break
 
             raw_data = fetch_emergency_messages(
-                api_key, logger,
-                region=region, start_date=start_date,
-                page_no=page_no, num_of_rows=num_of_rows
+                api_key,
+                logger,
+                region=region,
+                start_date=start_date,
+                page_no=page_no,
+                num_of_rows=num_of_rows,
             )
             api_call_count += 1
 
@@ -306,7 +326,7 @@ def load_emergency_messages(sample_limit: int = None, years: int = 5):
                 break
 
             # 파싱 전 데이터 개수
-            body = raw_data.get('body', [])
+            body = raw_data.get("body", [])
             if isinstance(body, list):
                 fetched = len(body)
             elif body:
@@ -332,7 +352,9 @@ def load_emergency_messages(sample_limit: int = None, years: int = 5):
             region_count += filtered_count
             region_filtered += filtered_count
 
-            logger.info(f"  {region} 페이지 {page_no}: {fetched}건 조회 → {filtered_count}건 필터링 통과")
+            logger.info(
+                f"  {region} 페이지 {page_no}: {fetched}건 조회 → {filtered_count}건 필터링 통과"
+            )
 
             # 샘플 제한 확인
             if sample_limit and len(all_data) >= sample_limit:
@@ -362,17 +384,17 @@ def load_emergency_messages(sample_limit: int = None, years: int = 5):
 
         success_count = batch_upsert(
             conn,
-            'api_emergency_messages',
+            "api_emergency_messages",
             all_data,
-            unique_columns=['alert_date', 'disaster_type', 'severity', 'region'],
-            batch_size=100
+            unique_columns=["alert_date", "disaster_type", "severity", "region"],
+            batch_size=100,
         )
         logger.info(f"DB 적재 완료: {success_count}건")
 
         # 재난 유형별 통계
         type_stats = {}
         for d in all_data:
-            dtype = d.get('disaster_type')
+            dtype = d.get("disaster_type")
             type_stats[dtype] = type_stats.get(dtype, 0) + 1
 
         logger.info("\n재난 유형별 통계:")
@@ -382,7 +404,7 @@ def load_emergency_messages(sample_limit: int = None, years: int = 5):
         # 강도별 통계
         severity_stats = {}
         for d in all_data:
-            sev = d.get('severity')
+            sev = d.get("severity")
             severity_stats[sev] = severity_stats.get(sev, 0) + 1
 
         logger.info("\n강도별 통계:")
@@ -393,7 +415,7 @@ def load_emergency_messages(sample_limit: int = None, years: int = 5):
         logger.warning("적재할 데이터 없음")
 
     # 결과 확인
-    total_count = get_table_count(conn, 'api_emergency_messages')
+    total_count = get_table_count(conn, "api_emergency_messages")
     logger.info(f"\napi_emergency_messages 테이블 총 레코드: {total_count}건")
 
     conn.close()
@@ -401,5 +423,5 @@ def load_emergency_messages(sample_limit: int = None, years: int = 5):
 
 
 if __name__ == "__main__":
-    sample_limit = int(os.getenv('SAMPLE_LIMIT', 0)) or None
+    sample_limit = int(os.getenv("SAMPLE_LIMIT", 0)) or None
     load_emergency_messages(sample_limit=sample_limit)

@@ -9,7 +9,6 @@
 """
 
 from typing import List, Dict, Any
-import math
 
 
 class ClimateAggregators:
@@ -128,8 +127,9 @@ class ClimateAggregators:
         return yearly_values
 
     @staticmethod
-    def yearly_percentile(monthly_data: List[float], percentile: int = 95,
-                         months_per_year: int = 12) -> List[float]:
+    def yearly_percentile(
+        monthly_data: List[float], percentile: int = 95, months_per_year: int = 12
+    ) -> List[float]:
         """
         월별 데이터 → 연백분위수
 
@@ -175,7 +175,7 @@ class ClimateAggregators:
 
         rolling_values = []
         for i in range(len(data) - window + 1):
-            window_data = data[i:i + window]
+            window_data = data[i : i + window]
             rolling_values.append(sum(window_data) / len(window_data))
 
         return rolling_values
@@ -196,7 +196,7 @@ class ClimateAggregators:
             }
         """
         if not data or len(data) < 2:
-            return {'slope': 0.0, 'intercept': 0.0, 'trend': 'stable'}
+            return {"slope": 0.0, "intercept": 0.0, "trend": "stable"}
 
         n = len(data)
         x = list(range(n))
@@ -215,17 +215,13 @@ class ClimateAggregators:
 
         # 추세 판단
         if abs(slope) < 0.01:
-            trend = 'stable'
+            trend = "stable"
         elif slope > 0:
-            trend = 'increasing'
+            trend = "increasing"
         else:
-            trend = 'decreasing'
+            trend = "decreasing"
 
-        return {
-            'slope': slope,
-            'intercept': intercept,
-            'trend': trend
-        }
+        return {"slope": slope, "intercept": intercept, "trend": trend}
 
     @staticmethod
     def _calculate_percentile(data: List[float], percentile: int) -> float:

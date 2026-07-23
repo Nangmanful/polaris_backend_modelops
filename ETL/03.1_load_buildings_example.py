@@ -45,6 +45,7 @@ CODE_TARGETS = [
 # 실행 (변수 읽어서 03_load_buildings 호출)
 # =============================================================================
 
+
 def main():
     """변수 기반 건축물대장 조회"""
 
@@ -58,18 +59,17 @@ def main():
         for target in COORD_TARGETS:
             print(f"\n처리 중: {target['name']}")
             result = fetch_buildings(
-                lat=target['lat'],
-                lon=target['lon'],
-                site_name=target['name'],
-                save_to_db=True
+                lat=target["lat"], lon=target["lon"], site_name=target["name"], save_to_db=True
             )
-            results.append({
-                'type': '좌표',
-                'name': target['name'],
-                'success': result['success'],
-                'buildings': result['total_buildings'],
-                'lots': result['total_lots']
-            })
+            results.append(
+                {
+                    "type": "좌표",
+                    "name": target["name"],
+                    "success": result["success"],
+                    "buildings": result["total_buildings"],
+                    "lots": result["total_lots"],
+                }
+            )
 
     # 행정코드 기반 조회
     if CODE_TARGETS:
@@ -79,28 +79,32 @@ def main():
         for target in CODE_TARGETS:
             print(f"\n처리 중: {target['name']}")
             result = fetch_buildings(
-                sigungu_cd=target['sigungu_cd'],
-                bjdong_cd=target['bjdong_cd'],
-                site_name=target['name'],
-                save_to_db=True
+                sigungu_cd=target["sigungu_cd"],
+                bjdong_cd=target["bjdong_cd"],
+                site_name=target["name"],
+                save_to_db=True,
             )
-            results.append({
-                'type': '행정코드',
-                'name': target['name'],
-                'success': result['success'],
-                'buildings': result['total_buildings'],
-                'lots': result['total_lots']
-            })
+            results.append(
+                {
+                    "type": "행정코드",
+                    "name": target["name"],
+                    "success": result["success"],
+                    "buildings": result["total_buildings"],
+                    "lots": result["total_lots"],
+                }
+            )
 
     # 결과 요약
     print("\n" + "=" * 60)
     print("전체 결과 요약")
     print("=" * 60)
     for r in results:
-        status = "O" if r['success'] else "X"
-        print(f"  [{status}] [{r['type']}] {r['name']} → 건물 {r['buildings']}개, 번지 {r['lots']}개")
+        status = "O" if r["success"] else "X"
+        print(
+            f"  [{status}] [{r['type']}] {r['name']} → 건물 {r['buildings']}개, 번지 {r['lots']}개"
+        )
 
-    success_count = sum(1 for r in results if r['success'])
+    success_count = sum(1 for r in results if r["success"])
     print(f"\n총 {len(results)}개 중 {success_count}개 성공")
     print("=" * 60)
 

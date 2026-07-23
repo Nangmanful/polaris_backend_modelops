@@ -1,7 +1,7 @@
 import select
 import psycopg2
 import logging
-from typing import Callable, Dict, Any
+from typing import Callable, Dict
 from ..config.settings import settings
 from ..database.connection import DatabaseConnection
 

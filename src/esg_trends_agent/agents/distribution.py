@@ -9,6 +9,7 @@
 3) 봇이 초대된 모든 채널에 자동 배포 지원
 ==================================================================
 """
+
 from typing import Dict, List
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
@@ -39,7 +40,7 @@ def get_bot_channels(client: WebClient) -> List[str]:
                 types="public_channel,private_channel",
                 exclude_archived=True,
                 limit=200,
-                cursor=cursor
+                cursor=cursor,
             )
             fetched_channels = result.get("channels", [])
             all_channels.extend(fetched_channels)
@@ -51,7 +52,7 @@ def get_bot_channels(client: WebClient) -> List[str]:
         logger.info(f"총 {len(all_channels)}개 채널 발견")
 
         for channel in all_channels:
-            channel_name = channel.get('name', 'unknown')
+            channel_name = channel.get("name", "unknown")
             is_member = channel.get("is_member", False)
             logger.info(f"채널: #{channel_name} - is_member: {is_member}")
 
@@ -63,7 +64,7 @@ def get_bot_channels(client: WebClient) -> List[str]:
             logger.warning("봇이 멤버인 채널이 없습니다. '/invite @봇이름'으로 초대해주세요.")
 
     except SlackApiError as e:
-        error_msg = e.response.get('error', 'unknown')
+        error_msg = e.response.get("error", "unknown")
         logger.error(f"채널 목록 조회 실패: {error_msg}")
         if error_msg == "missing_scope":
             logger.error("필요한 권한: channels:read, groups:read")
@@ -140,7 +141,9 @@ def _send_to_channel(client: WebClient, channel: str, report: str, state: ESGTre
     _send_report_as_message(client, channel, report, state)
 
 
-def _send_report_as_message(client: WebClient, channel: str, report: str, state: ESGTrendsState) -> None:
+def _send_report_as_message(
+    client: WebClient, channel: str, report: str, state: ESGTrendsState
+) -> None:
     """리포트를 메시지로 전송
 
     Args:
@@ -161,47 +164,27 @@ def _send_report_as_message(client: WebClient, channel: str, report: str, state:
     header_blocks = [
         {
             "type": "header",
-            "text": {
-                "type": "plain_text",
-                "text": "🌿 ESG 트렌드 일간 리포트",
-                "emoji": True
-            }
+            "text": {"type": "plain_text", "text": "🌿 ESG 트렌드 일간 리포트", "emoji": True},
         },
-        {
-            "type": "context",
-            "elements": [
-                {
-                    "type": "mrkdwn",
-                    "text": f"발행일: {today}"
-                }
-            ]
-        },
-        {
-            "type": "divider"
-        }
+        {"type": "context", "elements": [{"type": "mrkdwn", "text": f"발행일: {today}"}]},
+        {"type": "divider"},
     ]
 
     # 섹션들을 블록으로 변환 (각 블록은 3000자 제한)
     for section in sections:
         if section.strip():
-            header_blocks.append({
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": section[:3000]
-                }
-            })
+            header_blocks.append(
+                {"type": "section", "text": {"type": "mrkdwn", "text": section[:3000]}}
+            )
 
     try:
         logger.info(f"채널 {channel}에 메시지 전송 시도...")
         result = client.chat_postMessage(
-            channel=channel,
-            blocks=header_blocks,
-            text="🌿 ESG 트렌드 일간 리포트"  # 폴백 텍스트
+            channel=channel, blocks=header_blocks, text="🌿 ESG 트렌드 일간 리포트"  # 폴백 텍스트
         )
         logger.info(f"✅ 메시지 전송 성공: {result.get('ts')}")
     except SlackApiError as e:
-        error_msg = e.response.get('error', 'unknown')
+        error_msg = e.response.get("error", "unknown")
         logger.error(f"Slack 메시지 전송 실패: {error_msg}")
         if error_msg == "not_in_channel":
             logger.error("봇이 채널에 초대되지 않았습니다. '/invite @봇이름' 실행 필요")
@@ -224,7 +207,7 @@ def _split_report_into_sections(report: str) -> List[str]:
     import re
 
     # ## 헤더 기준으로 분할
-    sections = re.split(r'(?=\*[^*]+\*\n)', report)
+    sections = re.split(r"(?=\*[^*]+\*\n)", report)
 
     # 빈 섹션 제거 및 정리
     result = []
@@ -240,7 +223,9 @@ def _split_report_into_sections(report: str) -> List[str]:
     return result
 
 
-def _upload_report_as_file(client: WebClient, channel: str, report: str, state: ESGTrendsState) -> None:
+def _upload_report_as_file(
+    client: WebClient, channel: str, report: str, state: ESGTrendsState
+) -> None:
     """리포트를 파일로 업로드
 
     Args:
@@ -257,10 +242,7 @@ def _upload_report_as_file(client: WebClient, channel: str, report: str, state: 
         # 먼저 요약 메시지 전송
         summary = _create_summary_message(state)
 
-        client.chat_postMessage(
-            channel=channel,
-            text=summary
-        )
+        client.chat_postMessage(channel=channel, text=summary)
 
         # 파일 업로드
         client.files_upload_v2(
@@ -268,7 +250,7 @@ def _upload_report_as_file(client: WebClient, channel: str, report: str, state: 
             content=report,
             filename=filename,
             title=f"ESG 트렌드 리포트 ({datetime.now().strftime('%Y-%m-%d')})",
-            initial_comment="📎 상세 리포트"
+            initial_comment="📎 상세 리포트",
         )
 
     except SlackApiError as e:
@@ -298,10 +280,9 @@ def _create_summary_message(state: ESGTrendsState) -> str:
 
     # 날씨 요약
     if weather_data:
-        weather_str = ", ".join([
-            f"{w.get('location')}: {w.get('temperature')}°C"
-            for w in weather_data
-        ])
+        weather_str = ", ".join(
+            [f"{w.get('location')}: {w.get('temperature')}°C" for w in weather_data]
+        )
         summary += f"🌤️ *날씨*: {weather_str}\n"
 
     # 리스크 알림
@@ -335,10 +316,10 @@ def _convert_to_slack_markdown(text: str) -> str:
     import re
 
     # 헤더 변환: ## -> *텍스트*
-    text = re.sub(r'^#{1,6}\s+(.+)$', r'*\1*', text, flags=re.MULTILINE)
+    text = re.sub(r"^#{1,6}\s+(.+)$", r"*\1*", text, flags=re.MULTILINE)
 
     # 볼드: **텍스트** -> *텍스트*
-    text = re.sub(r'\*\*(.+?)\*\*', r'*\1*', text)
+    text = re.sub(r"\*\*(.+?)\*\*", r"*\1*", text)
 
     # 이탤릭: _텍스트_ 유지
 

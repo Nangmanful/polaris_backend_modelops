@@ -19,14 +19,12 @@ router = APIRouter(tags=["health"])
     response_model=HealthResponse,
     responses={
         200: {"description": "서버 정상 작동 중"},
-    }
+    },
 )
 async def health_check():
     """서버 상태 확인"""
     return HealthResponse(
-        status="healthy",
-        service="ModelOps Risk Assessment API",
-        timestamp=datetime.now()
+        status="healthy", service="ModelOps Risk Assessment API", timestamp=datetime.now()
     )
 
 
@@ -43,13 +41,13 @@ async def health_check():
                         "detail": {
                             "status": "unhealthy",
                             "database": "disconnected",
-                            "error": "Connection failed"
+                            "error": "Connection failed",
                         }
                     }
                 }
-            }
-        }
-    }
+            },
+        },
+    },
 )
 async def database_health():
     """데이터베이스 연결 확인"""
@@ -64,7 +62,7 @@ async def database_health():
                     status="healthy",
                     service="ModelOps Risk Assessment API",
                     database="connected",
-                    timestamp=datetime.now()
+                    timestamp=datetime.now(),
                 )
             else:
                 raise Exception("Database query returned no result")
@@ -73,9 +71,5 @@ async def database_health():
         logger.error(f"Database health check failed: {e}")
         raise HTTPException(
             status_code=500,
-            detail={
-                "status": "unhealthy",
-                "database": "disconnected",
-                "error": str(e)
-            }
+            detail={"status": "unhealthy", "database": "disconnected", "error": str(e)},
         )

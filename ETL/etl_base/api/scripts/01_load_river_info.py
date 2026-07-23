@@ -23,9 +23,8 @@ from utils import (
     get_db_connection,
     get_api_key,
     APIClient,
-    batch_upsert,
     get_table_count,
-    API_ENDPOINTS
+    API_ENDPOINTS,
 )
 
 
@@ -55,17 +54,17 @@ def geocode_address(api_key: str, address: str, logger) -> dict:
     search_queries.append(("address", address))
 
     # 시군구청 검색 쿼리 생성
-    parts = address.replace('/', ' ').split()
+    parts = address.replace("/", " ").split()
     for part in parts:
         part = part.strip()
         if not part:
             continue
         # "시", "군", "구"로 끝나면 청사 검색
-        if part.endswith('시'):
+        if part.endswith("시"):
             search_queries.insert(0, ("place", f"{part}청"))
-        elif part.endswith('군'):
+        elif part.endswith("군"):
             search_queries.insert(0, ("place", f"{part}청"))
-        elif part.endswith('구'):
+        elif part.endswith("구"):
             # 구는 상위 시가 필요하므로 전체 주소로 검색
             search_queries.insert(0, ("place", f"{part}청"))
 
@@ -79,26 +78,26 @@ def geocode_address(api_key: str, address: str, logger) -> dict:
                 "query": query,
                 "type": search_type,
                 "format": "json",
-                "key": api_key
+                "key": api_key,
             }
 
             response = requests.get(url, params=params, timeout=10)
             data = response.json()
 
-            if data.get('response', {}).get('status') != 'OK':
+            if data.get("response", {}).get("status") != "OK":
                 continue
 
-            items = data.get('response', {}).get('result', {}).get('items', [])
+            items = data.get("response", {}).get("result", {}).get("items", [])
             if not items:
                 continue
 
             # 첫 번째 결과 사용
-            point = items[0].get('point', {})
-            x = point.get('x')  # 경도
-            y = point.get('y')  # 위도
+            point = items[0].get("point", {})
+            x = point.get("x")  # 경도
+            y = point.get("y")  # 위도
 
             if x and y:
-                return {'lat': float(y), 'lon': float(x)}
+                return {"lat": float(y), "lon": float(x)}
 
         except Exception as e:
             continue
@@ -122,12 +121,23 @@ def build_address_for_geocoding(sido: str, sigungu: str, emd: str) -> str:
     """
     # 시도 약어 → 정식 명칭
     sido_map = {
-        '서울': '서울특별시', '부산': '부산광역시', '대구': '대구광역시',
-        '인천': '인천광역시', '광주': '광주광역시', '대전': '대전광역시',
-        '울산': '울산광역시', '세종': '세종특별자치시', '경기': '경기도',
-        '강원': '강원도', '충북': '충청북도', '충남': '충청남도',
-        '전북': '전라북도', '전남': '전라남도', '경북': '경상북도',
-        '경남': '경상남도', '제주': '제주특별자치도'
+        "서울": "서울특별시",
+        "부산": "부산광역시",
+        "대구": "대구광역시",
+        "인천": "인천광역시",
+        "광주": "광주광역시",
+        "대전": "대전광역시",
+        "울산": "울산광역시",
+        "세종": "세종특별자치시",
+        "경기": "경기도",
+        "강원": "강원도",
+        "충북": "충청북도",
+        "충남": "충청남도",
+        "전북": "전라북도",
+        "전남": "전라남도",
+        "경북": "경상북도",
+        "경남": "경상남도",
+        "제주": "제주특별자치도",
     }
 
     parts = []
@@ -140,7 +150,7 @@ def build_address_for_geocoding(sido: str, sigungu: str, emd: str) -> str:
     # 시군구 처리 - 접미사가 없으면 일반적인 패턴 추론
     if sigungu and sigungu.strip():
         sg = sigungu.strip()
-        if not (sg.endswith('시') or sg.endswith('군') or sg.endswith('구')):
+        if not (sg.endswith("시") or sg.endswith("군") or sg.endswith("구")):
             # 접미사 추가 시도 (주로 군 지역이 많음)
             sg = f"{sg}군"
         parts.append(sg)
@@ -149,10 +159,12 @@ def build_address_for_geocoding(sido: str, sigungu: str, emd: str) -> str:
     # if emd and emd.strip():
     #     parts.append(emd.strip())
 
-    return ' '.join(parts) if parts else None
+    return " ".join(parts) if parts else None
 
 
-def fetch_river_info(client: APIClient, api_key: str, logger, page_no: int = 1, num_of_rows: int = 100):
+def fetch_river_info(
+    client: APIClient, api_key: str, logger, page_no: int = 1, num_of_rows: int = 100
+):
     """
     하천정보 API 호출
 
@@ -166,12 +178,12 @@ def fetch_river_info(client: APIClient, api_key: str, logger, page_no: int = 1, 
     Returns:
         API 응답 데이터
     """
-    url = API_ENDPOINTS['river_info']
+    url = API_ENDPOINTS["river_info"]
     params = {
-        'serviceKey': api_key,
-        'returnType': 'json',
-        'pageNo': str(page_no),
-        'numOfRows': str(num_of_rows)
+        "serviceKey": api_key,
+        "returnType": "json",
+        "pageNo": str(page_no),
+        "numOfRows": str(num_of_rows),
     }
 
     logger.info(f"하천정보 API 호출: 페이지 {page_no}")
@@ -197,13 +209,13 @@ def parse_river_data(raw_data: dict, logger, vworld_api_key: str = None) -> list
         return parsed
 
     # 헤더 확인
-    header = raw_data.get('header', {})
-    if header.get('resultCode') != '00':
+    header = raw_data.get("header", {})
+    if header.get("resultCode") != "00":
         logger.error(f"API 오류: {header.get('resultMsg')}")
         return parsed
 
     # 본문 데이터 추출
-    body = raw_data.get('body', [])
+    body = raw_data.get("body", [])
     if not body:
         logger.warning("API 응답 body 없음")
         return parsed
@@ -215,79 +227,79 @@ def parse_river_data(raw_data: dict, logger, vworld_api_key: str = None) -> list
         try:
             # 기존 필드
             record = {
-                'river_code': item.get('RVR_CD', ''),
-                'river_name': item.get('RVR_NM', ''),
-                'river_grade': int(item.get('RVR_GRD_CD', 0) or 0),
-                'watershed_area_km2': float(item.get('DRAR', 0) or 0),
-                'river_length_km': float(item.get('RVR_PRLG_LEN', 0) or 0),
-                'start_point': item.get('ORG_PT', ''),
-                'end_point': item.get('CNFLS_PT', ''),
-                'management_org': item.get('MGMT_ORG', ''),
-                'basin_name': item.get('WTRSHD_NM', ''),
-                'sido_name': item.get('CTPV_NM', ''),
-                'sigungu_name': item.get('SGG_NM', ''),
+                "river_code": item.get("RVR_CD", ""),
+                "river_name": item.get("RVR_NM", ""),
+                "river_grade": int(item.get("RVR_GRD_CD", 0) or 0),
+                "watershed_area_km2": float(item.get("DRAR", 0) or 0),
+                "river_length_km": float(item.get("RVR_PRLG_LEN", 0) or 0),
+                "start_point": item.get("ORG_PT", ""),
+                "end_point": item.get("CNFLS_PT", ""),
+                "management_org": item.get("MGMT_ORG", ""),
+                "basin_name": item.get("WTRSHD_NM", ""),
+                "sido_name": item.get("CTPV_NM", ""),
+                "sigungu_name": item.get("SGG_NM", ""),
                 # 추가 필드 (v02)
-                'start_sido': item.get('RVR_CAPO_VL_1', ''),
-                'start_sigungu': item.get('RVR_CAPO_VL_2', ''),
-                'start_emd': item.get('RVR_CAPO_VL_3', ''),
-                'end_sido': item.get('RVR_FNLST_NM_1', ''),
-                'end_sigungu': item.get('RVR_FNLST_NM_2', ''),
-                'end_emd': item.get('RVR_FNLST_NM_3', ''),
-                'flood_capacity': float(item.get('FLOD_CPC', 0) or 0),
-                'main_river': item.get('MAST', ''),
-                'watershed_code': item.get('WASY_CD', ''),
+                "start_sido": item.get("RVR_CAPO_VL_1", ""),
+                "start_sigungu": item.get("RVR_CAPO_VL_2", ""),
+                "start_emd": item.get("RVR_CAPO_VL_3", ""),
+                "end_sido": item.get("RVR_FNLST_NM_1", ""),
+                "end_sigungu": item.get("RVR_FNLST_NM_2", ""),
+                "end_emd": item.get("RVR_FNLST_NM_3", ""),
+                "flood_capacity": float(item.get("FLOD_CPC", 0) or 0),
+                "main_river": item.get("MAST", ""),
+                "watershed_code": item.get("WASY_CD", ""),
                 # 좌표 (초기값)
-                'start_lat': None,
-                'start_lon': None,
-                'end_lat': None,
-                'end_lon': None,
-                'api_response': item
+                "start_lat": None,
+                "start_lon": None,
+                "end_lat": None,
+                "end_lon": None,
+                "api_response": item,
             }
 
             # river_code가 없으면 river_name + grade로 생성
-            if not record['river_code']:
-                record['river_code'] = f"{record['river_name']}_{record['river_grade']}"
+            if not record["river_code"]:
+                record["river_code"] = f"{record['river_name']}_{record['river_grade']}"
 
             # 지오코딩 (VWorld API 키가 있는 경우만)
             if vworld_api_key:
                 # 1. 기점 지오코딩: start_point 먼저 시도, 실패하면 구조화된 주소
                 start_coord = None
-                if record['start_point']:
+                if record["start_point"]:
                     # '/' 구분자를 ' '로 변환
-                    start_query = record['start_point'].replace('/', ' ')
+                    start_query = record["start_point"].replace("/", " ")
                     start_coord = geocode_address(vworld_api_key, start_query, logger)
 
-                if not start_coord and (record['start_sido'] or record['start_sigungu']):
+                if not start_coord and (record["start_sido"] or record["start_sigungu"]):
                     # 폴백: 구조화된 주소로 시도
                     start_addr = build_address_for_geocoding(
-                        record['start_sido'], record['start_sigungu'], record['start_emd']
+                        record["start_sido"], record["start_sigungu"], record["start_emd"]
                     )
                     if start_addr:
                         start_coord = geocode_address(vworld_api_key, start_addr, logger)
 
                 if start_coord:
-                    record['start_lat'] = start_coord['lat']
-                    record['start_lon'] = start_coord['lon']
+                    record["start_lat"] = start_coord["lat"]
+                    record["start_lon"] = start_coord["lon"]
                     geocode_success += 1
                 else:
                     geocode_fail += 1
 
                 # 2. 종점 지오코딩
                 end_coord = None
-                if record['end_point']:
-                    end_query = record['end_point'].replace('/', ' ')
+                if record["end_point"]:
+                    end_query = record["end_point"].replace("/", " ")
                     end_coord = geocode_address(vworld_api_key, end_query, logger)
 
-                if not end_coord and (record['end_sido'] or record['end_sigungu']):
+                if not end_coord and (record["end_sido"] or record["end_sigungu"]):
                     end_addr = build_address_for_geocoding(
-                        record['end_sido'], record['end_sigungu'], record['end_emd']
+                        record["end_sido"], record["end_sigungu"], record["end_emd"]
                     )
                     if end_addr:
                         end_coord = geocode_address(vworld_api_key, end_addr, logger)
 
                 if end_coord:
-                    record['end_lat'] = end_coord['lat']
-                    record['end_lon'] = end_coord['lon']
+                    record["end_lat"] = end_coord["lat"]
+                    record["end_lon"] = end_coord["lon"]
 
                 # API 레이트 리밋 방지
                 time.sleep(0.1)
@@ -317,13 +329,13 @@ def load_river_info(sample_limit: int = None):
     logger.info("=" * 60)
 
     # API 키 확인
-    api_key = get_api_key('RIVER_API_KEY')
+    api_key = get_api_key("RIVER_API_KEY")
     if not api_key:
         logger.error("RIVER_API_KEY 환경변수 필요")
         return
 
     # VWorld API 키 (지오코딩용, 선택적)
-    vworld_api_key = get_api_key('VWORLD_API_KEY')
+    vworld_api_key = get_api_key("VWORLD_API_KEY")
     if vworld_api_key:
         logger.info("VWorld API 키 확인됨 - 지오코딩 활성화")
     else:
@@ -348,10 +360,10 @@ def load_river_info(sample_limit: int = None):
             break
 
         # 샘플 제한 적용 (지오코딩 전에 자르기)
-        body = raw_data.get('body', [])
+        body = raw_data.get("body", [])
         if sample_limit and len(all_data) + len(body) > sample_limit:
             remaining = sample_limit - len(all_data)
-            raw_data['body'] = body[:remaining]
+            raw_data["body"] = body[:remaining]
 
         parsed = parse_river_data(raw_data, logger, vworld_api_key)
         if not parsed:
@@ -385,11 +397,13 @@ def load_river_info(sample_limit: int = None):
                 start_geom_sql = "NULL"
                 end_geom_sql = "NULL"
 
-                if record.get('start_lat') and record.get('start_lon'):
+                if record.get("start_lat") and record.get("start_lon"):
                     start_geom_sql = f"ST_SetSRID(ST_MakePoint({record['start_lon']}, {record['start_lat']}), 4326)"
 
-                if record.get('end_lat') and record.get('end_lon'):
-                    end_geom_sql = f"ST_SetSRID(ST_MakePoint({record['end_lon']}, {record['end_lat']}), 4326)"
+                if record.get("end_lat") and record.get("end_lon"):
+                    end_geom_sql = (
+                        f"ST_SetSRID(ST_MakePoint({record['end_lon']}, {record['end_lat']}), 4326)"
+                    )
 
                 # UPSERT SQL
                 sql = f"""
@@ -439,17 +453,37 @@ def load_river_info(sample_limit: int = None):
                 """
 
                 import json
-                cursor.execute(sql, (
-                    record['river_code'], record['river_name'], record['river_grade'],
-                    record['watershed_area_km2'], record['river_length_km'],
-                    record['start_point'], record['end_point'], record['management_org'],
-                    record['basin_name'], record['sido_name'], record['sigungu_name'],
-                    record['start_sido'], record['start_sigungu'], record['start_emd'],
-                    record['end_sido'], record['end_sigungu'], record['end_emd'],
-                    record['flood_capacity'], record['main_river'], record['watershed_code'],
-                    record['start_lat'], record['start_lon'], record['end_lat'], record['end_lon'],
-                    json.dumps(record['api_response'], ensure_ascii=False)
-                ))
+
+                cursor.execute(
+                    sql,
+                    (
+                        record["river_code"],
+                        record["river_name"],
+                        record["river_grade"],
+                        record["watershed_area_km2"],
+                        record["river_length_km"],
+                        record["start_point"],
+                        record["end_point"],
+                        record["management_org"],
+                        record["basin_name"],
+                        record["sido_name"],
+                        record["sigungu_name"],
+                        record["start_sido"],
+                        record["start_sigungu"],
+                        record["start_emd"],
+                        record["end_sido"],
+                        record["end_sigungu"],
+                        record["end_emd"],
+                        record["flood_capacity"],
+                        record["main_river"],
+                        record["watershed_code"],
+                        record["start_lat"],
+                        record["start_lon"],
+                        record["end_lat"],
+                        record["end_lon"],
+                        json.dumps(record["api_response"], ensure_ascii=False),
+                    ),
+                )
                 success_count += 1
 
             except Exception as e:
@@ -464,14 +498,14 @@ def load_river_info(sample_limit: int = None):
         logger.info(f"DB 적재 완료: 성공 {success_count}, 실패 {error_count}")
 
         # 지오코딩 통계
-        with_geom = sum(1 for r in all_data if r.get('start_lat'))
+        with_geom = sum(1 for r in all_data if r.get("start_lat"))
         logger.info(f"geometry 생성: {with_geom}/{len(all_data)}건")
 
     else:
         logger.warning("적재할 데이터 없음")
 
     # 결과 확인
-    total_count = get_table_count(conn, 'api_river_info')
+    total_count = get_table_count(conn, "api_river_info")
     logger.info(f"api_river_info 테이블 총 레코드: {total_count}건")
 
     conn.close()
@@ -480,5 +514,5 @@ def load_river_info(sample_limit: int = None):
 
 if __name__ == "__main__":
     # 환경변수로 샘플 제한 설정 가능
-    sample_limit = int(os.getenv('SAMPLE_LIMIT', 0)) or None
+    sample_limit = int(os.getenv("SAMPLE_LIMIT", 0)) or None
     load_river_info(sample_limit=sample_limit)

@@ -11,11 +11,10 @@ NetCDF 파일에서 해수면 상승 예측 데이터를 로드
 """
 
 import sys
-from pathlib import Path
 from tqdm import tqdm
 import numpy as np
 
-from utils import setup_logging, get_db_connection, get_data_dir, table_exists, get_row_count
+from utils import setup_logging, get_db_connection, get_data_dir, get_row_count
 
 
 def load_sea_level() -> None:
@@ -51,7 +50,7 @@ def load_sea_level() -> None:
 
     nc_files = list(sea_level_dir.glob("*annual_mean*.nc"))
     # ssp1 파일이 먼저 처리되도록 정렬 (INSERT → UPDATE 순서 보장)
-    nc_files = sorted(nc_files, key=lambda x: 0 if 'ssp1' in x.name else 1)
+    nc_files = sorted(nc_files, key=lambda x: 0 if "ssp1" in x.name else 1)
     logger.info(f"{len(nc_files)}개 NetCDF 파일 발견")
 
     if not nc_files:
@@ -67,8 +66,8 @@ def load_sea_level() -> None:
     ds = nc.Dataset(nc_files[0])
     logger.info(f"   변수: {list(ds.variables.keys())}")
 
-    lat = ds.variables['latitude'][:]  # 2D 배열일 수 있음
-    lon = ds.variables['longitude'][:]
+    lat = ds.variables["latitude"][:]  # 2D 배열일 수 있음
+    lon = ds.variables["longitude"][:]
 
     # 1D로 변환
     if len(lat.shape) == 2:
@@ -92,11 +91,14 @@ def load_sea_level() -> None:
                 lat_val = float(lat_1d[j])
                 lon_val = float(lon_1d[i])
 
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO sea_level_grid (longitude, latitude, geom)
                 VALUES (%s, %s, ST_SetSRID(ST_MakePoint(%s, %s), 4326))
                 RETURNING grid_id
-            """, (lon_val, lat_val, lon_val, lat_val))
+            """,
+                (lon_val, lat_val, lon_val, lat_val),
+            )
             grid_id = cursor.fetchone()[0]
             grid_map[(j, i)] = grid_id
 
@@ -107,10 +109,10 @@ def load_sea_level() -> None:
 
     # SSP별 해수면 데이터 로드
     ssp_mapping = {
-        'ssp1_2_6': 'ssp1',
-        'ssp2_4_5': 'ssp2',
-        'ssp3_7_0': 'ssp3',
-        'ssp5_8_5': 'ssp5',
+        "ssp1_2_6": "ssp1",
+        "ssp2_4_5": "ssp2",
+        "ssp3_7_0": "ssp3",
+        "ssp5_8_5": "ssp5",
     }
 
     total_insert = 0
@@ -132,7 +134,7 @@ def load_sea_level() -> None:
             # 데이터 변수 찾기
             slr_var = None
             for var in ds.variables.keys():
-                if 'slr' in var.lower():
+                if "slr" in var.lower():
                     slr_var = var
                     break
 
@@ -144,7 +146,7 @@ def load_sea_level() -> None:
             time_steps = slr_data.shape[0]
 
             # sea_level_data 테이블 초기화 (첫 번째 SSP에서만)
-            if ssp_col == 'ssp1':
+            if ssp_col == "ssp1":
                 cursor.execute("TRUNCATE TABLE sea_level_data")
                 conn.commit()
 
@@ -158,17 +160,23 @@ def load_sea_level() -> None:
                     if np.ma.is_masked(val) or np.isnan(val):
                         continue
 
-                    if ssp_col == 'ssp1':
-                        cursor.execute("""
+                    if ssp_col == "ssp1":
+                        cursor.execute(
+                            """
                             INSERT INTO sea_level_data (grid_id, year, ssp1)
                             VALUES (%s, %s, %s)
-                        """, (grid_id, year, float(val)))
+                        """,
+                            (grid_id, year, float(val)),
+                        )
                     else:
-                        cursor.execute(f"""
+                        cursor.execute(
+                            f"""
                             UPDATE sea_level_data
                             SET {ssp_col} = %s
                             WHERE grid_id = %s AND year = %s
-                        """, (float(val), grid_id, year))
+                        """,
+                            (float(val), grid_id, year),
+                        )
 
                     insert_count += 1
 

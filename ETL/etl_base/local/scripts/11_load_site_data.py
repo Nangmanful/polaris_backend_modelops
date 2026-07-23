@@ -18,13 +18,14 @@ from pathlib import Path
 from datetime import datetime
 from openpyxl import load_workbook
 
-from utils import setup_logging, get_db_connection, get_data_dir, table_exists, get_row_count
-
+from utils import setup_logging, get_db_connection, get_data_dir, table_exists
 
 # 고정 Site ID (환경변수 또는 기본값)
-PANGYO_DC_SITE_ID = os.environ.get('PANGYO_DC_SITE_ID', '00000000-0000-0000-0000-000000000001')
-PANGYO_CAMPUS_SITE_ID = os.environ.get('PANGYO_CAMPUS_SITE_ID', '00000000-0000-0000-0000-000000000002')
-DEFAULT_SITE_ID = os.environ.get('DEFAULT_SITE_ID', '00000000-0000-0000-0000-000000000099')
+PANGYO_DC_SITE_ID = os.environ.get("PANGYO_DC_SITE_ID", "00000000-0000-0000-0000-000000000001")
+PANGYO_CAMPUS_SITE_ID = os.environ.get(
+    "PANGYO_CAMPUS_SITE_ID", "00000000-0000-0000-0000-000000000002"
+)
+DEFAULT_SITE_ID = os.environ.get("DEFAULT_SITE_ID", "00000000-0000-0000-0000-000000000099")
 
 
 def universal_excel_loader(xlsx_file: Path) -> dict:
@@ -39,11 +40,7 @@ def universal_excel_loader(xlsx_file: Path) -> dict:
     Returns:
         dict: 텍스트 덤프된 데이터
     """
-    result = {
-        'file_name': xlsx_file.name,
-        'uploaded_at': datetime.now().isoformat(),
-        'sheets': []
-    }
+    result = {"file_name": xlsx_file.name, "uploaded_at": datetime.now().isoformat(), "sheets": []}
 
     try:
         wb = load_workbook(xlsx_file, data_only=True)
@@ -53,22 +50,20 @@ def universal_excel_loader(xlsx_file: Path) -> dict:
 
             rows = []
             for row in ws.iter_rows():
-                row_values = [str(cell.value) if cell.value is not None else '' for cell in row]
+                row_values = [str(cell.value) if cell.value is not None else "" for cell in row]
                 # 완전히 빈 행은 스킵
                 if any(v.strip() for v in row_values):
-                    rows.append(' | '.join(row_values))
+                    rows.append(" | ".join(row_values))
 
-            result['sheets'].append({
-                'name': sheet_name,
-                'row_count': len(rows),
-                'content': '\n'.join(rows)
-            })
+            result["sheets"].append(
+                {"name": sheet_name, "row_count": len(rows), "content": "\n".join(rows)}
+            )
 
         wb.close()
 
     except Exception as e:
-        result['error'] = str(e)
-        result['sheets'] = []
+        result["error"] = str(e)
+        result["sheets"] = []
 
     return result
 
@@ -85,18 +80,18 @@ def infer_category(file_name: str) -> str:
     """
     file_lower = file_name.lower()
 
-    if '전력' in file_lower or 'power' in file_lower:
-        return 'power'
-    elif '에너지' in file_lower or 'energy' in file_lower:
-        return 'energy'
-    elif '보험' in file_lower or 'insurance' in file_lower:
-        return 'insurance'
-    elif '건물' in file_lower or 'building' in file_lower:
-        return 'building'
-    elif '자산' in file_lower or 'asset' in file_lower:
-        return 'asset'
+    if "전력" in file_lower or "power" in file_lower:
+        return "power"
+    elif "에너지" in file_lower or "energy" in file_lower:
+        return "energy"
+    elif "보험" in file_lower or "insurance" in file_lower:
+        return "insurance"
+    elif "건물" in file_lower or "building" in file_lower:
+        return "building"
+    elif "자산" in file_lower or "asset" in file_lower:
+        return "asset"
     else:
-        return 'other'
+        return "other"
 
 
 def infer_site_id(file_name: str) -> str:
@@ -111,9 +106,9 @@ def infer_site_id(file_name: str) -> str:
     """
     file_lower = file_name.lower()
 
-    if '판교dc' in file_lower or '판교DC' in file_name:
+    if "판교dc" in file_lower or "판교DC" in file_name:
         return PANGYO_DC_SITE_ID
-    elif '판교캠퍼스' in file_lower:
+    elif "판교캠퍼스" in file_lower:
         return PANGYO_CAMPUS_SITE_ID
     else:
         return DEFAULT_SITE_ID
@@ -144,7 +139,7 @@ def load_site_data() -> None:
     data_dir = get_data_dir()
 
     # 모든 Excel 파일 찾기 (참조 데이터 파일 제외)
-    EXCLUDE_PATTERNS = ['aqueduct', 'rankings', 'reference']  # 글로벌 참조 데이터 제외
+    EXCLUDE_PATTERNS = ["aqueduct", "rankings", "reference"]  # 글로벌 참조 데이터 제외
 
     all_xlsx = list(data_dir.glob("*.xlsx"))
     xlsx_files = [f for f in all_xlsx if not any(p in f.name.lower() for p in EXCLUDE_PATTERNS)]
@@ -171,14 +166,15 @@ def load_site_data() -> None:
         # 범용 로더로 텍스트 덤프
         data = universal_excel_loader(xlsx_file)
 
-        if 'error' in data:
+        if "error" in data:
             logger.error(f"   ✗ 파일 읽기 실패: {data['error']}")
             fail_count += 1
             continue
 
         # DB 저장 (UPSERT - site_id + category + file_name 기준)
         try:
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO site_additional_data
                 (site_id, data_category, file_name, structured_data, metadata, uploaded_at)
                 VALUES (%s, %s, %s, %s, %s, NOW())
@@ -187,21 +183,26 @@ def load_site_data() -> None:
                     structured_data = EXCLUDED.structured_data,
                     metadata = EXCLUDED.metadata,
                     uploaded_at = NOW()
-            """, (
-                site_id,
-                category,
-                xlsx_file.name,
-                json.dumps(data, ensure_ascii=False),
-                json.dumps({
-                    'source': 'Universal Excel Loader',
-                    'loaded_at': datetime.now().isoformat(),
-                    'sheet_count': len(data['sheets']),
-                    'total_rows': sum(s['row_count'] for s in data['sheets'])
-                }, ensure_ascii=False)
-            ))
+            """,
+                (
+                    site_id,
+                    category,
+                    xlsx_file.name,
+                    json.dumps(data, ensure_ascii=False),
+                    json.dumps(
+                        {
+                            "source": "Universal Excel Loader",
+                            "loaded_at": datetime.now().isoformat(),
+                            "sheet_count": len(data["sheets"]),
+                            "total_rows": sum(s["row_count"] for s in data["sheets"]),
+                        },
+                        ensure_ascii=False,
+                    ),
+                ),
+            )
             conn.commit()
 
-            total_rows = sum(s['row_count'] for s in data['sheets'])
+            total_rows = sum(s["row_count"] for s in data["sheets"])
             logger.info(f"   ✓ 저장 완료: {len(data['sheets'])} sheets, {total_rows} rows")
             success_count += 1
 

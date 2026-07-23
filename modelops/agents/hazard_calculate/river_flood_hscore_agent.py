@@ -1,4 +1,4 @@
-'''
+"""
 파일명: river_flood_hscore_agent.py
 최종 수정일: 2025-12-14
 버전: v2
@@ -6,7 +6,8 @@
 변경 이력:
     - v1: HazardCalculator 로직 통합 (TWI + 강수량 기반)
     - v2: 원래 설계 복원 (DB 로직 제거, 순수 계산만)
-'''
+"""
+
 from typing import Dict, Any
 from .base_hazard_hscore_agent import BaseHazardHScoreAgent
 
@@ -25,7 +26,7 @@ class RiverFloodHScoreAgent(BaseHazardHScoreAgent):
     """
 
     def __init__(self):
-        super().__init__(risk_type='river_flood')
+        super().__init__(risk_type="river_flood")
 
     def calculate_hazard(self, collected_data: Dict[str, Any]) -> float:
         """
@@ -39,16 +40,14 @@ class RiverFloodHScoreAgent(BaseHazardHScoreAgent):
         Returns:
             Hazard 점수 (0.0 ~ 1.0)
         """
-        spatial_data = collected_data.get('spatial_data', {})
-        climate_data = collected_data.get('climate_data', {})
-        building_data = collected_data.get('building_data', {})
+        spatial_data = collected_data.get("spatial_data", {})
+        climate_data = collected_data.get("climate_data", {})
+        building_data = collected_data.get("building_data", {})
 
         try:
             # 1. TWI 기반 지형 취약도 계산
             landcover_type = self.get_value_with_fallback(
-                spatial_data,
-                ['landcover_type', 'land_cover_type'],
-                'urban'
+                spatial_data, ["landcover_type", "land_cover_type"], "urban"
             )
             twi = self._calculate_twi(landcover_type)
 
@@ -62,9 +61,7 @@ class RiverFloodHScoreAgent(BaseHazardHScoreAgent):
 
             # 2. 강수량 기반 홍수 빈도 점수
             extreme_rainfall = self.get_value_with_fallback(
-                climate_data,
-                ['max_1day_rainfall_mm', 'rx1day', 'extreme_rain_95p'],
-                250.0
+                climate_data, ["max_1day_rainfall_mm", "rx1day", "extreme_rain_95p"], 250.0
             )
 
             # 강수량 정규화 (0~1 점수)
@@ -78,8 +75,8 @@ class RiverFloodHScoreAgent(BaseHazardHScoreAgent):
             # 3. 하천 거리 보정 (가까울수록 위험)
             distance_to_river = self.get_value_with_fallback(
                 {**spatial_data, **building_data},
-                ['distance_to_river_m', 'river_distance_m'],
-                10000.0
+                ["distance_to_river_m", "river_distance_m"],
+                10000.0,
             )
 
             # 거리 보정 계수 (1km 이내 1.2, 5km 이내 1.0, 그 외 0.8)
@@ -94,17 +91,17 @@ class RiverFloodHScoreAgent(BaseHazardHScoreAgent):
             hazard_score = (twi_score * 0.4 + rainfall_score * 0.6) * distance_factor
 
             # 상세 결과 기록
-            if 'calculation_details' not in collected_data:
-                collected_data['calculation_details'] = {}
+            if "calculation_details" not in collected_data:
+                collected_data["calculation_details"] = {}
 
-            collected_data['calculation_details']['river_flood'] = {
-                'hazard_score': hazard_score,
-                'rx1day': extreme_rainfall,    # DB에서 가져온 1일 최대강수량
-                'twi': twi,
-                'twi_score': twi_score,
-                'rainfall_score': rainfall_score,
-                'distance_to_river': distance_to_river,
-                'distance_factor': distance_factor
+            collected_data["calculation_details"]["river_flood"] = {
+                "hazard_score": hazard_score,
+                "rx1day": extreme_rainfall,  # DB에서 가져온 1일 최대강수량
+                "twi": twi,
+                "twi_score": twi_score,
+                "rainfall_score": rainfall_score,
+                "distance_to_river": distance_to_river,
+                "distance_factor": distance_factor,
             }
 
             return round(min(hazard_score, 1.0), 4)
@@ -119,12 +116,12 @@ class RiverFloodHScoreAgent(BaseHazardHScoreAgent):
         토지피복도 기반의 경험적 추정치 사용
         """
         twi_map = {
-            'forest': 10.5,
-            'grassland': 9.0,
-            'agricultural': 7.5,
-            'water': 14.0,
-            'wetland': 12.0,
-            'urban': 6.5,
-            'barren': 5.0,
+            "forest": 10.5,
+            "grassland": 9.0,
+            "agricultural": 7.5,
+            "water": 14.0,
+            "wetland": 12.0,
+            "urban": 6.5,
+            "barren": 5.0,
         }
         return twi_map.get(landcover_type, 6.5)

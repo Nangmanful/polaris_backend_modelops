@@ -8,6 +8,7 @@
 2) 리포트 품질 검증
 ==================================================================
 """
+
 from typing import Dict, Literal
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
@@ -145,7 +146,8 @@ def _llm_quality_check(state: ESGTrendsState) -> tuple:
     try:
         if "점수" in result:
             import re
-            match = re.search(r'점수[:\s]*([0-9.]+)', result)
+
+            match = re.search(r"점수[:\s]*([0-9.]+)", result)
             if match:
                 score = float(match.group(1))
                 score = min(max(score, 0.0), 1.0)

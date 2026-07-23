@@ -19,8 +19,7 @@ from pathlib import Path
 
 # 로깅 설정
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 
 logger = logging.getLogger(__name__)
@@ -38,11 +37,11 @@ def probability_batch_job():
     try:
         run_probability_batch(
             grid_points=None,  # 전체 격자점
-            scenarios=None,    # 전체 시나리오
-            years=None,        # 2021-2100
-            risk_types=None,   # 전체 리스크
+            scenarios=None,  # 전체 시나리오
+            years=None,  # 2021-2100
+            risk_types=None,  # 전체 리스크
             batch_size=100,
-            max_workers=4
+            max_workers=4,
         )
         logger.info("P(H) BATCH JOB COMPLETED SUCCESSFULLY")
     except Exception as e:
@@ -61,11 +60,11 @@ def hazard_batch_job():
     try:
         run_hazard_batch(
             grid_points=None,  # 전체 격자점
-            scenarios=None,    # 전체 시나리오
-            years=None,        # 2021-2100
-            risk_types=None,   # 전체 리스크
+            scenarios=None,  # 전체 시나리오
+            years=None,  # 2021-2100
+            risk_types=None,  # 전체 리스크
             batch_size=100,
-            max_workers=4
+            max_workers=4,
         )
         logger.info("HAZARD SCORE BATCH JOB COMPLETED SUCCESSFULLY")
     except Exception as e:
@@ -89,9 +88,9 @@ def emergency_messages_batch_job():
 
         # ETL 스크립트 동적 import
         import importlib.util
+
         spec = importlib.util.spec_from_file_location(
-            "load_emergency_messages",
-            etl_path / "02_load_emergency_messages.py"
+            "load_emergency_messages", etl_path / "02_load_emergency_messages.py"
         )
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
@@ -162,7 +161,7 @@ app = FastAPI(
     """,
     version="2.0.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
 )
 
 # CORS 설정
@@ -199,41 +198,28 @@ async def startup_event():
         # P(H) 배치 스케줄 등록: 매년 1월 1일 02:00
         scheduler.add_job(
             probability_batch_job,
-            trigger=CronTrigger(
-                month=1,      # 1월
-                day=1,        # 1일
-                hour=2,       # 02:00
-                minute=0
-            ),
-            id='probability_batch',
-            name='P(H) Timeseries Batch',
-            replace_existing=True
+            trigger=CronTrigger(month=1, day=1, hour=2, minute=0),  # 1월  # 1일  # 02:00
+            id="probability_batch",
+            name="P(H) Timeseries Batch",
+            replace_existing=True,
         )
 
         # H 배치 스케줄 등록: 매년 1월 1일 04:00
         scheduler.add_job(
             hazard_batch_job,
-            trigger=CronTrigger(
-                month=1,      # 1월
-                day=1,        # 1일
-                hour=4,       # 04:00
-                minute=0
-            ),
-            id='hazard_batch',
-            name='Hazard Score Timeseries Batch',
-            replace_existing=True
+            trigger=CronTrigger(month=1, day=1, hour=4, minute=0),  # 1월  # 1일  # 04:00
+            id="hazard_batch",
+            name="Hazard Score Timeseries Batch",
+            replace_existing=True,
         )
 
         # 재난안전데이터 ETL 배치 스케줄 등록: 매일 09:00
         scheduler.add_job(
             emergency_messages_batch_job,
-            trigger=CronTrigger(
-                hour=9,       # 09:00
-                minute=0
-            ),
-            id='emergency_messages_etl',
-            name='Emergency Messages ETL Batch',
-            replace_existing=True
+            trigger=CronTrigger(hour=9, minute=0),  # 09:00
+            id="emergency_messages_etl",
+            name="Emergency Messages ETL Batch",
+            replace_existing=True,
         )
 
         scheduler.start()
@@ -273,14 +259,14 @@ async def root():
             "사업장 리스크 계산 (건물 정보 기반 H × E × V)",
             "이전 후보지 추천 (~1000개 격자 평가)",
             "AAL 기반 의사결정 (base_aal × F_vuln)",
-            "자동 배치 처리 (Hazard, Probability 스케줄러)"
+            "자동 배치 처리 (Hazard, Probability 스케줄러)",
         ],
         "calculation_process": {
             "1_hazard": "DB 조회 (스케줄러가 미리 계산)",
             "2_exposure": "건물 정보 기반 노출도 계산",
             "3_vulnerability": "건물 특성 기반 취약성 계산",
             "4_integrated_risk": "H × E × V / 10000",
-            "5_aal": "base_aal × F_vuln × (1 - insurance_rate)"
+            "5_aal": "base_aal × F_vuln × (1 - insurance_rate)",
         },
         "endpoints": {
             "site_assessment": {
@@ -288,7 +274,7 @@ async def root():
                 "recommend_locations": "POST /api/site-assessment/recommend-locations",
                 "task_status": "GET /api/site-assessment/task-status/{task_id}",
                 "tasks": "GET /api/site-assessment/tasks",
-                "delete_task": "DELETE /api/site-assessment/task/{task_id}"
+                "delete_task": "DELETE /api/site-assessment/task/{task_id}",
             },
             "batch_trigger": {
                 "custom_schedule": "POST /api/batch-trigger/trigger-custom-schedule",
@@ -296,21 +282,14 @@ async def root():
                 "run_hazard": "POST /api/batch-trigger/run-hazard-batch",
                 "run_candidate_locations": "POST /api/batch-trigger/run-candidate-locations-batch",
                 "run_regional_locations": "POST /api/batch-trigger/run-regional-locations-batch",
-                "scheduled_jobs": "GET /api/batch-trigger/scheduled-jobs"
+                "scheduled_jobs": "GET /api/batch-trigger/scheduled-jobs",
             },
-            "health": {
-                "check": "GET /health",
-                "database": "GET /health/db"
-            }
-        }
+            "health": {"check": "GET /health", "database": "GET /health/db"},
+        },
     }
 
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(
-        app,
-        host="0.0.0.0",
-        port=8001,
-        log_level="info"
-    )
+
+    uvicorn.run(app, host="0.0.0.0", port=8001, log_level="info")

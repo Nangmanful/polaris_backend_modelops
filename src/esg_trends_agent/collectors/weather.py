@@ -8,12 +8,13 @@
 2) 9대 물리적 리스크 분석
 ==================================================================
 """
+
 from typing import Dict
 from ..state import ESGTrendsState, WeatherData, PhysicalRiskAnalysis
 from ..tools.weather_api import (
     fetch_weather_for_location,
     analyze_physical_risks,
-    LOCATION_GRID_MAP
+    LOCATION_GRID_MAP,
 )
 from ..utils.config import Config
 from ..utils.logging import get_logger
@@ -61,7 +62,9 @@ def collect_weather(state: ESGTrendsState) -> Dict:
                     raw_data=weather_result,
                 )
                 weather_data_list.append(weather_data)
-                logger.info(f"{location} 날씨: {weather_data['temperature']}°C, {weather_data['weather_condition']}")
+                logger.info(
+                    f"{location} 날씨: {weather_data['temperature']}°C, {weather_data['weather_condition']}"
+                )
             else:
                 errors.append(f"{location} 날씨 데이터 수집 실패")
 

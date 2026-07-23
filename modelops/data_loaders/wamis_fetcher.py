@@ -35,7 +35,7 @@ import os
 import requests
 from pathlib import Path
 from dotenv import load_dotenv
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 # 환경변수 로드
 BASE_DIR = Path(__file__).parent.parent.parent
@@ -55,138 +55,138 @@ class WamisFetcher:
 
         # 시도별 권역 매핑 (출처: 국가수자원관리종합정보시스템, http://www.wamis.go.kr)
         self.sido_watershed_map = {
-            '서울특별시': {
-                'major_watershed': '한강',
-                'medium_watershed': '한강서해',
-                'river_name': '한강',
-                'watershed_area_km2': 26219,
-                'runoff_coef': 0.65,
+            "서울특별시": {
+                "major_watershed": "한강",
+                "medium_watershed": "한강서해",
+                "river_name": "한강",
+                "watershed_area_km2": 26219,
+                "runoff_coef": 0.65,
             },
-            '부산광역시': {
-                'major_watershed': '낙동강',
-                'medium_watershed': '낙동강하구',
-                'river_name': '낙동강',
-                'watershed_area_km2': 23817,
-                'runoff_coef': 0.60,
+            "부산광역시": {
+                "major_watershed": "낙동강",
+                "medium_watershed": "낙동강하구",
+                "river_name": "낙동강",
+                "watershed_area_km2": 23817,
+                "runoff_coef": 0.60,
             },
-            '대구광역시': {
-                'major_watershed': '낙동강',
-                'medium_watershed': '낙동강본류',
-                'river_name': '낙동강',
-                'watershed_area_km2': 23817,
-                'runoff_coef': 0.60,
+            "대구광역시": {
+                "major_watershed": "낙동강",
+                "medium_watershed": "낙동강본류",
+                "river_name": "낙동강",
+                "watershed_area_km2": 23817,
+                "runoff_coef": 0.60,
             },
-            '인천광역시': {
-                'major_watershed': '한강',
-                'medium_watershed': '한강서해',
-                'river_name': '한강',
-                'watershed_area_km2': 26219,
-                'runoff_coef': 0.65,
+            "인천광역시": {
+                "major_watershed": "한강",
+                "medium_watershed": "한강서해",
+                "river_name": "한강",
+                "watershed_area_km2": 26219,
+                "runoff_coef": 0.65,
             },
-            '광주광역시': {
-                'major_watershed': '영산강',
-                'medium_watershed': '영산강본류',
-                'river_name': '영산강',
-                'watershed_area_km2': 3469,
-                'runoff_coef': 0.55,
+            "광주광역시": {
+                "major_watershed": "영산강",
+                "medium_watershed": "영산강본류",
+                "river_name": "영산강",
+                "watershed_area_km2": 3469,
+                "runoff_coef": 0.55,
             },
-            '대전광역시': {
-                'major_watershed': '금강',
-                'medium_watershed': '금강본류',
-                'river_name': '금강',
-                'watershed_area_km2': 9914,
-                'runoff_coef': 0.58,
+            "대전광역시": {
+                "major_watershed": "금강",
+                "medium_watershed": "금강본류",
+                "river_name": "금강",
+                "watershed_area_km2": 9914,
+                "runoff_coef": 0.58,
             },
-            '울산광역시': {
-                'major_watershed': '낙동강',
-                'medium_watershed': '태화강',
-                'river_name': '태화강',
-                'watershed_area_km2': 23817,
-                'runoff_coef': 0.60,
+            "울산광역시": {
+                "major_watershed": "낙동강",
+                "medium_watershed": "태화강",
+                "river_name": "태화강",
+                "watershed_area_km2": 23817,
+                "runoff_coef": 0.60,
             },
-            '세종특별자치시': {
-                'major_watershed': '금강',
-                'medium_watershed': '금강본류',
-                'river_name': '금강',
-                'watershed_area_km2': 9914,
-                'runoff_coef': 0.58,
+            "세종특별자치시": {
+                "major_watershed": "금강",
+                "medium_watershed": "금강본류",
+                "river_name": "금강",
+                "watershed_area_km2": 9914,
+                "runoff_coef": 0.58,
             },
-            '경기도': {
-                'major_watershed': '한강',
-                'medium_watershed': '한강서해',
-                'river_name': '한강',
-                'watershed_area_km2': 26219,
-                'runoff_coef': 0.65,
+            "경기도": {
+                "major_watershed": "한강",
+                "medium_watershed": "한강서해",
+                "river_name": "한강",
+                "watershed_area_km2": 26219,
+                "runoff_coef": 0.65,
             },
-            '강원도': {
-                'major_watershed': '한강',
-                'medium_watershed': '북한강',
-                'river_name': '북한강',
-                'watershed_area_km2': 26219,
-                'runoff_coef': 0.65,
+            "강원도": {
+                "major_watershed": "한강",
+                "medium_watershed": "북한강",
+                "river_name": "북한강",
+                "watershed_area_km2": 26219,
+                "runoff_coef": 0.65,
             },
-            '강원특별자치도': {
-                'major_watershed': '한강',
-                'medium_watershed': '북한강',
-                'river_name': '북한강',
-                'watershed_area_km2': 26219,
-                'runoff_coef': 0.65,
+            "강원특별자치도": {
+                "major_watershed": "한강",
+                "medium_watershed": "북한강",
+                "river_name": "북한강",
+                "watershed_area_km2": 26219,
+                "runoff_coef": 0.65,
             },
-            '충청북도': {
-                'major_watershed': '금강',
-                'medium_watershed': '금강본류',
-                'river_name': '금강',
-                'watershed_area_km2': 9914,
-                'runoff_coef': 0.58,
+            "충청북도": {
+                "major_watershed": "금강",
+                "medium_watershed": "금강본류",
+                "river_name": "금강",
+                "watershed_area_km2": 9914,
+                "runoff_coef": 0.58,
             },
-            '충청남도': {
-                'major_watershed': '금강',
-                'medium_watershed': '금강본류',
-                'river_name': '금강',
-                'watershed_area_km2': 9914,
-                'runoff_coef': 0.58,
+            "충청남도": {
+                "major_watershed": "금강",
+                "medium_watershed": "금강본류",
+                "river_name": "금강",
+                "watershed_area_km2": 9914,
+                "runoff_coef": 0.58,
             },
-            '전라북도': {
-                'major_watershed': '섬진강',
-                'medium_watershed': '섬진강본류',
-                'river_name': '섬진강',
-                'watershed_area_km2': 4914,
-                'runoff_coef': 0.62,
+            "전라북도": {
+                "major_watershed": "섬진강",
+                "medium_watershed": "섬진강본류",
+                "river_name": "섬진강",
+                "watershed_area_km2": 4914,
+                "runoff_coef": 0.62,
             },
-            '전북특별자치도': {
-                'major_watershed': '섬진강',
-                'medium_watershed': '섬진강본류',
-                'river_name': '섬진강',
-                'watershed_area_km2': 4914,
-                'runoff_coef': 0.62,
+            "전북특별자치도": {
+                "major_watershed": "섬진강",
+                "medium_watershed": "섬진강본류",
+                "river_name": "섬진강",
+                "watershed_area_km2": 4914,
+                "runoff_coef": 0.62,
             },
-            '전라남도': {
-                'major_watershed': '영산강',
-                'medium_watershed': '영산강본류',
-                'river_name': '영산강',
-                'watershed_area_km2': 3469,
-                'runoff_coef': 0.55,
+            "전라남도": {
+                "major_watershed": "영산강",
+                "medium_watershed": "영산강본류",
+                "river_name": "영산강",
+                "watershed_area_km2": 3469,
+                "runoff_coef": 0.55,
             },
-            '경상북도': {
-                'major_watershed': '낙동강',
-                'medium_watershed': '낙동강본류',
-                'river_name': '낙동강',
-                'watershed_area_km2': 23817,
-                'runoff_coef': 0.60,
+            "경상북도": {
+                "major_watershed": "낙동강",
+                "medium_watershed": "낙동강본류",
+                "river_name": "낙동강",
+                "watershed_area_km2": 23817,
+                "runoff_coef": 0.60,
             },
-            '경상남도': {
-                'major_watershed': '낙동강',
-                'medium_watershed': '낙동강하구',
-                'river_name': '낙동강',
-                'watershed_area_km2': 23817,
-                'runoff_coef': 0.60,
+            "경상남도": {
+                "major_watershed": "낙동강",
+                "medium_watershed": "낙동강하구",
+                "river_name": "낙동강",
+                "watershed_area_km2": 23817,
+                "runoff_coef": 0.60,
             },
-            '제주특별자치도': {
-                'major_watershed': '제주',
-                'medium_watershed': '제주',
-                'river_name': '한천',
-                'watershed_area_km2': 1849,
-                'runoff_coef': 0.50,
+            "제주특별자치도": {
+                "major_watershed": "제주",
+                "medium_watershed": "제주",
+                "river_name": "한천",
+                "watershed_area_km2": 1849,
+                "runoff_coef": 0.50,
             },
         }
 
@@ -210,28 +210,28 @@ class WamisFetcher:
             "point": f"{lon},{lat}",
             "format": "json",
             "type": "PARCEL",  # 지번 주소
-            "key": self.vworld_api_key
+            "key": self.vworld_api_key,
         }
 
         try:
             response = requests.get(url, params=params, timeout=10)
             data = response.json()
 
-            if data['response']['status'] != 'OK':
+            if data["response"]["status"] != "OK":
                 raise ValueError(f"VWorld API 응답 실패: {data['response'].get('status')}")
 
-            results = data['response']['result']
+            results = data["response"]["result"]
             if not results:
                 raise ValueError("해당 좌표의 주소 정보 없음")
 
             # 첫 번째 결과에서 시도/시군구 추출
             for item in results:
-                if item.get('type') == 'parcel' or item.get('type') == 'road':
-                    structure = item.get('structure', {})
-                    sido = structure.get('level1', '')  # 시도
-                    sigungu = structure.get('level2', '')  # 시군구
+                if item.get("type") == "parcel" or item.get("type") == "road":
+                    structure = item.get("structure", {})
+                    sido = structure.get("level1", "")  # 시도
+                    sigungu = structure.get("level2", "")  # 시군구
                     if sido:
-                        return {'sido': sido, 'sigungu': sigungu}
+                        return {"sido": sido, "sigungu": sigungu}
 
             raise ValueError("주소 정보 추출 실패")
 
@@ -260,45 +260,59 @@ class WamisFetcher:
         # 출처: WAMIS 권역 경계, 환경부 수계구분도
         sigungu_watershed_map = {
             # 경기도 - 대부분 한강, 일부 금강
-            ('경기도', '평택시'): {'major_watershed': '한강', 'medium_watershed': '한강서해'},
-            ('경기도', '안성시'): {'major_watershed': '금강', 'medium_watershed': '금강본류'},  # 일부 금강
-
+            ("경기도", "평택시"): {"major_watershed": "한강", "medium_watershed": "한강서해"},
+            ("경기도", "안성시"): {
+                "major_watershed": "금강",
+                "medium_watershed": "금강본류",
+            },  # 일부 금강
             # 강원도 - 서부 한강, 동부 동해
-            ('강원도', '춘천시'): {'major_watershed': '한강', 'medium_watershed': '북한강'},
-            ('강원도', '원주시'): {'major_watershed': '한강', 'medium_watershed': '남한강'},
-            ('강원도', '강릉시'): {'major_watershed': '동해', 'medium_watershed': '동해안'},
-            ('강원도', '동해시'): {'major_watershed': '동해', 'medium_watershed': '동해안'},
-            ('강원도', '속초시'): {'major_watershed': '동해', 'medium_watershed': '동해안'},
-            ('강원도', '삼척시'): {'major_watershed': '동해', 'medium_watershed': '동해안'},
-            ('강원특별자치도', '춘천시'): {'major_watershed': '한강', 'medium_watershed': '북한강'},
-            ('강원특별자치도', '원주시'): {'major_watershed': '한강', 'medium_watershed': '남한강'},
-            ('강원특별자치도', '강릉시'): {'major_watershed': '동해', 'medium_watershed': '동해안'},
-            ('강원특별자치도', '동해시'): {'major_watershed': '동해', 'medium_watershed': '동해안'},
-            ('강원특별자치도', '속초시'): {'major_watershed': '동해', 'medium_watershed': '동해안'},
-            ('강원특별자치도', '삼척시'): {'major_watershed': '동해', 'medium_watershed': '동해안'},
-
+            ("강원도", "춘천시"): {"major_watershed": "한강", "medium_watershed": "북한강"},
+            ("강원도", "원주시"): {"major_watershed": "한강", "medium_watershed": "남한강"},
+            ("강원도", "강릉시"): {"major_watershed": "동해", "medium_watershed": "동해안"},
+            ("강원도", "동해시"): {"major_watershed": "동해", "medium_watershed": "동해안"},
+            ("강원도", "속초시"): {"major_watershed": "동해", "medium_watershed": "동해안"},
+            ("강원도", "삼척시"): {"major_watershed": "동해", "medium_watershed": "동해안"},
+            ("강원특별자치도", "춘천시"): {"major_watershed": "한강", "medium_watershed": "북한강"},
+            ("강원특별자치도", "원주시"): {"major_watershed": "한강", "medium_watershed": "남한강"},
+            ("강원특별자치도", "강릉시"): {"major_watershed": "동해", "medium_watershed": "동해안"},
+            ("강원특별자치도", "동해시"): {"major_watershed": "동해", "medium_watershed": "동해안"},
+            ("강원특별자치도", "속초시"): {"major_watershed": "동해", "medium_watershed": "동해안"},
+            ("강원특별자치도", "삼척시"): {"major_watershed": "동해", "medium_watershed": "동해안"},
             # 충청북도 - 북부 한강, 남부 금강
-            ('충청북도', '충주시'): {'major_watershed': '한강', 'medium_watershed': '남한강'},
-            ('충청북도', '제천시'): {'major_watershed': '한강', 'medium_watershed': '남한강'},
-            ('충청북도', '단양군'): {'major_watershed': '한강', 'medium_watershed': '남한강'},
-            ('충청북도', '청주시'): {'major_watershed': '금강', 'medium_watershed': '금강본류'},
-            ('충청북도', '음성군'): {'major_watershed': '한강', 'medium_watershed': '남한강'},
-
+            ("충청북도", "충주시"): {"major_watershed": "한강", "medium_watershed": "남한강"},
+            ("충청북도", "제천시"): {"major_watershed": "한강", "medium_watershed": "남한강"},
+            ("충청북도", "단양군"): {"major_watershed": "한강", "medium_watershed": "남한강"},
+            ("충청북도", "청주시"): {"major_watershed": "금강", "medium_watershed": "금강본류"},
+            ("충청북도", "음성군"): {"major_watershed": "한강", "medium_watershed": "남한강"},
             # 충청남도 - 대부분 금강, 일부 한강
-            ('충청남도', '아산시'): {'major_watershed': '한강', 'medium_watershed': '안성천'},
-            ('충청남도', '천안시'): {'major_watershed': '한강', 'medium_watershed': '안성천'},
-
+            ("충청남도", "아산시"): {"major_watershed": "한강", "medium_watershed": "안성천"},
+            ("충청남도", "천안시"): {"major_watershed": "한강", "medium_watershed": "안성천"},
             # 전라북도 - 섬진강/만경강/금강 혼재
-            ('전라북도', '전주시'): {'major_watershed': '만경강', 'medium_watershed': '만경강'},
-            ('전라북도', '군산시'): {'major_watershed': '만경강', 'medium_watershed': '만경강'},
-            ('전라북도', '남원시'): {'major_watershed': '섬진강', 'medium_watershed': '섬진강본류'},
-            ('전라북도', '익산시'): {'major_watershed': '만경강', 'medium_watershed': '만경강'},
-            ('전라북도', '무주군'): {'major_watershed': '금강', 'medium_watershed': '금강본류'},
-            ('전북특별자치도', '전주시'): {'major_watershed': '만경강', 'medium_watershed': '만경강'},
-            ('전북특별자치도', '군산시'): {'major_watershed': '만경강', 'medium_watershed': '만경강'},
-            ('전북특별자치도', '남원시'): {'major_watershed': '섬진강', 'medium_watershed': '섬진강본류'},
-            ('전북특별자치도', '익산시'): {'major_watershed': '만경강', 'medium_watershed': '만경강'},
-            ('전북특별자치도', '무주군'): {'major_watershed': '금강', 'medium_watershed': '금강본류'},
+            ("전라북도", "전주시"): {"major_watershed": "만경강", "medium_watershed": "만경강"},
+            ("전라북도", "군산시"): {"major_watershed": "만경강", "medium_watershed": "만경강"},
+            ("전라북도", "남원시"): {"major_watershed": "섬진강", "medium_watershed": "섬진강본류"},
+            ("전라북도", "익산시"): {"major_watershed": "만경강", "medium_watershed": "만경강"},
+            ("전라북도", "무주군"): {"major_watershed": "금강", "medium_watershed": "금강본류"},
+            ("전북특별자치도", "전주시"): {
+                "major_watershed": "만경강",
+                "medium_watershed": "만경강",
+            },
+            ("전북특별자치도", "군산시"): {
+                "major_watershed": "만경강",
+                "medium_watershed": "만경강",
+            },
+            ("전북특별자치도", "남원시"): {
+                "major_watershed": "섬진강",
+                "medium_watershed": "섬진강본류",
+            },
+            ("전북특별자치도", "익산시"): {
+                "major_watershed": "만경강",
+                "medium_watershed": "만경강",
+            },
+            ("전북특별자치도", "무주군"): {
+                "major_watershed": "금강",
+                "medium_watershed": "금강본류",
+            },
         }
 
         key = (sido, sigungu)
@@ -332,39 +346,47 @@ class WamisFetcher:
         """
         # 1. VWorld API로 좌표 → 시도/시군구 추출 (실제 API 데이터 사용)
         address = self._get_address_from_coords(lat, lon)
-        sido = address['sido']
-        sigungu = address['sigungu']
+        sido = address["sido"]
+        sigungu = address["sigungu"]
 
         # 2. 시군구 단위 매핑 시도 (더 정확함)
         watershed_info = self._get_watershed_from_sigungu(sido, sigungu)
 
         if watershed_info:
             # 시군구 매핑 성공
-            data_source = f'VWorld API (시군구: {sido} {sigungu}) + WAMIS 시군구 매핑'
+            data_source = f"VWorld API (시군구: {sido} {sigungu}) + WAMIS 시군구 매핑"
         else:
             # 3. 시도 단위 매핑 폴백
             if sido not in self.sido_watershed_map:
                 raise ValueError(f"[TCFD 경고] {sido}의 권역 정보 없음")
 
             watershed_info = self.sido_watershed_map[sido].copy()
-            data_source = f'VWorld API (시도: {sido}) + WAMIS 시도 매핑'
+            data_source = f"VWorld API (시도: {sido}) + WAMIS 시도 매핑"
 
         # 추가 정보 보강 (시도별 권역 기본 정보 사용)
         sido_info = self.sido_watershed_map.get(sido, {})
 
         result = {
-            'major_watershed': watershed_info.get('major_watershed', sido_info.get('major_watershed', 'unknown')),
-            'medium_watershed': watershed_info.get('medium_watershed', sido_info.get('medium_watershed', 'unknown')),
-            'river_name': watershed_info.get('river_name', sido_info.get('river_name', 'unknown')),
-            'watershed_area_km2': sido_info.get('watershed_area_km2', 0),  # 시도 단위 유역면적 사용
-            'runoff_coef': sido_info.get('runoff_coef', 0.6),  # 시도 단위 유출계수 사용
-            'sido': sido,
-            'sigungu': sigungu,
-            'data_source': data_source
+            "major_watershed": watershed_info.get(
+                "major_watershed", sido_info.get("major_watershed", "unknown")
+            ),
+            "medium_watershed": watershed_info.get(
+                "medium_watershed", sido_info.get("medium_watershed", "unknown")
+            ),
+            "river_name": watershed_info.get("river_name", sido_info.get("river_name", "unknown")),
+            "watershed_area_km2": sido_info.get("watershed_area_km2", 0),  # 시도 단위 유역면적 사용
+            "runoff_coef": sido_info.get("runoff_coef", 0.6),  # 시도 단위 유출계수 사용
+            "sido": sido,
+            "sigungu": sigungu,
+            "data_source": data_source,
         }
 
-        print(f"   ✅ 권역 매핑: {sido} {sigungu} → {result['major_watershed']} ({result['medium_watershed']})")
-        print(f"      주요 하천: {result['river_name']}, 유역면적: {result['watershed_area_km2']:.0f}km²")
+        print(
+            f"   ✅ 권역 매핑: {sido} {sigungu} → {result['major_watershed']} ({result['medium_watershed']})"
+        )
+        print(
+            f"      주요 하천: {result['river_name']}, 유역면적: {result['watershed_area_km2']:.0f}km²"
+        )
 
         return result
 
@@ -405,10 +427,7 @@ class WamisFetcher:
 
         # WAMIS Open API 호출
         url = "http://www.wamis.go.kr:8080/wamis/openapi/wks/wks_wiawtaa_lst"
-        params = {
-            "basin": basin_code,
-            "output": "json"
-        }
+        params = {"basin": basin_code, "output": "json"}
 
         # 선택적 파라미터
         if admcd:
@@ -442,15 +461,17 @@ class WamisFetcher:
 
             # 데이터 파싱 (단위: 천 m³/년)
             result = {
-                'domestic': float(target_item.get('wssum', 0)),       # 생활용수
-                'industrial': float(target_item.get('indsum', 0)),    # 공업용수
-                'agricultural': float(target_item.get('afsum', 0)),   # 농업용수
-                'total': float(target_item.get('total', 0)),          # 총 이용량
-                'year': target_item.get('year', ''),
-                'data_source': 'WAMIS Open API (wks_wiawtaa_lst)'
+                "domestic": float(target_item.get("wssum", 0)),  # 생활용수
+                "industrial": float(target_item.get("indsum", 0)),  # 공업용수
+                "agricultural": float(target_item.get("afsum", 0)),  # 농업용수
+                "total": float(target_item.get("total", 0)),  # 총 이용량
+                "year": target_item.get("year", ""),
+                "data_source": "WAMIS Open API (wks_wiawtaa_lst)",
             }
 
-            print(f"   ✅ WAMIS API 용수 이용량 ({result['year']}년): {major_watershed} 총 {result['total']/1000:.1f} 백만m³/년")
+            print(
+                f"   ✅ WAMIS API 용수 이용량 ({result['year']}년): {major_watershed} 총 {result['total']/1000:.1f} 백만m³/년"
+            )
             return result
 
         except Exception as e:

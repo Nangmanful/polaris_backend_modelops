@@ -6,8 +6,8 @@
 - 47280 (문경시)
 - 48860 (산청군)
 """
+
 import os
-import sys
 import csv
 import io
 import tarfile
@@ -22,39 +22,40 @@ import psycopg2
 # - 삼척시: 3207000000
 # - 문경시: 3709000000
 # - 산청군: 3840000000
-NEW_SGG_CODES = {'2107000000', '3207000000', '3709000000', '3840000000'}
+NEW_SGG_CODES = {"2107000000", "3207000000", "3709000000", "3840000000"}
 
 SGG261_DAILY_TABLE_MAP = {
-    'ta_daily_sgg261': 'TA',
-    'tamax_daily_sgg261': 'TAMAX',
-    'tamin_daily_sgg261': 'TAMIN',
-    'rn_daily_sgg261': 'RN',
-    'rhm_daily_sgg261': 'RHM',
-    'ws_daily_sgg261': 'WS',
-    'si_daily_sgg261': 'SI',
+    "ta_daily_sgg261": "TA",
+    "tamax_daily_sgg261": "TAMAX",
+    "tamin_daily_sgg261": "TAMIN",
+    "rn_daily_sgg261": "RN",
+    "rhm_daily_sgg261": "RHM",
+    "ws_daily_sgg261": "WS",
+    "si_daily_sgg261": "SI",
 }
 
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
-logger = logging.getLogger('add_4sgg_climate')
+logger = logging.getLogger("add_4sgg_climate")
 
 
 def get_db_connection():
     return psycopg2.connect(
-        host=os.environ.get('DW_HOST', 'localhost'),
-        port=int(os.environ.get('DW_PORT', 5555)),
-        database=os.environ.get('DW_NAME', 'datawarehouse'),
-        user=os.environ.get('DW_USER', 'skala'),
-        password=os.environ.get('DW_PASSWORD', 'skala1234')
+        host=os.environ.get("DW_HOST", "localhost"),
+        port=int(os.environ.get("DW_PORT", 5555)),
+        database=os.environ.get("DW_NAME", "datawarehouse"),
+        user=os.environ.get("DW_USER", "skala"),
+        password=os.environ.get("DW_PASSWORD", "skala1234"),
     )
 
 
 def main():
     # 데이터 디렉토리: 환경변수 ETL_DATA_DIR 우선, 기본은 레포 내 ETL/etl_base/local/data
     data_dir = Path(
-        os.environ.get("ETL_DATA_DIR", str(Path(__file__).resolve().parent / "etl_base" / "local" / "data"))
+        os.environ.get(
+            "ETL_DATA_DIR", str(Path(__file__).resolve().parent / "etl_base" / "local" / "data")
+        )
     )
     sgg261_dir = data_dir / "KMA" / "extracted" / "KMA" / "downloads_kma_ssp_sgg261"
 
@@ -72,24 +73,27 @@ def main():
 
     # 먼저 location_sgg261에 4개 시군구 추가
     sgg_info = {
-        '2107000000': ('부산광역시', '남구'),
-        '3207000000': ('강원특별자치도', '삼척시'),
-        '3709000000': ('경상북도', '문경시'),
-        '3840000000': ('경상남도', '산청군'),
+        "2107000000": ("부산광역시", "남구"),
+        "3207000000": ("강원특별자치도", "삼척시"),
+        "3709000000": ("경상북도", "문경시"),
+        "3840000000": ("경상남도", "산청군"),
     }
 
     for admin_code_10, (sido, sigungu) in sgg_info.items():
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO location_sgg261 (admin_code, sido_name, sigungu_name)
             VALUES (%s, %s, %s)
             ON CONFLICT (admin_code) DO NOTHING
-        """, (admin_code_10, sido, sigungu))
+        """,
+            (admin_code_10, sido, sigungu),
+        )
     conn.commit()
     logger.info(f"location_sgg261에 4개 시군구 추가 완료")
 
     ssp_dirs = sorted(sgg261_dir.glob("SSP*"))
     # SSP126 먼저
-    ssp_dirs = sorted(ssp_dirs, key=lambda x: 0 if 'SSP126' in x.name else 1)
+    ssp_dirs = sorted(ssp_dirs, key=lambda x: 0 if "SSP126" in x.name else 1)
 
     results = {}
 
@@ -111,25 +115,24 @@ def main():
                 continue
 
             asc_file = asc_files[0]
-            ssp_col = {
-                'SSP126': 'ssp1', 'SSP245': 'ssp2',
-                'SSP370': 'ssp3', 'SSP585': 'ssp5'
-            }.get(ssp_name, 'ssp1')
+            ssp_col = {"SSP126": "ssp1", "SSP245": "ssp2", "SSP370": "ssp3", "SSP585": "ssp5"}.get(
+                ssp_name, "ssp1"
+            )
 
             logger.info(f"   {ssp_name}: {asc_file.name} 파싱...")
 
             ssp_inserted = 0
 
             try:
-                with tarfile.open(asc_file, 'r:gz') as tar:
-                    members = [m for m in tar.getmembers() if m.name.endswith('.txt')]
+                with tarfile.open(asc_file, "r:gz") as tar:
+                    members = [m for m in tar.getmembers() if m.name.endswith(".txt")]
 
                     for member in members:
                         f = tar.extractfile(member)
                         if not f:
                             continue
 
-                        content = f.read().decode('utf-8')
+                        content = f.read().decode("utf-8")
                         reader = csv.reader(io.StringIO(content))
                         rows = list(reader)
 
@@ -155,7 +158,7 @@ def main():
 
                             date_str = row[0]
                             try:
-                                obs_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+                                obs_date = datetime.strptime(date_str, "%Y-%m-%d").date()
                             except ValueError:
                                 continue
 
@@ -168,17 +171,23 @@ def main():
                                 except (ValueError, TypeError):
                                     continue
 
-                                if ssp_name == 'SSP126':
-                                    cursor.execute(f"""
+                                if ssp_name == "SSP126":
+                                    cursor.execute(
+                                        f"""
                                         INSERT INTO {table_name} (admin_code, observation_date, {ssp_col})
                                         VALUES (%s, %s, %s)
                                         ON CONFLICT (admin_code, observation_date) DO UPDATE SET {ssp_col} = EXCLUDED.{ssp_col}
-                                    """, (admin_code, obs_date, val))
+                                    """,
+                                        (admin_code, obs_date, val),
+                                    )
                                 else:
-                                    cursor.execute(f"""
+                                    cursor.execute(
+                                        f"""
                                         UPDATE {table_name} SET {ssp_col} = %s
                                         WHERE admin_code = %s AND observation_date = %s
-                                    """, (val, admin_code, obs_date))
+                                    """,
+                                        (val, admin_code, obs_date),
+                                    )
 
                                 ssp_inserted += 1
 

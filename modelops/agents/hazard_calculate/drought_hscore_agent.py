@@ -1,4 +1,4 @@
-'''
+"""
 파일명: drought_hscore_agent.py
 최종 수정일: 2025-12-14
 버전: v2
@@ -6,7 +6,8 @@
 변경 이력:
     - v1: HazardCalculator 로직 통합 (SPEI-12 기반)
     - v2: 원래 설계 복원 (DB 로직 제거, 순수 계산만)
-'''
+"""
+
 from typing import Dict, Any
 from .base_hazard_hscore_agent import BaseHazardHScoreAgent
 
@@ -35,7 +36,7 @@ class DroughtHScoreAgent(BaseHazardHScoreAgent):
     """
 
     def __init__(self):
-        super().__init__(risk_type='drought')
+        super().__init__(risk_type="drought")
 
     def calculate_hazard(self, collected_data: Dict[str, Any]) -> float:
         """
@@ -49,7 +50,7 @@ class DroughtHScoreAgent(BaseHazardHScoreAgent):
         Returns:
             Hazard 점수 (0.0 ~ 1.0)
         """
-        climate_data = collected_data.get('climate_data', {})
+        climate_data = collected_data.get("climate_data", {})
 
         # 데이터 부재 시 기본값
         if not climate_data:
@@ -58,19 +59,13 @@ class DroughtHScoreAgent(BaseHazardHScoreAgent):
         try:
             # 1. 데이터 추출 (data_loaders가 DB에서 수집)
             spei12 = self.get_value_with_fallback(
-                climate_data,
-                ['spei12_index', 'spei12', 'spei'],
-                None
+                climate_data, ["spei12_index", "spei12", "spei"], None
             )
             annual_rainfall = self.get_value_with_fallback(
-                climate_data,
-                ['annual_rainfall_mm', 'rn', 'total_rainfall'],
-                1200.0
+                climate_data, ["annual_rainfall_mm", "rn", "total_rainfall"], 1200.0
             )
             cdd = self.get_value_with_fallback(
-                climate_data,
-                ['consecutive_dry_days', 'cdd', 'cdd_days'],
-                15
+                climate_data, ["consecutive_dry_days", "cdd", "cdd_days"], 15
             )
 
             final_spei = 0.0
@@ -85,12 +80,12 @@ class DroughtHScoreAgent(BaseHazardHScoreAgent):
                 final_spei = max(-3.0, min(3.0, final_spei))
             else:
                 # Fallback: 강수량 기반 SPI 추정
-                if config and hasattr(config, 'DROUGHT_HAZARD_PARAMS'):
+                if config and hasattr(config, "DROUGHT_HAZARD_PARAMS"):
                     params = config.DROUGHT_HAZARD_PARAMS
-                    korea_mean_rainfall = params.get('korea_mean_rainfall', 1300.0)
-                    korea_std_rainfall = params.get('korea_std_rainfall', 300.0)
-                    cdd_norm_avg = params.get('cdd_norm_avg', 10.0)
-                    cdd_norm_std = params.get('cdd_norm_std', 10.0)
+                    korea_mean_rainfall = params.get("korea_mean_rainfall", 1300.0)
+                    korea_std_rainfall = params.get("korea_std_rainfall", 300.0)
+                    cdd_norm_avg = params.get("cdd_norm_avg", 10.0)
+                    cdd_norm_std = params.get("cdd_norm_std", 10.0)
                 else:
                     korea_mean_rainfall = 1300.0
                     korea_std_rainfall = 300.0
@@ -120,14 +115,14 @@ class DroughtHScoreAgent(BaseHazardHScoreAgent):
                 hazard_score = min(1.0, -final_spei / 2.0)
 
             # 상세 결과 기록
-            if 'calculation_details' not in collected_data:
-                collected_data['calculation_details'] = {}
+            if "calculation_details" not in collected_data:
+                collected_data["calculation_details"] = {}
 
-            collected_data['calculation_details']['drought'] = {
-                'spei12': final_spei,
-                'hazard_score_raw': hazard_score,
-                'annual_rainfall': annual_rainfall,
-                'cdd': cdd
+            collected_data["calculation_details"]["drought"] = {
+                "spei12": final_spei,
+                "hazard_score_raw": hazard_score,
+                "annual_rainfall": annual_rainfall,
+                "cdd": cdd,
             }
 
             return round(hazard_score, 4)

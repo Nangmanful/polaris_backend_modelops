@@ -5,7 +5,6 @@ Batch Trigger API
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
-from datetime import datetime, timedelta
 import logging
 
 logger = logging.getLogger(__name__)
@@ -15,6 +14,7 @@ router = APIRouter(prefix="/api/batch-trigger", tags=["batch-trigger"])
 
 class CustomScheduleRequest(BaseModel):
     """사용자 정의 스케줄 요청"""
+
     batch_type: str = Field(..., description="배치 타입: 'probability' 또는 'hazard'")
 
 
@@ -282,17 +282,13 @@ class CustomScheduleRequest(BaseModel):
                 "application/json": {
                     "example": {"detail": "Failed to get scheduled jobs: Internal error"}
                 }
-            }
+            },
         },
         503: {
             "description": "스케줄러가 실행되지 않음",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Scheduler is not running"}
-                }
-            }
-        }
-    }
+            "content": {"application/json": {"example": {"detail": "Scheduler is not running"}}},
+        },
+    },
 )
 async def get_scheduled_jobs():
     """
@@ -306,17 +302,16 @@ async def get_scheduled_jobs():
 
         jobs = []
         for job in scheduler.get_jobs():
-            jobs.append({
-                'id': job.id,
-                'name': job.name,
-                'next_run_time': job.next_run_time.isoformat() if job.next_run_time else None,
-                'trigger': str(job.trigger)
-            })
+            jobs.append(
+                {
+                    "id": job.id,
+                    "name": job.name,
+                    "next_run_time": job.next_run_time.isoformat() if job.next_run_time else None,
+                    "trigger": str(job.trigger),
+                }
+            )
 
-        return {
-            'total_jobs': len(jobs),
-            'jobs': jobs
-        }
+        return {"total_jobs": len(jobs), "jobs": jobs}
 
     except ImportError as e:
         logger.error(f"Scheduler import 실패: {e}")

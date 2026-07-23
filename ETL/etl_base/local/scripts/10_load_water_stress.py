@@ -12,7 +12,6 @@ WRI Aqueduct 4.0 Excel 파일에서 물 스트레스 순위 데이터를 로드
 
 import sys
 import pandas as pd
-from pathlib import Path
 from tqdm import tqdm
 
 from utils import setup_logging, get_db_connection, get_data_dir, table_exists, get_row_count
@@ -62,7 +61,7 @@ def load_water_stress() -> None:
     logger.info("Excel 파일 읽는 중...")
 
     try:
-        df = pd.read_excel(xlsx_file, sheet_name='province_future')
+        df = pd.read_excel(xlsx_file, sheet_name="province_future")
     except Exception as e:
         logger.error(f"Excel 파일 읽기 실패: {e}")
         conn.close()
@@ -81,7 +80,8 @@ def load_water_stress() -> None:
 
     for idx, row in tqdm(df.iterrows(), total=len(df), desc="데이터 로딩"):
         try:
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO water_stress_rankings (
                     gid_0, gid_1, name_0, name_1,
                     year, scenario, indicator_name,
@@ -90,22 +90,24 @@ def load_water_stress() -> None:
                 ) VALUES (
                     %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
                 )
-            """, (
-                row.get('gid_0'),
-                row.get('gid_1'),
-                row.get('name_0'),
-                row.get('name_1'),
-                int(row['year']) if pd.notna(row.get('year')) else None,
-                row.get('scenario'),
-                row.get('indicator_name'),
-                row.get('weight'),
-                float(row['score']) if pd.notna(row.get('score')) else None,
-                int(row['score_ranked']) if pd.notna(row.get('score_ranked')) else None,
-                int(row['cat']) if pd.notna(row.get('cat')) else None,
-                row.get('label'),
-                row.get('un_region'),
-                row.get('wb_region'),
-            ))
+            """,
+                (
+                    row.get("gid_0"),
+                    row.get("gid_1"),
+                    row.get("name_0"),
+                    row.get("name_1"),
+                    int(row["year"]) if pd.notna(row.get("year")) else None,
+                    row.get("scenario"),
+                    row.get("indicator_name"),
+                    row.get("weight"),
+                    float(row["score"]) if pd.notna(row.get("score")) else None,
+                    int(row["score_ranked"]) if pd.notna(row.get("score_ranked")) else None,
+                    int(row["cat"]) if pd.notna(row.get("cat")) else None,
+                    row.get("label"),
+                    row.get("un_region"),
+                    row.get("wb_region"),
+                ),
+            )
             insert_count += 1
 
             # 배치 커밋

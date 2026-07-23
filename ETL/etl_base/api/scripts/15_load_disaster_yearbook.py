@@ -24,7 +24,7 @@ from utils import (
     APIClient,
     batch_upsert,
     get_table_count,
-    API_ENDPOINTS
+    API_ENDPOINTS,
 )
 
 
@@ -41,13 +41,13 @@ def classify_damage_level(total_damage: float) -> str:
     if total_damage is None:
         return None
     if total_damage < 100:
-        return '경미'
+        return "경미"
     elif total_damage < 1000:
-        return '보통'
+        return "보통"
     elif total_damage < 5000:
-        return '심각'
+        return "심각"
     else:
-        return '대재해'
+        return "대재해"
 
 
 def get_major_disaster_type(record: dict) -> str:
@@ -61,12 +61,12 @@ def get_major_disaster_type(record: dict) -> str:
         주요 재해 유형
     """
     damages = {
-        '태풍': record.get('typhoon_damage', 0) or 0,
-        '호우': record.get('heavy_rain_damage', 0) or 0,
-        '대설': record.get('heavy_snow_damage', 0) or 0,
-        '강풍': record.get('strong_wind_damage', 0) or 0,
-        '풍랑': record.get('wind_wave_damage', 0) or 0,
-        '지진': record.get('earthquake_damage', 0) or 0,
+        "태풍": record.get("typhoon_damage", 0) or 0,
+        "호우": record.get("heavy_rain_damage", 0) or 0,
+        "대설": record.get("heavy_snow_damage", 0) or 0,
+        "강풍": record.get("strong_wind_damage", 0) or 0,
+        "풍랑": record.get("wind_wave_damage", 0) or 0,
+        "지진": record.get("earthquake_damage", 0) or 0,
     }
 
     if max(damages.values()) == 0:
@@ -75,8 +75,9 @@ def get_major_disaster_type(record: dict) -> str:
     return max(damages, key=damages.get)
 
 
-def fetch_disaster_yearbook(client: APIClient, api_key: str, logger,
-                            page_no: int = 1, num_of_rows: int = 100):
+def fetch_disaster_yearbook(
+    client: APIClient, api_key: str, logger, page_no: int = 1, num_of_rows: int = 100
+):
     """
     재해연보 API 호출
 
@@ -90,11 +91,11 @@ def fetch_disaster_yearbook(client: APIClient, api_key: str, logger,
     Returns:
         API 응답 데이터 (XML)
     """
-    url = API_ENDPOINTS['disaster_yearbook']
+    url = API_ENDPOINTS["disaster_yearbook"]
     params = {
-        'ServiceKey': api_key,  # 대문자 S
-        'pageNo': str(page_no),
-        'numOfRows': str(num_of_rows)
+        "ServiceKey": api_key,  # 대문자 S
+        "pageNo": str(page_no),
+        "numOfRows": str(num_of_rows),
     }
 
     logger.info(f"재해연보 API 호출: 페이지 {page_no}")
@@ -119,7 +120,7 @@ def parse_disaster_yearbook(raw_data: dict, logger) -> list:
         return parsed
 
     # raw_text에서 XML 파싱
-    raw_text = raw_data.get('raw_text', '')
+    raw_text = raw_data.get("raw_text", "")
     if not raw_text:
         logger.warning("응답 텍스트 없음")
         return parsed
@@ -128,22 +129,22 @@ def parse_disaster_yearbook(raw_data: dict, logger) -> list:
         root = ET.fromstring(raw_text)
 
         # head 정보 확인
-        head = root.find('.//head')
+        head = root.find(".//head")
         if head is not None:
-            result_msg = head.find('.//RESULT/resultMsg')
+            result_msg = head.find(".//RESULT/resultMsg")
             if result_msg is not None:
-                if 'NOMAL' not in result_msg.text and 'SUCCESS' not in result_msg.text.upper():
+                if "NOMAL" not in result_msg.text and "SUCCESS" not in result_msg.text.upper():
                     logger.error(f"API 오류: {result_msg.text}")
                     return parsed
 
         # row 데이터 파싱
-        rows = root.findall('.//row')
+        rows = root.findall(".//row")
         logger.info(f"파싱할 row 수: {len(rows)}")
 
         for row in rows:
             try:
                 # 연도 파싱
-                year_elem = row.find('wrttimeid')
+                year_elem = row.find("wrttimeid")
                 if year_elem is None or not year_elem.text:
                     continue
 
@@ -160,21 +161,21 @@ def parse_disaster_yearbook(raw_data: dict, logger) -> list:
                     return None
 
                 record = {
-                    'year': year,
-                    'typhoon_damage': get_float('typhoon'),
-                    'heavy_rain_damage': get_float('heavy_rain'),
-                    'heavy_snow_damage': get_float('heavy_snow'),
-                    'strong_wind_damage': get_float('strong_wind'),
-                    'wind_wave_damage': get_float('wind_wave'),
-                    'earthquake_damage': get_float('earthquake'),
-                    'other_damage': get_float('etc'),
-                    'total_damage': get_float('tot'),
-                    'api_response': raw_data
+                    "year": year,
+                    "typhoon_damage": get_float("typhoon"),
+                    "heavy_rain_damage": get_float("heavy_rain"),
+                    "heavy_snow_damage": get_float("heavy_snow"),
+                    "strong_wind_damage": get_float("strong_wind"),
+                    "wind_wave_damage": get_float("wind_wave"),
+                    "earthquake_damage": get_float("earthquake"),
+                    "other_damage": get_float("etc"),
+                    "total_damage": get_float("tot"),
+                    "api_response": raw_data,
                 }
 
                 # 피해 등급 및 주요 재해 유형 계산
-                record['damage_level'] = classify_damage_level(record['total_damage'])
-                record['major_disaster_type'] = get_major_disaster_type(record)
+                record["damage_level"] = classify_damage_level(record["total_damage"])
+                record["major_disaster_type"] = get_major_disaster_type(record)
 
                 parsed.append(record)
 
@@ -202,7 +203,7 @@ def load_disaster_yearbook(sample_limit: int = None):
     logger.info("=" * 60)
 
     # API 키 확인
-    api_key = get_api_key('PUBLICDATA_API_KEY')
+    api_key = get_api_key("PUBLICDATA_API_KEY")
     if not api_key:
         logger.error("PUBLICDATA_API_KEY 환경변수 필요")
         return
@@ -247,24 +248,30 @@ def load_disaster_yearbook(sample_limit: int = None):
         logger.info(f"총 {len(all_data)}건 DB 적재 시작")
         success_count = batch_upsert(
             conn,
-            'api_disaster_yearbook',
+            "api_disaster_yearbook",
             all_data,
-            unique_columns=['year', 'admin_code', 'disaster_type'],  # 스키마 UNIQUE(year, admin_code, disaster_type) 제약조건
-            batch_size=50
+            unique_columns=[
+                "year",
+                "admin_code",
+                "disaster_type",
+            ],  # 스키마 UNIQUE(year, admin_code, disaster_type) 제약조건
+            batch_size=50,
         )
         logger.info(f"DB 적재 완료: {success_count}건")
 
         # 통계 출력
-        typhoon_total = sum(d.get('typhoon_damage', 0) or 0 for d in all_data)
-        rain_total = sum(d.get('heavy_rain_damage', 0) or 0 for d in all_data)
-        total_total = sum(d.get('total_damage', 0) or 0 for d in all_data)
+        typhoon_total = sum(d.get("typhoon_damage", 0) or 0 for d in all_data)
+        rain_total = sum(d.get("heavy_rain_damage", 0) or 0 for d in all_data)
+        total_total = sum(d.get("total_damage", 0) or 0 for d in all_data)
 
-        logger.info(f"피해 통계: 태풍 {typhoon_total:.0f}억원, 호우 {rain_total:.0f}억원, 총계 {total_total:.0f}억원")
+        logger.info(
+            f"피해 통계: 태풍 {typhoon_total:.0f}억원, 호우 {rain_total:.0f}억원, 총계 {total_total:.0f}억원"
+        )
     else:
         logger.warning("적재할 데이터 없음")
 
     # 결과 확인
-    total_count = get_table_count(conn, 'api_disaster_yearbook')
+    total_count = get_table_count(conn, "api_disaster_yearbook")
     logger.info(f"api_disaster_yearbook 테이블 총 레코드: {total_count}건")
 
     conn.close()
@@ -272,5 +279,5 @@ def load_disaster_yearbook(sample_limit: int = None):
 
 
 if __name__ == "__main__":
-    sample_limit = int(os.getenv('SAMPLE_LIMIT', 0)) or None
+    sample_limit = int(os.getenv("SAMPLE_LIMIT", 0)) or None
     load_disaster_yearbook(sample_limit=sample_limit)

@@ -8,6 +8,7 @@
 2) ESG 인사이트 분석 (LLM 활용)
 ==================================================================
 """
+
 from typing import Dict, List
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
@@ -21,18 +22,72 @@ logger = get_logger("esg_agent.supervisor")
 # ESG 관련 키워드 (필터링용)
 ESG_KEYWORDS = [
     # E (환경)
-    "환경", "탄소", "기후", "친환경", "재생에너지", "태양광", "풍력", "전기차", "EV",
-    "탈탄소", "넷제로", "온실가스", "배출", "CBAM", "탄소국경", "RE100", "그린",
-    "폐기물", "재활용", "플라스틱", "생물다양성", "수자원", "오염", "에너지",
-    "지속가능", "ESG", "CDP", "TCFD", "SBTi", "녹색",
+    "환경",
+    "탄소",
+    "기후",
+    "친환경",
+    "재생에너지",
+    "태양광",
+    "풍력",
+    "전기차",
+    "EV",
+    "탈탄소",
+    "넷제로",
+    "온실가스",
+    "배출",
+    "CBAM",
+    "탄소국경",
+    "RE100",
+    "그린",
+    "폐기물",
+    "재활용",
+    "플라스틱",
+    "생물다양성",
+    "수자원",
+    "오염",
+    "에너지",
+    "지속가능",
+    "ESG",
+    "CDP",
+    "TCFD",
+    "SBTi",
+    "녹색",
     # S (사회)
-    "사회", "인권", "노동", "안전", "보건", "다양성", "포용", "공급망", "협력사",
-    "지역사회", "사회공헌", "DEI", "근로자", "고용",
+    "사회",
+    "인권",
+    "노동",
+    "안전",
+    "보건",
+    "다양성",
+    "포용",
+    "공급망",
+    "협력사",
+    "지역사회",
+    "사회공헌",
+    "DEI",
+    "근로자",
+    "고용",
     # G (지배구조)
-    "지배구조", "이사회", "주주", "투명성", "공시", "윤리", "반부패", "컴플라이언스",
-    "거버넌스", "감사", "내부통제", "리스크관리",
+    "지배구조",
+    "이사회",
+    "주주",
+    "투명성",
+    "공시",
+    "윤리",
+    "반부패",
+    "컴플라이언스",
+    "거버넌스",
+    "감사",
+    "내부통제",
+    "리스크관리",
     # 일반 ESG
-    "ESG", "지속가능경영", "사회적책임", "CSR", "CSV", "임팩트", "스튜어드십",
+    "ESG",
+    "지속가능경영",
+    "사회적책임",
+    "CSR",
+    "CSV",
+    "임팩트",
+    "스튜어드십",
 ]
 
 
@@ -195,13 +250,15 @@ def _create_weather_summary(weather_data: List[Dict], physical_risks: List[Dict]
         condition = data.get("weather_condition", "")
         humidity = data.get("humidity", "N/A")
 
-        summary_parts.append(
-            f"📍 {location}: {temp}°C, {condition}, 습도 {humidity}%"
-        )
+        summary_parts.append(f"📍 {location}: {temp}°C, {condition}, 습도 {humidity}%")
 
     # 물리적 리스크 요약
-    high_risks = [r for r in physical_risks if r.get("risk_level") == "높음"] if physical_risks else []
-    medium_risks = [r for r in physical_risks if r.get("risk_level") == "보통"] if physical_risks else []
+    high_risks = (
+        [r for r in physical_risks if r.get("risk_level") == "높음"] if physical_risks else []
+    )
+    medium_risks = (
+        [r for r in physical_risks if r.get("risk_level") == "보통"] if physical_risks else []
+    )
 
     if physical_risks and (high_risks or medium_risks):
         summary_parts.append("")  # 빈 줄
@@ -220,7 +277,9 @@ def _create_weather_summary(weather_data: List[Dict], physical_risks: List[Dict]
     return "\n".join(summary_parts)
 
 
-def _generate_risk_assessment(weather_data: List[Dict], high_risks: List, medium_risks: List) -> str:
+def _generate_risk_assessment(
+    weather_data: List[Dict], high_risks: List, medium_risks: List
+) -> str:
     """물리적 리스크 종합 평가 생성
 
     Args:

@@ -25,7 +25,6 @@ import sys
 import time
 import requests
 from pathlib import Path
-from datetime import datetime
 
 # 상위 경로 추가
 sys.path.insert(0, str(Path(__file__).parent))
@@ -34,9 +33,7 @@ from utils import (
     setup_logging,
     get_db_connection,
     get_api_key,
-    get_table_count,
 )
-
 
 # SGIS API 엔드포인트 (2025년 11월 20일 이후 새 도메인)
 SGIS_AUTH_URL = "https://sgisapi.mods.go.kr/OpenAPI3/auth/authentication.json"
@@ -51,25 +48,25 @@ TARGET_YEAR = "2024"
 # SGIS 코드:  11(서울), 21(부산), 22(대구), ...
 # 참고: 강원/전북은 기존코드(42,45)와 신코드(51,52) 모두 지원
 SIDO_CODE_MAPPING = [
-    ('11', '11', '서울특별시'),
-    ('26', '21', '부산광역시'),
-    ('27', '22', '대구광역시'),
-    ('28', '23', '인천광역시'),
-    ('29', '24', '광주광역시'),
-    ('30', '25', '대전광역시'),
-    ('31', '26', '울산광역시'),
-    ('36', '29', '세종특별자치시'),
-    ('41', '31', '경기도'),
-    ('42', '32', '강원특별자치도'),  # 기존 코드
-    ('51', '32', '강원특별자치도'),  # 신규 코드
-    ('43', '33', '충청북도'),
-    ('44', '34', '충청남도'),
-    ('45', '35', '전북특별자치도'),  # 기존 코드
-    ('52', '35', '전북특별자치도'),  # 신규 코드
-    ('46', '36', '전라남도'),
-    ('47', '37', '경상북도'),
-    ('48', '38', '경상남도'),
-    ('50', '39', '제주특별자치도'),
+    ("11", "11", "서울특별시"),
+    ("26", "21", "부산광역시"),
+    ("27", "22", "대구광역시"),
+    ("28", "23", "인천광역시"),
+    ("29", "24", "광주광역시"),
+    ("30", "25", "대전광역시"),
+    ("31", "26", "울산광역시"),
+    ("36", "29", "세종특별자치시"),
+    ("41", "31", "경기도"),
+    ("42", "32", "강원특별자치도"),  # 기존 코드
+    ("51", "32", "강원특별자치도"),  # 신규 코드
+    ("43", "33", "충청북도"),
+    ("44", "34", "충청남도"),
+    ("45", "35", "전북특별자치도"),  # 기존 코드
+    ("52", "35", "전북특별자치도"),  # 신규 코드
+    ("46", "36", "전라남도"),
+    ("47", "37", "경상북도"),
+    ("48", "38", "경상남도"),
+    ("50", "39", "제주특별자치도"),
 ]
 
 
@@ -89,20 +86,17 @@ class SGISClient:
         if self.access_token and time.time() < self.token_expires - 60:
             return self.access_token
 
-        params = {
-            'consumer_key': self.service_id,
-            'consumer_secret': self.security_key
-        }
+        params = {"consumer_key": self.service_id, "consumer_secret": self.security_key}
 
         try:
             response = requests.get(SGIS_AUTH_URL, params=params, timeout=30)
             data = response.json()
 
-            if data.get('errCd') == 0:
-                result = data.get('result', {})
-                self.access_token = result.get('accessToken')
+            if data.get("errCd") == 0:
+                result = data.get("result", {})
+                self.access_token = result.get("accessToken")
                 # accessTimeout은 밀리초 단위
-                timeout_ms = int(result.get('accessTimeout', 0))
+                timeout_ms = int(result.get("accessTimeout", 0))
                 self.token_expires = timeout_ms / 1000
 
                 self.logger.info(f"SGIS 토큰 발급 성공")
@@ -130,17 +124,17 @@ class SGISClient:
             return []
 
         params = {
-            'accessToken': token,
+            "accessToken": token,
         }
         if adm_cd:
-            params['cd'] = adm_cd
+            params["cd"] = adm_cd
 
         try:
             response = requests.get(SGIS_ADDR_STAGE_URL, params=params, timeout=30)
             data = response.json()
 
-            if data.get('errCd') == 0:
-                return data.get('result', [])
+            if data.get("errCd") == 0:
+                return data.get("result", [])
             else:
                 self.logger.warning(f"행정구역 조회 실패: {data.get('errMsg')}")
                 return []
@@ -149,8 +143,7 @@ class SGISClient:
             self.logger.error(f"행정구역 조회 오류: {e}")
             return []
 
-    def get_population(self, adm_cd: str, year: str = TARGET_YEAR,
-                       low_search: str = "1") -> list:
+    def get_population(self, adm_cd: str, year: str = TARGET_YEAR, low_search: str = "1") -> list:
         """
         인구통계 조회
 
@@ -167,19 +160,19 @@ class SGISClient:
             return []
 
         params = {
-            'accessToken': token,
-            'year': year,
-            'adm_cd': adm_cd,
-            'low_search': low_search,
-            'gender': '0'  # 전체
+            "accessToken": token,
+            "year": year,
+            "adm_cd": adm_cd,
+            "low_search": low_search,
+            "gender": "0",  # 전체
         }
 
         try:
             response = requests.get(SGIS_POPULATION_URL, params=params, timeout=30)
             data = response.json()
 
-            if data.get('errCd') == 0:
-                return data.get('result', [])
+            if data.get("errCd") == 0:
+                return data.get("result", [])
             else:
                 self.logger.warning(f"인구 조회 실패 ({adm_cd}): {data.get('errMsg')}")
                 return []
@@ -215,13 +208,16 @@ def populate_code_mappings(conn, logger):
     # 1. 시도 코드 매핑 (정적 17개)
     logger.info("1. sido_code_mapping 적재 (17개)")
     for admin_sido, sgis_sido, sido_name in SIDO_CODE_MAPPING:
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO sido_code_mapping (admin_sido, sgis_sido, sido_name)
             VALUES (%s, %s, %s)
             ON CONFLICT (admin_sido) DO UPDATE SET
                 sgis_sido = EXCLUDED.sgis_sido,
                 sido_name = EXCLUDED.sido_name
-        """, (admin_sido, sgis_sido, sido_name))
+        """,
+            (admin_sido, sgis_sido, sido_name),
+        )
     conn.commit()
     logger.info(f"   시도 매핑 완료: {len(SIDO_CODE_MAPPING)}개")
 
@@ -271,33 +267,36 @@ def populate_code_mappings(conn, logger):
     # 3. 누락된 매핑 수동 추가 (알려진 케이스)
     manual_mappings = [
         # 서울
-        ('11', '11260', '11070', '중랑구'),   # 상봉동
-        ('11', '11320', '11100', '도봉구'),   # 창동
-        ('11', '11350', '11110', '노원구'),   # 월계동
-        ('11', '11470', '11150', '양천구'),   # 목동
+        ("11", "11260", "11070", "중랑구"),  # 상봉동
+        ("11", "11320", "11100", "도봉구"),  # 창동
+        ("11", "11350", "11110", "노원구"),  # 월계동
+        ("11", "11470", "11150", "양천구"),  # 목동
         # 부산
-        ('26', '26110', '21010', '중구'),
-        ('26', '26200', '21020', '서구'),
-        ('26', '26470', '21130', '연제구'),
+        ("26", "26110", "21010", "중구"),
+        ("26", "26200", "21020", "서구"),
+        ("26", "26470", "21130", "연제구"),
         # 대구
-        ('27', '27170', '22030', '서구'),
+        ("27", "27170", "22030", "서구"),
         # 인천
-        ('28', '28200', '23090', '미추홀구'),
-        ('28', '28245', '23090', '미추홀구'),
+        ("28", "28200", "23090", "미추홀구"),
+        ("28", "28245", "23090", "미추홀구"),
         # 경기
-        ('41', '41171', '31041', '안양시 만안구'),
+        ("41", "41171", "31041", "안양시 만안구"),
     ]
 
     manual_added = 0
     for sido_code, admin_sigungu, sgis_sigungu, sigungu_name in manual_mappings:
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO sigungu_code_mapping (sido_code, admin_sigungu, sgis_sigungu, sigungu_name, verified)
             VALUES (%s, %s, %s, %s, TRUE)
             ON CONFLICT (sido_code, admin_sigungu) DO UPDATE SET
                 sgis_sigungu = EXCLUDED.sgis_sigungu,
                 sigungu_name = EXCLUDED.sigungu_name,
                 verified = TRUE
-        """, (sido_code, admin_sigungu, sgis_sigungu, sigungu_name))
+        """,
+            (sido_code, admin_sigungu, sgis_sigungu, sigungu_name),
+        )
         if cursor.rowcount > 0:
             manual_added += 1
     conn.commit()
@@ -333,8 +332,8 @@ def load_sgis_population(sample_limit: int = None):
     logger.info("=" * 60)
 
     # API 키 확인
-    service_id = get_api_key('SGIS_SERVICE_ID')
-    security_key = get_api_key('SGIS_SECURITY_KEY')
+    service_id = get_api_key("SGIS_SERVICE_ID")
+    security_key = get_api_key("SGIS_SECURITY_KEY")
 
     if not service_id or not security_key:
         logger.error("SGIS_SERVICE_ID, SGIS_SECURITY_KEY 환경변수 필요")
@@ -397,8 +396,8 @@ def load_sgis_population(sample_limit: int = None):
 
     # 시도별 처리
     for sido in sido_list:
-        sido_cd = sido.get('cd')
-        sido_nm = sido.get('addr_name', sido.get('nm', ''))
+        sido_cd = sido.get("cd")
+        sido_nm = sido.get("addr_name", sido.get("nm", ""))
 
         logger.info(f"\n2. {sido_nm} ({sido_cd}) 처리 중...")
 
@@ -408,8 +407,8 @@ def load_sgis_population(sample_limit: int = None):
         logger.info(f"   {len(sigungu_list)}개 시군구 발견")
 
         for sigungu in sigungu_list:
-            sigungu_cd = sigungu.get('cd')
-            sigungu_nm = sigungu.get('addr_name', sigungu.get('nm', ''))
+            sigungu_cd = sigungu.get("cd")
+            sigungu_nm = sigungu.get("addr_name", sigungu.get("nm", ""))
 
             # 읍면동 인구 조회 (low_search=1: 1단계 하위)
             population_data = client.get_population(sigungu_cd, year=TARGET_YEAR, low_search="1")
@@ -425,9 +424,9 @@ def load_sgis_population(sample_limit: int = None):
             emd_not_matched = 0
 
             for item in population_data:
-                adm_cd = item.get('adm_cd')
-                population = item.get('population')
-                adm_nm = item.get('adm_nm', '')
+                adm_cd = item.get("adm_cd")
+                population = item.get("population")
+                adm_nm = item.get("adm_nm", "")
 
                 if not adm_cd or population is None:
                     continue
@@ -438,7 +437,8 @@ def load_sgis_population(sample_limit: int = None):
                     continue
 
                 # 1) api_sgis_population 테이블에 INSERT (100% 저장)
-                cursor.execute("""
+                cursor.execute(
+                    """
                     INSERT INTO api_sgis_population
                         (sgis_code, admin_name, sido_code, sido_name,
                          sigungu_code, sigungu_name, population, year, gender)
@@ -447,29 +447,34 @@ def load_sgis_population(sample_limit: int = None):
                     DO UPDATE SET
                         population = EXCLUDED.population,
                         cached_at = NOW()
-                """, (
-                    adm_cd,           # sgis_code (8자리)
-                    adm_nm,           # admin_name
-                    sido_cd[:2],      # sido_code (2자리)
-                    sido_nm,          # sido_name
-                    sigungu_cd,       # sigungu_code (5자리)
-                    sigungu_nm,       # sigungu_name
-                    pop_int,          # population
-                    int(TARGET_YEAR), # year
-                    'total'           # gender
-                ))
+                """,
+                    (
+                        adm_cd,  # sgis_code (8자리)
+                        adm_nm,  # admin_name
+                        sido_cd[:2],  # sido_code (2자리)
+                        sido_nm,  # sido_name
+                        sigungu_cd,  # sigungu_code (5자리)
+                        sigungu_nm,  # sigungu_name
+                        pop_int,  # population
+                        int(TARGET_YEAR),  # year
+                        "total",  # gender
+                    ),
+                )
                 emd_inserted += 1
 
                 # 2) location_admin 테이블 UPDATE (이름 매칭)
                 if adm_nm:
-                    cursor.execute("""
+                    cursor.execute(
+                        """
                         UPDATE location_admin
                         SET population_current = %s,
                             population_current_year = %s
                         WHERE admin_name = %s
                           AND level = 3
                           AND population_current IS NULL
-                    """, (pop_int, int(TARGET_YEAR), adm_nm))
+                    """,
+                        (pop_int, int(TARGET_YEAR), adm_nm),
+                    )
 
                     if cursor.rowcount > 0:
                         emd_updated += cursor.rowcount
@@ -483,7 +488,9 @@ def load_sgis_population(sample_limit: int = None):
             total_updated += emd_updated
             total_not_matched += emd_not_matched
 
-            logger.info(f"   {sigungu_nm}: INSERT {emd_inserted}건, UPDATE {emd_updated}건, 미매칭 {emd_not_matched}건")
+            logger.info(
+                f"   {sigungu_nm}: INSERT {emd_inserted}건, UPDATE {emd_updated}건, 미매칭 {emd_not_matched}건"
+            )
 
             # API 호출 제한 방지 (최소 대기)
             time.sleep(0.1)
@@ -498,7 +505,8 @@ def load_sgis_population(sample_limit: int = None):
     logger.info(f"location_admin 미매칭: {total_not_matched}건")
 
     # api_sgis_population 통계
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT
             COUNT(*) as total,
             COUNT(DISTINCT sido_name) as sido_count,
@@ -506,7 +514,9 @@ def load_sgis_population(sample_limit: int = None):
             SUM(population) as total_population
         FROM api_sgis_population
         WHERE year = %s
-    """, (int(TARGET_YEAR),))
+    """,
+        (int(TARGET_YEAR),),
+    )
     sgis_stats = cursor.fetchone()
     if sgis_stats:
         logger.info(f"\napi_sgis_population 통계 ({TARGET_YEAR}년):")
@@ -530,20 +540,25 @@ def load_sgis_population(sample_limit: int = None):
     if stats:
         logger.info(f"\nlocation_admin (level=3) 통계:")
         logger.info(f"  전체 읍면동: {stats[0]}개")
-        logger.info(f"  인구 데이터 있음: {stats[1]}개 ({stats[1]*100//stats[0] if stats[0] else 0}%)")
+        logger.info(
+            f"  인구 데이터 있음: {stats[1]}개 ({stats[1]*100//stats[0] if stats[0] else 0}%)"
+        )
         if stats[2]:
             logger.info(f"  평균 인구: {stats[2]:,.0f}명")
         if stats[3]:
             logger.info(f"  총 인구: {stats[3]:,.0f}명")
 
     # 인구 데이터 확인 (상위 10개)
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT sgis_code, admin_name, sido_name, sigungu_name, population
         FROM api_sgis_population
         WHERE year = %s
         ORDER BY population DESC
         LIMIT 10
-    """, (int(TARGET_YEAR),))
+    """,
+        (int(TARGET_YEAR),),
+    )
     rows = cursor.fetchall()
     if rows:
         logger.info(f"\n인구 상위 10개 읍면동 (api_sgis_population):")
@@ -559,5 +574,5 @@ def load_sgis_population(sample_limit: int = None):
 
 
 if __name__ == "__main__":
-    sample_limit = int(os.getenv('SAMPLE_LIMIT', 0)) or None
+    sample_limit = int(os.getenv("SAMPLE_LIMIT", 0)) or None
     load_sgis_population(sample_limit=sample_limit)

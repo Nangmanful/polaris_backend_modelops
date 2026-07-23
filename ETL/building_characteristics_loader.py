@@ -1,4 +1,4 @@
-'''
+"""
 파일명: building_characteristics_loader.py
 작성일: 2025-12-16
 버전: v02
@@ -64,12 +64,11 @@ results = await loader.load_batch([
 ])
 
 ================================================================================
-'''
+"""
 
 from typing import Dict, Any, List, Optional
 import logging
 import os
-from datetime import datetime
 
 # BuildingDataFetcher 임포트
 try:
@@ -79,7 +78,8 @@ except ImportError:
         # 직접 실행 시
         import sys
         import os
-        sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
         from modelops.utils.building_data_fetcher import BuildingDataFetcher
     except ImportError:
         BuildingDataFetcher = None
@@ -143,7 +143,9 @@ class BuildingDataLoader:
         self.db_manager = None
         if DatabaseManager:
             try:
-                dw_db_url = db_url or os.getenv('DATAWAREHOUSE_DATABASE_URL') or os.getenv('DATABASE_URL')
+                dw_db_url = (
+                    db_url or os.getenv("DATAWAREHOUSE_DATABASE_URL") or os.getenv("DATABASE_URL")
+                )
                 if dw_db_url:
                     self.db_manager = DatabaseManager(dw_db_url)
                     self.logger.info("DatabaseManager 초기화 성공 (building_aggregate_cache)")
@@ -153,12 +155,7 @@ class BuildingDataLoader:
                 self.logger.error(f"DatabaseManager 초기화 실패: {e}")
                 self.db_manager = None
 
-    def load_and_cache(
-        self,
-        lat: float,
-        lon: float,
-        address: str = None
-    ) -> Dict[str, Any]:
+    def load_and_cache(self, lat: float, lon: float, address: str = None) -> Dict[str, Any]:
         """
         건축물 데이터 로드 및 DB 캐시 저장
 
@@ -188,20 +185,20 @@ class BuildingDataLoader:
                 return {}
 
             # 2. 주소 코드 추출 (meta에서 - 중첩 구조 대응)
-            meta = data.get('meta', {})
-            admin_codes = meta.get('admin_codes', {})
+            meta = data.get("meta", {})
+            admin_codes = meta.get("admin_codes", {})
 
             # admin_codes가 있으면 거기서, 없으면 meta에서 직접
-            sigungu_cd = admin_codes.get('sigungu_cd', '') or meta.get('sigungu_cd', '')
-            bjdong_cd = admin_codes.get('bjdong_cd', '') or meta.get('bjdong_cd', '')
+            sigungu_cd = admin_codes.get("sigungu_cd", "") or meta.get("sigungu_cd", "")
+            bjdong_cd = admin_codes.get("bjdong_cd", "") or meta.get("bjdong_cd", "")
 
             # bun/ji는 road_address에서 파싱하거나 meta에서
-            bun = meta.get('bun', '')
-            ji = meta.get('ji', '')
+            bun = meta.get("bun", "")
+            ji = meta.get("ji", "")
 
             # bun/ji가 없으면 road_address에서 파싱 시도
             if not (bun and ji):
-                road_addr = meta.get('road_address', '') or meta.get('address', '')
+                road_addr = meta.get("road_address", "") or meta.get("address", "")
                 # 도로명주소에서 번지 추출 로직은 BuildingDataFetcher가 이미 처리함
                 # 여기서는 sigungu_cd/bjdong_cd만 있어도 저장 시도
                 pass
@@ -219,32 +216,50 @@ class BuildingDataLoader:
                         bjdong_cd=bjdong_cd,
                         bun=bun,
                         ji=ji,
-                        building_data=data
+                        building_data=data,
                     )
                     self.logger.info(f"✅ DB 캐시 저장 완료: {sigungu_cd}-{bjdong_cd}-{bun}-{ji}")
                 except Exception as cache_error:
                     self.logger.warning(f"DB 캐시 저장 실패 (계속 진행): {cache_error}")
             elif (is_daedeok or is_sk_u_tower or is_pangyo) and self.db_manager:
                 # SK 3개 사업장 강제 저장 (주소 코드 없을 때)
-                site_name = '대덕 데이터센터' if is_daedeok else ('SK u타워' if is_sk_u_tower else '판교 캠퍼스')
-                self.logger.info(f"🔧 {site_name} 강제 저장 시도: sigungu={sigungu_cd}, bjdong={bjdong_cd}, bun={bun}, ji={ji}")
+                site_name = (
+                    "대덕 데이터센터"
+                    if is_daedeok
+                    else ("SK u타워" if is_sk_u_tower else "판교 캠퍼스")
+                )
+                self.logger.info(
+                    f"🔧 {site_name} 강제 저장 시도: sigungu={sigungu_cd}, bjdong={bjdong_cd}, bun={bun}, ji={ji}"
+                )
 
                 # 빈 값 채우기 (사업장별 하드코딩)
                 if is_daedeok:
-                    if not sigungu_cd: sigungu_cd = '30200'
-                    if not bjdong_cd: bjdong_cd = '14200'
-                    if not bun: bun = '0140'
-                    if not ji: ji = '0009'
+                    if not sigungu_cd:
+                        sigungu_cd = "30200"
+                    if not bjdong_cd:
+                        bjdong_cd = "14200"
+                    if not bun:
+                        bun = "0140"
+                    if not ji:
+                        ji = "0009"
                 elif is_sk_u_tower:
-                    if not sigungu_cd: sigungu_cd = '41135'
-                    if not bjdong_cd: bjdong_cd = '10300'
-                    if not bun: bun = '0025'
-                    if not ji: ji = '0001'
+                    if not sigungu_cd:
+                        sigungu_cd = "41135"
+                    if not bjdong_cd:
+                        bjdong_cd = "10300"
+                    if not bun:
+                        bun = "0025"
+                    if not ji:
+                        ji = "0001"
                 elif is_pangyo:
-                    if not sigungu_cd: sigungu_cd = '41135'
-                    if not bjdong_cd: bjdong_cd = '10900'
-                    if not bun: bun = '0612'
-                    if not ji: ji = '0004'
+                    if not sigungu_cd:
+                        sigungu_cd = "41135"
+                    if not bjdong_cd:
+                        bjdong_cd = "10900"
+                    if not bun:
+                        bun = "0612"
+                    if not ji:
+                        ji = "0004"
 
                 try:
                     self.db_manager.save_building_aggregate_cache(
@@ -252,9 +267,11 @@ class BuildingDataLoader:
                         bjdong_cd=bjdong_cd,
                         bun=bun,
                         ji=ji,
-                        building_data=data
+                        building_data=data,
                     )
-                    self.logger.info(f"✅ {site_name} 강제 저장 완료: {sigungu_cd}-{bjdong_cd}-{bun}-{ji}")
+                    self.logger.info(
+                        f"✅ {site_name} 강제 저장 완료: {sigungu_cd}-{bjdong_cd}-{bun}-{ji}"
+                    )
                 except Exception as cache_error:
                     self.logger.warning(f"{site_name} 강제 저장 실패: {cache_error}")
 
@@ -265,11 +282,7 @@ class BuildingDataLoader:
             return {}
 
     def fetch_from_cache(
-        self,
-        sigungu_cd: str,
-        bjdong_cd: str,
-        bun: str,
-        ji: str
+        self, sigungu_cd: str, bjdong_cd: str, bun: str, ji: str
     ) -> Optional[Dict[str, Any]]:
         """
         DB 캐시에서 건축물 데이터 조회
@@ -288,10 +301,7 @@ class BuildingDataLoader:
 
         try:
             cache_data = self.db_manager.fetch_building_aggregate_cache(
-                sigungu_cd=sigungu_cd,
-                bjdong_cd=bjdong_cd,
-                bun=bun,
-                ji=ji
+                sigungu_cd=sigungu_cd, bjdong_cd=bjdong_cd, bun=bun, ji=ji
             )
 
             if cache_data:
@@ -304,10 +314,7 @@ class BuildingDataLoader:
             self.logger.error(f"DB 캐시 조회 실패: {e}")
             return None
 
-    async def load_batch(
-        self,
-        sites: List[Dict[str, Any]]
-    ) -> Dict[int, Dict[str, Any]]:
+    async def load_batch(self, sites: List[Dict[str, Any]]) -> Dict[int, Dict[str, Any]]:
         """
         다중 사업장 건축물 데이터 배치 로드 및 캐시
 
@@ -361,7 +368,7 @@ class BuildingDataLoader:
         sigungu_cd: str = None,
         bjdong_cd: str = None,
         bun: str = None,
-        ji: str = None
+        ji: str = None,
     ) -> Dict[str, Any]:
         """
         캐시 우선 조회, 없으면 API 호출
@@ -402,7 +409,7 @@ class BuildingDataLoader:
         bjdong_cd: str = None,
         bun: str = None,
         ji: str = None,
-        road_address: str = None
+        road_address: str = None,
     ) -> Optional[Dict[str, Any]]:
         """
         DB 캐시에서만 건축물 데이터 조회 (API 호출 X)
@@ -488,7 +495,9 @@ class BuildingDataLoader:
             results = self.db_manager.execute_query(query, (search_pattern,))
 
             if results:
-                self.logger.info(f"DB 캐시에서 주소로 데이터 로드: {road_address} (검색: {core_address})")
+                self.logger.info(
+                    f"DB 캐시에서 주소로 데이터 로드: {road_address} (검색: {core_address})"
+                )
                 return self.db_manager.convert_cache_to_building_data(results[0])
 
             self.logger.warning(f"DB 캐시에 데이터 없음: {road_address} (검색: {core_address})")
@@ -518,11 +527,11 @@ class BuildingDataLoader:
         import re
 
         # 공백 제거
-        addr_no_space = road_address.replace(' ', '')
+        addr_no_space = road_address.replace(" ", "")
 
         # 도로명 + 번길/로 + 번지 패턴 추출
         # 예: 판교로255번길38, 성남대로343번길9
-        pattern = r'([가-힣]+(?:로|길)\d+(?:번길)?)\s*(\d+)'
+        pattern = r"([가-힣]+(?:로|길)\d+(?:번길)?)\s*(\d+)"
         match = re.search(pattern, addr_no_space)
 
         if match:
@@ -563,7 +572,7 @@ class BuildingDataLoader:
                 return None
 
             site = site_results[0]
-            address = site.get('address')
+            address = site.get("address")
 
             # 2. 주소로 building_aggregate_cache 조회
             if address:

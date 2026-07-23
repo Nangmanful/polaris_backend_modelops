@@ -19,10 +19,10 @@ import shutil
 from pathlib import Path
 from tqdm import tqdm
 
-from utils import setup_logging, get_db_connection, get_data_dir, table_exists, get_row_count
+from utils import setup_logging, get_db_connection, get_data_dir, get_row_count
 
 # SAMPLE_LIMIT: TIF 파일 개수 제한 (테스트용)
-SAMPLE_LIMIT = int(os.environ.get('SAMPLE_LIMIT', 0))  # 0 = 전체
+SAMPLE_LIMIT = int(os.environ.get("SAMPLE_LIMIT", 0))  # 0 = 전체
 
 
 def get_tif_srid(tif_path: Path) -> str:
@@ -37,8 +37,7 @@ def get_tif_srid(tif_path: Path) -> str:
     """
     try:
         result = subprocess.run(
-            ["gdalsrsinfo", "-o", "epsg", str(tif_path)],
-            capture_output=True, text=True, timeout=30
+            ["gdalsrsinfo", "-o", "epsg", str(tif_path)], capture_output=True, text=True, timeout=30
         )
         output = result.stdout.strip()
         if output.startswith("EPSG:"):
@@ -49,8 +48,7 @@ def get_tif_srid(tif_path: Path) -> str:
     # Tokyo/Bessel 좌표계인 경우 Korea 1985 Central Belt (2097) 사용
     try:
         result = subprocess.run(
-            ["gdalinfo", str(tif_path)],
-            capture_output=True, text=True, timeout=30
+            ["gdalinfo", str(tif_path)], capture_output=True, text=True, timeout=30
         )
         if "Tokyo" in result.stdout or "Bessel" in result.stdout:
             return "2097"  # Korea 1985 / Central Belt
@@ -60,7 +58,9 @@ def get_tif_srid(tif_path: Path) -> str:
     return "5174"  # 기본값
 
 
-def load_tif_to_postgres(tif_path: Path, table_name: str, append: bool = False, logger=None, srid: str = None) -> bool:
+def load_tif_to_postgres(
+    tif_path: Path, table_name: str, append: bool = False, logger=None, srid: str = None
+) -> bool:
     """
     GeoTIFF 파일을 PostgreSQL raster 테이블에 로드
 
@@ -110,7 +110,7 @@ def load_tif_to_postgres(tif_path: Path, table_name: str, append: bool = False, 
             stdin=raster_proc.stdout,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            env=psql_env
+            env=psql_env,
         )
 
         raster_proc.stdout.close()
@@ -171,9 +171,9 @@ def load_landcover() -> None:
         logger.info("ZIP 파일 압축 해제 중...")
         for zip_path in tqdm(zip_files, desc="ZIP 압축 해제"):
             try:
-                with zipfile.ZipFile(zip_path, 'r') as zf:
+                with zipfile.ZipFile(zip_path, "r") as zf:
                     for name in zf.namelist():
-                        if name.lower().endswith('.tif'):
+                        if name.lower().endswith(".tif"):
                             # TIF 파일만 추출
                             zf.extract(name, tmp_dir)
                             extracted_tif_files.append(tmp_dir / name)
@@ -213,9 +213,21 @@ def load_landcover() -> None:
     drop_env = os.environ.copy()
     drop_env["PGPASSWORD"] = db_password
     subprocess.run(
-        ["psql", "-h", db_host, "-p", db_port, "-U", db_user, "-d", db_name,
-         "-c", "DROP TABLE IF EXISTS raw_landcover CASCADE;"],
-        env=drop_env, capture_output=True
+        [
+            "psql",
+            "-h",
+            db_host,
+            "-p",
+            db_port,
+            "-U",
+            db_user,
+            "-d",
+            db_name,
+            "-c",
+            "DROP TABLE IF EXISTS raw_landcover CASCADE;",
+        ],
+        env=drop_env,
+        capture_output=True,
     )
 
     # TIF 파일 로드
@@ -225,10 +237,7 @@ def load_landcover() -> None:
 
     for tif_file in tqdm(tif_files, desc="TIF 로딩"):
         success = load_tif_to_postgres(
-            tif_file,
-            "raw_landcover",
-            append=not first_file,
-            logger=logger
+            tif_file, "raw_landcover", append=not first_file, logger=logger
         )
 
         if success:
